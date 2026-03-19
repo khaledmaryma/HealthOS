@@ -1,0 +1,317 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-bug me-2"></i>
+            Germs Management
+          </h5>
+          <div class="d-flex gap-2">
+            <button
+              class="btn btn-primary btn-sm"
+              (click)="clickAdd()"
+              [disabled]="loading()">
+              <i class="bi bi-plus-circle me-1"></i>
+              Add Germ
+            </button>
+            <button
+              class="btn btn-warning btn-sm"
+              (click)="clickEdit()"
+              [disabled]="!selectedItem() || loading()">
+              <i class="bi bi-pencil me-1"></i>
+              Edit
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              (click)="remove()"
+              [disabled]="!selectedItem() || loading()">
+              <i class="bi bi-trash me-1"></i>
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Search and Filters -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Search germs by code, description, or identifier..."
+                  [value]="query()"
+                  (input)="onSearchChange($any($event.target).value)">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex justify-content-end align-items-center gap-2">
+                <label class="form-label mb-0">Page Size:</label>
+                <select
+                  class="form-select form-select-sm"
+                  style="width: auto;"
+                  [value]="pageSize()"
+                  (change)="setPageSize(+$any($event.target).value)">
+                  <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="error()" class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ error() }}
+          </div>
+
+          <!-- Loading Spinner -->
+          <div *ngIf="loading()" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading germs...</p>
+          </div>
+
+          <!-- Data Table -->
+          <div *ngIf="!loading()" class="table-responsive">
+            <table class="table table-hover table-striped">
+              <thead class="table-dark">
+                <tr>
+                  <th
+                    class="sortable"
+                    (click)="sortBy('code')"
+                    style="cursor: pointer;">
+                    Code
+                    <i class="bi ms-1" [ngClass]="getSortIcon('code')"></i>
+                  </th>
+                  <th
+                    class="sortable"
+                    (click)="sortBy('description')"
+                    style="cursor: pointer;">
+                    Description
+                    <i class="bi ms-1" [ngClass]="getSortIcon('description')"></i>
+                  </th>
+                  <th
+                    class="sortable"
+                    (click)="sortBy('identifier')"
+                    style="cursor: pointer;">
+                    Identifier
+                    <i class="bi ms-1" [ngClass]="getSortIcon('identifier')"></i>
+                  </th>
+                  <th
+                    class="sortable"
+                    (click)="sortBy('displayOrder')"
+                    style="cursor: pointer;">
+                    Display Order
+                    <i class="bi ms-1" [ngClass]="getSortIcon('displayOrder')"></i>
+                  </th>
+                  <th>Created Date</th>
+                  <th>Modified Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let item of paged(); trackBy: trackByFn"
+                  [class.table-active]="isSelected(item)"
+                  (click)="selectRow(item)"
+                  style="cursor: pointer;">
+                  <td>
+                    <code class="text-primary">{{ item.code }}</code>
+                  </td>
+                  <td>{{ item.description }}</td>
+                  <td>
+                    <span *ngIf="item.identifier; else noIdentifier">{{ item.identifier }}</span>
+                    <ng-template #noIdentifier>
+                      <span class="text-muted">-</span>
+                    </ng-template>
+                  </td>
+                  <td>
+                    <span *ngIf="item.displayOrder; else noDisplayOrder">{{ item.displayOrder }}</span>
+                    <ng-template #noDisplayOrder>
+                      <span class="text-muted">-</span>
+                    </ng-template>
+                  </td>
+                  <td>
+                    <span *ngIf="item.createdDate; else noCreatedDate">
+                      {{ item.createdDate | date:'short' }}
+                    </span>
+                    <ng-template #noCreatedDate>
+                      <span class="text-muted">-</span>
+                    </ng-template>
+                  </td>
+                  <td>
+                    <span *ngIf="item.modifiedDate; else noModifiedDate">
+                      {{ item.modifiedDate | date:'short' }}
+                    </span>
+                    <ng-template #noModifiedDate>
+                      <span class="text-muted">-</span>
+                    </ng-template>
+                  </td>
+                </tr>
+                <tr *ngIf="paged().length === 0">
+                  <td colspan="6" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No germs found
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div *ngIf="!loading() && totalPages() > 1" class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+              Showing {{ (pageIndex() * pageSize()) + 1 }} to {{ min((pageIndex() + 1) * pageSize(), filtered().length) }}
+              of {{ filtered().length }} germs
+            </div>
+            <nav>
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" [class.disabled]="pageIndex() === 0">
+                  <button class="page-link" (click)="firstPage()" [disabled]="pageIndex() === 0">
+                    <i class="bi bi-chevron-double-left"></i>
+                  </button>
+                </li>
+                <li class="page-item" [class.disabled]="pageIndex() === 0">
+                  <button class="page-link" (click)="prevPage()" [disabled]="pageIndex() === 0">
+                    <i class="bi bi-chevron-left"></i>
+                  </button>
+                </li>
+                <li class="page-item active">
+                  <span class="page-link">{{ pageIndex() + 1 }} of {{ totalPages() }}</span>
+                </li>
+                <li class="page-item" [class.disabled]="pageIndex() >= totalPages() - 1">
+                  <button class="page-link" (click)="nextPage()" [disabled]="pageIndex() >= totalPages() - 1">
+                    <i class="bi bi-chevron-right"></i>
+                  </button>
+                </li>
+                <li class="page-item" [class.disabled]="pageIndex() >= totalPages() - 1">
+                  <button class="page-link" (click)="lastPage()" [disabled]="pageIndex() >= totalPages() - 1">
+                    <i class="bi bi-chevron-double-right"></i>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div
+  class="modal fade"
+  [class.show]="showForm()"
+  [style.display]="showForm() ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form (ngSubmit)="save($event)">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-bug me-2"></i>
+            {{ editItem()?.id ? 'Edit Germ' : 'Add New Germ' }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="cancel()"
+            aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="code" class="form-label">
+                  Code <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="code"
+                  [(ngModel)]="editItem()!.code"
+                  name="code"
+                  required
+                  maxlength="50"
+                  placeholder="Enter germ code">
+                <div class="form-text">Unique identifier for the germ</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="displayOrder" class="form-label">Display Order</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="displayOrder"
+                  [(ngModel)]="editItem()!.displayOrder"
+                  name="displayOrder"
+                  maxlength="50"
+                  placeholder="Enter display order">
+                <div class="form-text">Order for display purposes</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label">
+              Description <span class="text-danger">*</span>
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              id="description"
+              [(ngModel)]="editItem()!.description"
+              name="description"
+              required
+              maxlength="255"
+              placeholder="Enter germ description">
+            <div class="form-text">Full description of the germ</div>
+          </div>
+
+          <div class="mb-3">
+            <label for="identifier" class="form-label">Identifier</label>
+            <input
+              type="text"
+              class="form-control"
+              id="identifier"
+              [(ngModel)]="editItem()!.identifier"
+              name="identifier"
+              maxlength="50"
+              placeholder="Enter additional identifier">
+            <div class="form-text">Optional additional identifier</div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancel()">
+            <i class="bi bi-x-circle me-1"></i>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!editItem()?.code || !editItem()?.description">
+            <i class="bi bi-check-circle me-1"></i>
+            {{ editItem()?.id ? 'Update' : 'Create' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div
+  *ngIf="showForm()"
+  class="modal-backdrop fade show"
+  (click)="cancel()"></div>

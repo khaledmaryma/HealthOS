@@ -1,0 +1,30 @@
+<div class="account-row">
+  <div class="col-code" [style.padding-left]="level * 20 + 8 + 'px'">
+    <button *ngIf="hasChildren"
+            class="toggle-btn"
+            (click)="onToggle()"
+            [class.expanded]="isExpanded">
+      {{ isExpanded ? '▼' : '▶' }}
+    </button>
+    <span class="spacer" *ngIf="!hasChildren"></span>
+    {{ node.code }}
+  </div>
+  <div class="col-currency">{{ node.currency }}</div>
+  <div class="col-description">{{ node.description }}</div>
+  <div class="col-job">{{ node.job }}</div>
+  <div class="col-group">{{ node.group }}</div>
+  <div class="col-debit-local">{{ node.debitLocal | number:'1.2-2' }}</div>
+  <div class="col-debit-main">{{ node.debitMain | number:'1.2-2' }}</div>
+  <div class="col-credit-local">{{ node.creditLocal | number:'1.2-2' }}</div>
+  <div class="col-credit-main">{{ node.creditMain | number:'1.2-2' }}</div>
+</div>
+
+<div *ngIf="isExpanded && hasChildren">
+  <app-account-node
+    *ngFor="let child of node.children"
+    [node]="child"
+    [level]="level + 1"
+    [expandedNodes]="expandedNodes"
+    (toggle)="toggle.emit($event)">
+  </app-account-node>
+</div>

@@ -1,0 +1,268 @@
+<div class="rich-text-editor-container">
+  <!-- Toolbar -->
+  <div class="rich-text-toolbar" *ngIf="showToolbar" role="toolbar">
+    <!-- Full Toolbar -->
+    <ng-container *ngIf="toolbarStyle === 'full'">
+      <!-- Format Dropdown -->
+      <div class="toolbar-group me-2">
+        <label class="toolbar-label">Format:</label>
+        <select class="form-select form-select-sm"
+                (mousedown)="onToolbarMouseDown($event)"
+                (change)="onFormatBlockChange($event)"
+                style="width: auto;">
+          <option value="">Normal</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+          <option value="p">Paragraph</option>
+        </select>
+      </div>
+
+      <!-- Text Style -->
+      <div class="btn-group btn-group-sm me-2" role="group">
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                [class.active]="isBold()"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('bold')"
+                title="Bold (Ctrl+B)">
+          <i class="bi bi-type-bold"></i>
+          <span class="btn-label">Bold</span>
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                [class.active]="isItalic()"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('italic')"
+                title="Italic (Ctrl+I)">
+          <i class="bi bi-type-italic"></i>
+          <span class="btn-label">Italic</span>
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                [class.active]="isUnderline()"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('underline')"
+                title="Underline (Ctrl+U)">
+          <i class="bi bi-type-underline"></i>
+          <span class="btn-label">Underline</span>
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                [class.active]="isStrikeThrough()"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('strikeThrough')"
+                title="Strikethrough">
+          <i class="bi bi-type-strikethrough"></i>
+          <span class="btn-label">Strike</span>
+        </button>
+      </div>
+
+      <!-- Text Color -->
+      <div class="btn-group btn-group-sm me-2" role="group">
+        <label class="btn btn-outline-secondary d-flex align-items-center gap-1"
+               (mousedown)="onToolbarMouseDown($event)"
+               title="Text Color">
+          <i class="bi bi-palette"></i>
+          <span class="btn-label">Color</span>
+          <input type="color"
+                 class="color-picker"
+                 (change)="changeTextColor($event)"
+                 (mousedown)="onToolbarMouseDown($event)">
+        </label>
+        <label class="btn btn-outline-secondary d-flex align-items-center gap-1"
+               (mousedown)="onToolbarMouseDown($event)"
+               title="Background Color">
+          <i class="bi bi-paint-bucket"></i>
+          <span class="btn-label">BG</span>
+          <input type="color"
+                 class="color-picker"
+                 (change)="changeBackgroundColor($event)"
+                 (mousedown)="onToolbarMouseDown($event)">
+        </label>
+      </div>
+
+      <!-- Alignment -->
+      <div class="btn-group btn-group-sm me-2" role="group">
+        <button type="button"
+                class="btn btn-outline-secondary"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('justifyLeft')"
+                title="Align Left">
+          <i class="bi bi-text-left"></i>
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('justifyCenter')"
+                title="Align Center">
+          <i class="bi bi-text-center"></i>
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('justifyRight')"
+                title="Align Right">
+          <i class="bi bi-text-right"></i>
+        </button>
+      </div>
+
+      <!-- Lists -->
+      <div class="btn-group btn-group-sm me-2" role="group">
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('insertUnorderedList')"
+                title="Bullet List">
+          <i class="bi bi-list-ul"></i>
+          <span class="btn-label">Bullets</span>
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('insertOrderedList')"
+                title="Numbered List">
+          <i class="bi bi-list-ol"></i>
+          <span class="btn-label">Numbers</span>
+        </button>
+      </div>
+
+      <!-- Insert -->
+      <div class="btn-group btn-group-sm me-2" role="group">
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="insertLink()"
+                title="Insert Link">
+          <i class="bi bi-link-45deg"></i>
+          <span class="btn-label">Link</span>
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="toggleTablePicker($event)"
+                title="Insert Table">
+          <i class="bi bi-table"></i>
+          <span class="btn-label">Table</span>
+        </button>
+      </div>
+
+      <!-- Format Actions -->
+      <div class="btn-group btn-group-sm" role="group">
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                (mousedown)="onToolbarMouseDown($event)"
+                (click)="execCommand('removeFormat')"
+                title="Clear Formatting">
+          <i class="bi bi-eraser"></i>
+          <span class="btn-label">Clear</span>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- Simple Toolbar -->
+    <ng-container *ngIf="toolbarStyle === 'simple'">
+      <div class="btn-group btn-group-sm" role="group">
+        <button type="button" class="btn btn-outline-secondary" (mousedown)="onToolbarMouseDown($event)" (click)="execCommand('bold')" title="Bold">
+          <i class="bi bi-type-bold"></i>
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (mousedown)="onToolbarMouseDown($event)" (click)="execCommand('italic')" title="Italic">
+          <i class="bi bi-type-italic"></i>
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (mousedown)="onToolbarMouseDown($event)" (click)="execCommand('underline')" title="Underline">
+          <i class="bi bi-type-underline"></i>
+        </button>
+      </div>
+
+      <div class="btn-group btn-group-sm ms-2" role="group">
+        <button type="button" class="btn btn-outline-secondary" (mousedown)="onToolbarMouseDown($event)" (click)="execCommand('insertUnorderedList')" title="Bullet List">
+          <i class="bi bi-list-ul"></i>
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (mousedown)="onToolbarMouseDown($event)" (click)="execCommand('insertOrderedList')" title="Numbered List">
+          <i class="bi bi-list-ol"></i>
+        </button>
+      </div>
+
+      <div class="btn-group btn-group-sm ms-2" role="group">
+        <button type="button" class="btn btn-outline-secondary" (mousedown)="onToolbarMouseDown($event)" (click)="formatBlock('h3')" title="Heading">
+          <i class="bi bi-type-h3"></i>
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (mousedown)="onToolbarMouseDown($event)" (click)="formatBlock('p')" title="Paragraph">
+          <i class="bi bi-paragraph"></i>
+        </button>
+      </div>
+
+      <div class="btn-group btn-group-sm ms-2" role="group">
+        <button type="button" class="btn btn-outline-secondary" (mousedown)="onToolbarMouseDown($event)" (click)="execCommand('removeFormat')" title="Clear Formatting">
+          <i class="bi bi-eraser"></i>
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Table Picker Popup -->
+  <div class="table-picker-popup" *ngIf="showTablePicker()">
+    <div class="table-picker-grid">
+      <div class="table-picker-row" *ngFor="let row of [1,2,3,4,5]">
+        <div class="table-picker-cell"
+             *ngFor="let col of [1,2,3,4,5,6]"
+             (click)="insertTable(row, col)"
+             [title]="row + ' x ' + col">
+        </div>
+      </div>
+    </div>
+    <div class="table-picker-footer">
+      <small class="text-muted">Click to insert table</small>
+    </div>
+  </div>
+
+  <!-- Link Dialog -->
+  <div class="link-dialog-overlay" *ngIf="showLinkDialog()" (click)="cancelLink()">
+    <div class="link-dialog" (click)="$event.stopPropagation()">
+      <div class="link-dialog-header">
+        <h6 class="mb-0">Insert Link</h6>
+        <button type="button" class="btn-close" (click)="cancelLink()"></button>
+      </div>
+      <div class="link-dialog-body">
+        <div class="mb-3">
+          <label class="form-label">URL</label>
+          <input type="url"
+                 class="form-control form-control-sm"
+                 [(ngModel)]="linkUrl"
+                 placeholder="https://example.com">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Text (optional)</label>
+          <input type="text"
+                 class="form-control form-control-sm"
+                 [(ngModel)]="linkText"
+                 placeholder="Link text">
+        </div>
+      </div>
+      <div class="link-dialog-footer">
+        <button type="button" class="btn btn-sm btn-secondary" (click)="cancelLink()">Cancel</button>
+        <button type="button" class="btn btn-sm btn-primary" (click)="applyLink()">Insert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="rich-text-editor-wrapper">
+    <div #editor
+         class="rich-text-editor"
+         contenteditable="true"
+         [id]="editorId"
+         [attr.placeholder]="placeholder"
+         [style.min-height]="minHeight"
+         [style.max-height]="maxHeight"
+         (input)="onEditorInput($event)"
+         (blur)="onEditorBlur()"
+         (focus)="onEditorFocus()"
+         (mouseup)="saveSelection(); updateFormattingState()"
+         (keyup)="saveSelection(); updateFormattingState()"
+         (click)="saveSelection(); updateFormattingState()">
+    </div>
+  </div>
+</div>
+
+

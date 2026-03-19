@@ -1,0 +1,147 @@
+.journal-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+.journal-list,
+.journal-details {
+  background: #fff;
+  border: 1px solid #e1e5ea;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.list-header,
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.list-header h4,
+.details-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.list-body {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.list-filters {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.filter-row .form-label {
+  margin-bottom: 0.15rem;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.list-item {
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background: #f8f9fa;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.list-item:hover {
+  border-color: #cfe2ff;
+  background: #f1f5ff;
+}
+
+.list-item.active {
+  border-color: #0d6efd;
+  background: #e7f1ff;
+}
+
+.list-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #212529;
+}
+
+.list-subtitle {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.table-responsive {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.details-table {
+  thead th {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  thead tr {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  tfoot td {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  tfoot tr {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
+}
+
+.voucher-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #e1e5ea;
+  border-radius: 0.5rem;
+  background: #f8f9fa;
+  margin-bottom: 0.75rem;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-bottom: 0.15rem;
+}
+
+.summary-value {
+  font-weight: 600;
+  color: #212529;
+}

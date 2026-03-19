@@ -1,0 +1,291 @@
+﻿========================================
+EMR DATABASE SCAN RESULTS
+========================================
+
+1. TABLES IN EMR DATABASE:
+----------------------------------------
+  Table: AdmCompDetail - Rows: 14
+  Table: AdmCompGroup - Rows: 2
+  Table: AdmComplement - Rows: 1
+  Table: AdmImage - Rows: 3
+  Table: AdmImageDetail - Rows: 55
+  Table: AdmImageGroup - Rows: 8
+  Table: AdministrationMethod - Rows: 15
+  Table: AdmissionIntervention - Rows: 0
+  Table: AllergyType - Rows: 0
+  Table: Anesthesia - Rows: 3
+  Table: Bilan - Rows: 26
+  Table: BilanDetail - Rows: 196
+  Table: BloodGroup - Rows: 8
+  Table: CardiacHistory - Rows: 2
+  Table: CardiacHistoryDetail - Rows: 23
+  Table: CardIntervention - Rows: 4
+  Table: CardInterventionDetail - Rows: 30
+  Table: CardInterventionPAC - Rows: 14
+  Table: ChiefComplaints - Rows: 122
+  Table: ClinicExam - Rows: 294
+  Table: Confidentiality - Rows: 7
+  Table: ConfigurationTable - Rows: 1
+  Table: ConsultationRequest - Rows: 0
+  Table: Consultations - Rows: 0
+  Table: Coronaire - Rows: 22
+  Table: CoronaireDetail - Rows: 198
+  Table: CoronaireReport - Rows: 0
+  Table: CoronaireReportDetail - Rows: 0
+  Table: CoronaireReportStat - Rows: 0
+  Table: CoronaireStat - Rows: 66
+  Table: CoronaireToTechnique - Rows: 726
+  Table: CourseInHospital - Rows: 2
+  Table: DiagnosticReportDetail - Rows: 0
+  Table: DiagonisticCoronaryDetailReport - Rows: 0
+  Table: Dosage - Rows: 0
+  Table: EMRMedication - Rows: 0
+  Table: ExtubationReportDetail - Rows: 0
+  Table: ExtubFactor - Rows: 9
+  Table: FlatTableDefinition - Rows: 61
+  Table: GlasgowScore - Rows: 15
+  Table: GroupType - Rows: 3
+  Table: HeartDiagnostic - Rows: 3
+  Table: HeartFactorDetails - Rows: 0
+  Table: HeartFactors - Rows: 7
+  Table: ImagingClasses - Rows: 6
+  Table: ImagingDetail - Rows: 0
+  Table: ImagingSummary - Rows: 43
+  Table: ImagingType - Rows: 2
+  Table: InterventionDetail - Rows: 23
+  Table: InterventionReportCECDetail - Rows: 0
+  Table: InterventionReportDetail - Rows: 0
+  Table: InterventionSummary - Rows: 25
+  Table: InterventionType - Rows: 1
+  Table: MedicalFactories - Rows: 9
+  Table: MedicationOnAdmission - Rows: 21
+  Table: MedicationOnAdmissionDetail - Rows: 46
+  Table: MedObservation - Rows: 0
+  Table: MortalityFactor - Rows: 6
+  Table: MotarityReportDetail - Rows: 0
+  Table: Nursing - Rows: 0
+  Table: NursingProcedure - Rows: 0
+  Table: NursingProcedureDefinition - Rows: 0
+  Table: NursingProcedureText - Rows: 0
+  Table: NursingProcedureTreeHelper - Rows: 0
+  Table: ObservationVitalSign - Rows: 0
+  Table: OpenHeartCinetique - Rows: 0
+  Table: OperatingPhysicians - Rows: 0
+  Table: Operation - Rows: 64
+  Table: OperationType - Rows: 10
+  Table: OrderDetailsDisplayHelper - Rows: 0
+  Table: OrderDisplayHelper - Rows: 0
+  Table: OrderRequest - Rows: 51328
+  Table: OrderRequestDetail - Rows: 154254
+  Table: OrderRequestDetailMedicationSettings - Rows: 43
+  Table: OrderRequestDetailMedicationTimeDetails - Rows: 58
+  Table: PatientAdmComp - Rows: 0
+  Table: PatientAdmInaging - Rows: 0
+  Table: PatientAppointment - Rows: 36
+  Table: PatientAppointmentDetails - Rows: 0
+  Table: PatientCardiacHX - Rows: 2
+  Table: PatientCarePlanDetails - Rows: 0
+  Table: PatientCarePlanHeader - Rows: 0
+  Table: PatientCarePlanPhysicianSet - Rows: 0
+  Table: PatientCurrentIllness - Rows: 67
+  Table: PatientDisplayHelper - Rows: 0
+  Table: PatientFamilyHistory - Rows: 0
+  Table: PatientHistoryTextHelper - Rows: 721
+  Table: PatientIllness - Rows: 0
+  Table: PatientInvestigation - Rows: 0
+  Table: PatientMedicationHistory - Rows: 92
+  Table: PatientMedicationSchedule - Rows: 58
+  Table: PatientObservationDetail - Rows: 0
+  Table: PatientObservationHeader - Rows: 0
+  Table: PatientRecomandation - Rows: 4
+  Table: PatientRiskFactor - Rows: 58
+  Table: PatientScale - Rows: 2
+  Table: PatientTreatement - Rows: 2
+  Table: PatientUrgenceFile - Rows: 1
+  Table: PatientVitalSign - Rows: 7817
+  Table: Percentage - Rows: 6
+  Table: PhysicianFavorite - Rows: 0
+  Table: PhysicianRemarkableFactor - Rows: 0
+  Table: PhysicianReports - Rows: 0
+  Table: Pontage - Rows: 7
+  Table: PontageDetail - Rows: 6
+  Table: PontageReport - Rows: 0
+  Table: PrescriptionType - Rows: 2
+  Table: ProgressNotes - Rows: 230
+  Table: Reaction - Rows: 2
+  Table: ReportAnesthesia - Rows: 0
+  Table: ReportCourseInHospital - Rows: 0
+  Table: ReportDischargeSummary - Rows: 0
+  Table: ReportHeader - Rows: 0
+  Table: ReportingTable - Rows: 7
+  Table: ReportStatusOnDischarge - Rows: 0
+  Table: RequestType - Rows: 9
+  Table: Revasc - Rows: 3
+  Table: RevascDetails - Rows: 0
+  Table: RevascToPontage - Rows: 14
+  Table: RiskFactor - Rows: 8
+  Table: RiskFactorDetail - Rows: 14
+  Table: Scale - Rows: 3
+  Table: ScaleDetails - Rows: 10
+  Table: ScaleType - Rows: 2
+  Table: Severity - Rows: 3
+  Table: Status - Rows: 4
+  Table: Status_Label - Rows: 3
+  Table: StatusOnDischarge - Rows: 5
+  Table: StickyNotes - Rows: 3
+  Table: sysdiagrams - Rows: 19
+  Table: TaskPriority - Rows: 3
+  Table: TaskStatus - Rows: 5
+  Table: Technique - Rows: 40
+  Table: TechniqueDetail - Rows: 427
+  Table: TechniqueGroup - Rows: 10
+  Table: TechniqueReportDetail - Rows: 0
+  Table: TransferOfAccountability - Rows: 0
+  Table: UnitOfMeasure - Rows: 85
+  Table: UnitOfMeasureGroup - Rows: 11
+  Table: UrgenceDefinition - Rows: 19
+  Table: UrgentOperation - Rows: 0
+  Table: UrgentOperationDetail - Rows: 0
+  Table: UrgentOpFactory - Rows: 4
+  Table: UrgentOpFactoryDetails - Rows: 6
+  Table: VitalSignDetail - Rows: 51
+  Table: VitalSignSummary - Rows: 14
+  Table: VitalSignType - Rows: 5
+
+2. VIEWS IN EMR DATABASE:
+----------------------------------------
+  View: AdmissionUrgence
+  View: AvailableDenomination
+  View: CareInstruction
+  View: ModeDeTransfert
+  View: OrderDetailList
+  View: Procedure
+  View: SelectedImaging
+  View: SelectedLabTest
+  View: SelectedOperation
+  View: StatusEmotionnel
+  View: UrgenceTransfer
+
+3. STORED PROCEDURES IN EMR DATABASE:
+----------------------------------------
+  Procedure: CanGenerateImaging
+  Procedure: CanGenerateLaboratory
+  Procedure: CanGenerateOperation
+  Procedure: CanGenerateOthers
+  Procedure: CustomTableHTML
+  Procedure: GenerateExamenCliniqueTable
+  Procedure: GenerateMedicationSchedule
+  Procedure: GenerateVitalSignTable
+  Procedure: GetAllergy
+  Procedure: GetAvailableDenomination
+  Procedure: GetBilan
+  Procedure: GetCardiacHistory
+  Procedure: GetCareInstruction
+  Procedure: GetEMRConfigurationSummary
+  Procedure: GetImageTests
+  Procedure: GetLabTests
+  Procedure: GetMedicationSchedule
+  Procedure: GetOperations
+  Procedure: GetOthers
+  Procedure: GetPatientAvailablePills
+  Procedure: GetPatientCardiacHistory
+  Procedure: GetPatientDischargeVitalSignPivot
+  Procedure: GetPatientDistinctMedication
+  Procedure: GetPatientFamilyHistory
+  Procedure: GetPatientHistoryTextHelper
+  Procedure: GetPatientIllnessHistory
+  Procedure: GetPatientImageTestDetails
+  Procedure: GetPatientImageTests
+  Procedure: GetPatientLabTestDetails
+  Procedure: GetPatientLabTests
+  Procedure: GetPatientMedicationDetails
+  Procedure: GetPatientMedicationHistory
+  Procedure: GetPatientMedications
+  Procedure: GetPatientOperationDetails
+  Procedure: GetPatientOperationTests
+  Procedure: GetPatientOthersDetails
+  Procedure: GetPatientOthersTest
+  Procedure: GetPatientRiskFactors
+  Procedure: GetPatientScales
+  Procedure: GetPatientVitalSign
+  Procedure: GetPatientVitalSignPivot
+  Procedure: GetReaction
+  Procedure: GetRiskFactor
+  Procedure: GetScaleType
+  Procedure: GetSeverity
+  Procedure: GetStatusLabel
+  Procedure: GetUnits
+  Procedure: GetVitalSigns
+  Procedure: LoadConsultationRequests
+  Procedure: SaveBilan
+  Procedure: SaveConsultationRequests
+  Procedure: SaveImaging
+  Procedure: SaveImagingRequest
+  Procedure: SaveLaboratory
+  Procedure: SaveLaboratoryRequest
+  Procedure: SaveMedicationRequest
+  Procedure: SaveOperation
+  Procedure: SaveOperationRequest
+  Procedure: SaveOthers
+  Procedure: SaveOthersRequest
+  Procedure: SavePatientHistoryTextHelper
+  Procedure: SavePatientVitalSigns
+  Procedure: sp_alterdiagram
+  Procedure: sp_creatediagram
+  Procedure: sp_dropdiagram
+  Procedure: sp_helpdiagramdefinition
+  Procedure: sp_helpdiagrams
+  Procedure: sp_renamediagram
+  Procedure: sp_upgraddiagrams
+  Procedure: UpdatePill
+
+4. UnitOfMeasure TABLE STRUCTURE:
+----------------------------------------
+  ID - int (Nullable: NO)
+  GroupID - int (Nullable: YES)
+  Code - nvarchar (Nullable: NO)
+  Description - nvarchar (Nullable: NO)
+  ModifiedBy - int (Nullable: YES)
+  ModifiedDate - datetime (Nullable: YES)
+  CreatedBy - int (Nullable: NO)
+  CreatedDate - datetime (Nullable: NO)
+  IsDeleted - bit (Nullable: NO)
+
+5. Sample UnitOfMeasure Data (Top 5):
+----------------------------------------
+  Columns: ID, GroupID, Code, Description, ModifiedBy, ModifiedDate, CreatedBy, CreatedDate, IsDeleted
+  ID=4, GroupID=3, Code=g/l, Description=g/l, ModifiedBy=NULL, ModifiedDate=NULL, CreatedBy=42, CreatedDate=4/18/2014 11:38:53 AM, IsDeleted=False
+  ID=5, GroupID=3, Code=UI/l, Description=UI/l, ModifiedBy=NULL, ModifiedDate=NULL, CreatedBy=42, CreatedDate=4/18/2014 11:38:53 AM, IsDeleted=False
+  ID=6, GroupID=3, Code=mg/l, Description=mg/l, ModifiedBy=NULL, ModifiedDate=NULL, CreatedBy=42, CreatedDate=4/18/2014 11:38:53 AM, IsDeleted=False
+  ID=7, GroupID=4, Code=%, Description=%, ModifiedBy=NULL, ModifiedDate=NULL, CreatedBy=42, CreatedDate=4/18/2014 11:38:53 AM, IsDeleted=False
+  ID=8, GroupID=3, Code=ng/l, Description=ng/l, ModifiedBy=NULL, ModifiedDate=NULL, CreatedBy=42, CreatedDate=4/18/2014 11:38:53 AM, IsDeleted=False
+
+6. OrderRequest TABLE STRUCTURE:
+----------------------------------------
+  Id - int (Nullable: NO)
+  PatientID - int (Nullable: NO)
+  PatientName - nvarchar (Nullable: YES)
+  AdmissionID - int (Nullable: NO)
+  AdmissionNumber - nvarchar (Nullable: YES)
+  RequestedBy - int (Nullable: NO)
+  Comments - nvarchar (Nullable: YES)
+  Status - int (Nullable: NO)
+  CaseNumber - int (Nullable: YES)
+  RequestDate - datetime (Nullable: NO)
+  RequestType - int (Nullable: NO)
+  WarehouseID - int (Nullable: YES)
+  IsGenerated - bit (Nullable: NO)
+  ModifiedBy - int (Nullable: YES)
+  ModifiedDate - datetime (Nullable: YES)
+  CreatedBy - int (Nullable: NO)
+  CreatedDate - datetime (Nullable: NO)
+  IsDeleted - bit (Nullable: NO)
+  ReferenceNb - nvarchar (Nullable: YES)
+  GUID - uniqueidentifier (Nullable: YES)
+  MedicalUnitID - int (Nullable: YES)
+  Counter - int (Nullable: YES)
+  Physician - nvarchar (Nullable: YES)
+
+========================================
+SCAN COMPLETE
+========================================

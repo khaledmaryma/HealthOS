@@ -1,0 +1,14 @@
+/* simple styling for new quick admission screen */
+.quick-admission-v2 {
+  max-width: 800px;
+  margin: 0 auto;
+  fieldset {
+    border: 1px solid #ccc;
+    padding: 1em;
+    margin-bottom: 1em;
+    legend { font-weight: bold; }
+    label { display: block; margin-bottom: 0.5em; }
+    input, select { width: 100%; padding: 0.25em; }
+  }
+  .actions { display: flex; gap: 1em; }
+}

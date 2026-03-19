@@ -1,0 +1,539 @@
+.patient-results-container {
+  height: 100vh;
+  overflow: hidden;
+
+  .row {
+    height: 100%;
+    margin: 0;
+  }
+
+  .left-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f8f9fa;
+
+    .panel-header {
+      flex-shrink: 0;
+    }
+
+    .patient-list {
+      flex: 1;
+      overflow-y: auto;
+      background-color: white;
+
+      .patient-item {
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          filter: brightness(0.95);
+        }
+
+        &.selected {
+          border-left: 4px solid #2196f3;
+          box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .gender-icon-wrapper {
+          flex-shrink: 0;
+          display: flex;
+          align-items: flex-start;
+          padding-top: 2px;
+
+          .gender-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 2.5rem;
+
+            i {
+              transition: all 0.2s ease;
+            }
+          }
+
+          .male-icon {
+            color: #0d6efd;
+
+            i {
+              opacity: 0.85;
+            }
+          }
+
+          .female-icon {
+            color: #dc3545;
+
+            i {
+              opacity: 0.85;
+            }
+          }
+        }
+
+        &:hover .gender-icon-wrapper .gender-icon i {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+
+        .patient-name {
+          color: #1976d2;
+          font-size: 1rem;
+        }
+
+        .patient-details {
+          color: #666;
+
+          i {
+            width: 16px;
+            display: inline-block;
+          }
+        }
+      }
+    }
+
+    .panel-footer {
+      flex-shrink: 0;
+      background-color: #f8f9fa;
+    }
+  }
+
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: auto;
+    background-color: white;
+
+    .panel-content {
+      flex: 1;
+    }
+
+    .patient-header {
+      border-left: 4px solid #2196f3;
+    }
+
+    .results-content {
+      .card {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+        .card-title {
+          color: #1976d2;
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid #e0e0e0;
+        }
+      }
+
+      .table {
+        th {
+          font-weight: 600;
+          color: #495057;
+          white-space: nowrap;
+        }
+
+        td {
+          vertical-align: middle;
+
+          input.form-control-sm {
+            min-width: 80px;
+            font-size: 0.875rem;
+
+            &:focus {
+              box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            }
+
+            &.border-success {
+              border-color: #28a745;
+              background-color: rgba(40, 167, 69, 0.05);
+            }
+
+            &.border-danger {
+              border-color: #dc3545;
+              background-color: rgba(220, 53, 69, 0.05);
+            }
+
+            &[readonly] {
+              background-color: #e9ecef;
+              cursor: not-allowed;
+            }
+          }
+
+          .btn-link {
+            color: #495057;
+            text-decoration: none;
+
+            &:hover {
+              color: #0d6efd;
+            }
+
+            i {
+              font-size: 1.2rem;
+            }
+          }
+        }
+
+        tbody tr {
+          transition: background-color 0.2s ease;
+
+          &:hover:not(.sub-tests-container) {
+            background-color: #f8f9fa;
+          }
+
+          &.table-primary {
+            background-color: rgba(13, 110, 253, 0.1);
+          }
+
+          &.sub-tests-container {
+            background-color: #f8f9fa;
+
+            .sub-tests-wrapper {
+              padding: 0;
+              margin: 0;
+              background-color: #fff;
+              border-left: 3px solid #0d6efd;
+
+              .table {
+                margin: 0;
+
+                thead th {
+                  background-color: #e9ecef;
+                  font-size: 0.85rem;
+                  padding: 0.5rem;
+                }
+
+                tbody td {
+                  font-size: 0.85rem;
+                  padding: 0.5rem;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Text Results Section
+.text-results-section {
+  .text-result-item {
+    // Additional styling for text result items can go here if needed
+  }
+}
+
+// Antibiogram Results Section
+.antibiogram-results-section {
+  .antibiogram-result-item {
+    .antibiogram-content {
+      animation: slideDown 0.3s ease-in-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+      }
+      to {
+        opacity: 1;
+        max-height: 2000px;
+      }
+    }
+
+    .antibiogram-table-wrapper {
+      background-color: #f8f9fa;
+      padding: 1rem;
+      border-radius: 0.375rem;
+      border: 1px solid #e9ecef;
+
+      .alert-sm {
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.5rem;
+      }
+
+      table {
+        background-color: white;
+        margin-bottom: 0;
+
+        thead {
+          th {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #2c3e50;
+            background-color: #e9ecef !important;
+          }
+        }
+
+        tbody {
+          td {
+            vertical-align: middle;
+            font-size: 0.875rem;
+          }
+
+          .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+          }
+        }
+      }
+    }
+
+    .form-label.small {
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    textarea.form-control-sm {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Spinner animation
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .patient-results-container {
+    .left-panel,
+    .right-panel {
+      height: auto;
+      min-height: 50vh;
+    }
+  }
+}
+
+// Custom scrollbar
+.patient-list {
+  scrollbar-width: thin;
+  scrollbar-color: #bbb #f1f1f1;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 4px;
+
+    &:hover {
+      background: #999;
+    }
+  }
+}
+
+// Autocomplete Dropdown Styles
+.autocomplete-dropdown {
+  animation: fadeInDown 0.2s ease-in-out;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+
+    &:hover {
+      background: #aaa;
+    }
+  }
+
+  .autocomplete-item {
+    transition: background-color 0.15s ease;
+    user-select: none;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .bi-check-circle-fill {
+      font-size: 0.875rem;
+    }
+
+    .bi-flask,
+    .bi-list-ul,
+    .bi-folder2 {
+      font-size: 1rem;
+    }
+
+    &:active {
+      background-color: #e0e0e0 !important;
+    }
+
+    // Ensure checkboxes are visible - with stronger specificity
+    &.form-check {
+      display: flex !important;
+      align-items: center;
+      padding-left: 0 !important;
+
+      .form-check-input {
+        opacity: 1 !important;
+        position: relative !important;
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+        pointer-events: auto !important;
+        z-index: 1;
+        width: 1.1rem !important;
+        height: 1.1rem !important;
+        border: 2px solid #6c757d !important;
+        background-color: white !important;
+        flex-shrink: 0;
+
+        &:checked {
+          background-color: #0d6efd !important;
+          border-color: #0d6efd !important;
+        }
+
+        &:hover {
+          border-color: #0d6efd !important;
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Global checkbox styling for this component
+input[type="checkbox"].form-check-input {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  -moz-appearance: checkbox !important;
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+// Selected chips for multi-select filters
+.selected-chips {
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: normal;
+
+    i {
+      font-size: 0.7rem;
+      transition: color 0.15s ease;
+
+      &:hover {
+        color: #dc3545 !important;
+      }
+    }
+  }
+
+  // Different colors for different filter types
+  .bg-warning i:hover {
+    color: #856404 !important;
+  }
+
+  .bg-info i:hover {
+    color: #0c5460 !important;
+  }
+}
+
+// Print Options Dropdown
+.print-dropdown-menu {
+  animation: fadeInDown 0.2s ease-in-out;
+
+  .medical-class-list,
+  .lab-test-list {
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #f1f1f1;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
+
+      &:hover {
+        background: #aaa;
+      }
+    }
+
+    .form-check {
+      padding: 0.25rem 0.5rem;
+      margin-bottom: 0.25rem;
+      border-radius: 0.25rem;
+      transition: background-color 0.15s ease;
+      display: flex !important;
+      align-items: center;
+
+      &:hover {
+        background-color: #f8f9fa;
+      }
+
+      .form-check-input {
+        cursor: pointer;
+        opacity: 1 !important;
+        position: relative !important;
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0.5rem !important;
+        pointer-events: auto !important;
+        width: 1.1rem !important;
+        height: 1.1rem !important;
+        border: 2px solid #6c757d !important;
+        background-color: white !important;
+        flex-shrink: 0;
+
+        &:checked {
+          background-color: #0d6efd !important;
+          border-color: #0d6efd !important;
+        }
+
+        &:hover {
+          border-color: #0d6efd !important;
+        }
+      }
+
+      .form-check-label {
+        cursor: pointer;
+        user-select: none;
+      }
+    }
+  }
+
+  h6 {
+    font-size: 0.9rem;
+    color: #495057;
+  }
+}
+

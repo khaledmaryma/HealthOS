@@ -1,0 +1,161 @@
+<div class="container-fluid department-report-container">
+  <!-- Header -->
+  <div class="page-header p-3 bg-primary text-white d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="mb-0">
+        <i class="bi bi-file-earmark-text me-2"></i>
+        Department Report - Patients by Department
+      </h4>
+      <small class="text-light opacity-75">
+        <i class="bi bi-calendar3 me-1"></i>
+        Current Date Only: {{ getCurrentDateString() }}
+      </small>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-light" (click)="printReport()" type="button" title="Print Report">
+        <i class="bi bi-printer me-2"></i>
+        Print
+      </button>
+      <button class="btn btn-secondary" (click)="goBack()" type="button" title="Back to Patient List">
+        <i class="bi bi-arrow-left me-2"></i>
+        Back
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="text-center p-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Loading report...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage() && !isLoading()" class="alert alert-danger m-3">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorMessage() }}
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="!isLoading() && !errorMessage()" class="report-content p-3">
+    <div *ngFor="let department of reportData()" class="department-section mb-4">
+      <!-- Department Header -->
+      <div class="department-header bg-info text-white p-3 rounded-top">
+        <h5 class="mb-0">
+          <i class="bi bi-building me-2"></i>
+          {{ department.department || 'Unknown Department' }}
+        </h5>
+        <div class="mt-2 small">
+          <span class="badge bg-light text-dark me-2">
+            Patients: {{ department.departmentTotal.patientCount }}
+          </span>
+          <span class="badge bg-light text-dark me-2">
+            Total Invoice: {{ formatCurrency(department.departmentTotal.invoiceTotal) }}
+          </span>
+          <span class="badge bg-light text-dark me-2">
+            Total Receipt LBP: {{ formatCurrency(department.departmentTotal.receiptLBP) }}
+          </span>
+          <span class="badge bg-light text-dark">
+            Total Receipt USD: {{ formatCurrency(department.departmentTotal.receiptUSD) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Patients Table -->
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover table-striped mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th>
+              <th>MRN</th>
+              <th>Patient Name</th>
+              <th>Admission Number</th>
+              <th class="text-end">Invoice Total</th>
+              <th class="text-end">Receipt LBP</th>
+              <th class="text-end">Receipt USD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let patient of department.patients; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>
+                <strong class="text-danger">{{ patient.mrn }}</strong>
+              </td>
+              <td>{{ patient.patientName }}</td>
+              <td>
+                <strong class="text-primary">{{ patient.admissionNumber }}</strong>
+              </td>
+              <td class="text-end">{{ formatCurrency(patient.invoiceTotal) }}</td>
+              <td class="text-end">{{ formatCurrency(patient.receiptLBP) }}</td>
+              <td class="text-end">{{ formatCurrency(patient.receiptUSD) }}</td>
+            </tr>
+            <tr *ngIf="department.patients.length === 0" class="text-center">
+              <td colspan="7" class="text-muted py-3">No patients found in this department</td>
+            </tr>
+          </tbody>
+          <tfoot class="table-secondary fw-bold">
+            <tr>
+              <td colspan="4" class="text-end">Department Totals:</td>
+              <td class="text-end">{{ formatCurrency(department.departmentTotal.invoiceTotal) }}</td>
+              <td class="text-end">{{ formatCurrency(department.departmentTotal.receiptLBP) }}</td>
+              <td class="text-end">{{ formatCurrency(department.departmentTotal.receiptUSD) }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Grand Totals -->
+    <div *ngIf="reportData().length > 0" class="grand-totals-section mt-4 p-3 bg-light rounded">
+      <h5 class="mb-3">Grand Totals</h5>
+      <div class="row">
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h6 class="text-muted">Total Departments</h6>
+              <h3 class="text-primary">{{ getTotalDepartments() }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h6 class="text-muted">Total Patients</h6>
+              <h3 class="text-info">
+                {{ getTotalPatients() }}
+              </h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h6 class="text-muted">Total Invoice Amount</h6>
+              <h3 class="text-success">
+                {{ formatCurrency(getTotalInvoiceAmount()) }}
+              </h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h6 class="text-muted">Total Receipts</h6>
+              <div class="small">
+                <div>LBP: {{ formatCurrency(getTotalReceiptLBP()) }}</div>
+                <div>USD: {{ formatCurrency(getTotalReceiptUSD()) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Data Message -->
+    <div *ngIf="reportData().length === 0" class="text-center text-muted py-5">
+      <i class="bi bi-inbox display-6 d-block mb-2"></i>
+      No data available for the report
+    </div>
+  </div>
+</div>

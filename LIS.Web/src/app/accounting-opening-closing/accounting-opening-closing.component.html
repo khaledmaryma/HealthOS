@@ -1,0 +1,60 @@
+<div class="opening-closing">
+  <h4>Generate Closing / Opening Vouchers</h4>
+  <div class="mb-3 row align-items-end">
+    <div class="col-auto">
+      <label class="form-label">Year</label>
+      <input type="number" class="form-control form-control-sm" [value]="year()" (change)="year.set(+($any($event.target).value))" />
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-sm btn-primary" (click)="generatePreview()" [disabled]="isLoading()">Preview</button>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-sm btn-success" (click)="save()" [disabled]="isLoading() || !preview()">Save</button>
+    </div>
+  </div>
+
+  <div *ngIf="message()" class="alert alert-info">{{ message() }}</div>
+  <div *ngIf="isLoading()" class="text-muted small">Processing...</div>
+
+  <div *ngIf="preview()" class="preview-grids">
+    <h5>Closing Voucher Preview ({{ year() }})</h5>
+    <table class="table table-sm table-bordered">
+      <thead><tr><th>Account</th><th>Description</th><th class="text-end">Debit</th><th class="text-end">Credit</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let r of closingRows()">
+          <td>{{ r['accountCode'] }}</td>
+          <td>{{ r['accountDescription'] }}</td>
+          <td class="text-end">{{ r['debit'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ r['credit'] | number:'1.2-2' }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="fw-semibold">
+          <td colspan="2">Totals</td>
+          <td class="text-end">{{ closingTotals().debit | number:'1.2-2' }}</td>
+          <td class="text-end">{{ closingTotals().credit | number:'1.2-2' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <h5>Opening Voucher Preview ({{ year()+1 }})</h5>
+    <table class="table table-sm table-bordered">
+      <thead><tr><th>Account</th><th>Description</th><th class="text-end">Debit</th><th class="text-end">Credit</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let r of openingRows()">
+          <td>{{ r['accountCode'] }}</td>
+          <td>{{ r['accountDescription'] }}</td>
+          <td class="text-end">{{ r['debit'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ r['credit'] | number:'1.2-2' }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="fw-semibold">
+          <td colspan="2">Totals</td>
+          <td class="text-end">{{ openingTotals().debit | number:'1.2-2' }}</td>
+          <td class="text-end">{{ openingTotals().credit | number:'1.2-2' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>

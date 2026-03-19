@@ -1,0 +1,26 @@
+Changed database context to 'Configuration'.
+COLUMN_NAME DATA_TYPE CHARACTER_MAXIMUM_LENGTH IS_NULLABLE COLUMN_DEFAULT
+----------- --------- ------------------------ ----------- --------------
+ID int NULL NO NULL
+LastPreInvoiceSequenceNumber int NULL NO NULL
+LastInvoiceSequenceNumber int NULL NO ((0))
+LastMedicalRecordNumber int NULL NO NULL
+LastAdvanceNumber int NULL NO ((0))
+LastConsignmentNumber int NULL NO ((0))
+LastCollectionScheduleSequenceNumber int NULL NO ((0))
+LastCreditNoteSequenceNumber int NULL NO ((0))
+IsDeleted bit NULL NO ((0))
+CreatedBy int NULL NO NULL
+ModifiedBy int NULL YES NULL
+CreatedDate datetime NULL NO NULL
+ModifiedDate datetime NULL YES NULL
+LastAgreementnumber int NULL YES NULL
+LastPreInvoiceDetailSequenceNumber int NULL NO NULL
+LastGuardeSequenceNumber int NULL NO ((1))
+
+(16 rows affected)
+ID LastPreInvoiceSequenceNumber LastInvoiceSequenceNumber LastMedicalRecordNumber LastAdvanceNumber LastConsignmentNumber LastCollectionScheduleSequenceNumber LastCreditNoteSequenceNumber IsDeleted CreatedBy ModifiedBy CreatedDate ModifiedDate LastAgreementnumber LastPreInvoiceDetailSequenceNumber LastGuardeSequenceNumber
+-- ---------------------------- ------------------------- ----------------------- ----------------- --------------------- ------------------------------------ ---------------------------- --------- --------- ---------- ----------- ------------ ------------------- ---------------------------------- ------------------------
+1 55824 54495 20586 2271 1 1 1 0 41 NULL 2013-01-01 00:00:00.000 NULL 1 172903 1
+
+(1 rows affected)

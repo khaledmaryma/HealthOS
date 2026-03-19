@@ -1,0 +1,28 @@
+.um-page {
+  padding: 1.5rem;
+}
+
+.um-header {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.um-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.um-toolbar {
+  margin-bottom: 1rem;
+  max-width: 320px;
+}
+
+.um-table {
+  background: #fff;
+  border: 1px solid #e1e5ea;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}

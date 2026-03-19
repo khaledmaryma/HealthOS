@@ -1,0 +1,92 @@
+.gemini-chat-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.page-header {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chat-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.conversation-area {
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+}
+
+.message {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-user {
+  background-color: #0d6efd;
+  color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-left: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.message-assistant {
+  background-color: white;
+  color: #212529;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-right: 2rem;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.message-header {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.message-content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+}
+
+textarea.form-control {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: all 0.3s ease;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+}
+

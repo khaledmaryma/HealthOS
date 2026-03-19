@@ -1,0 +1,116 @@
+Changed database context to 'Admission'.
+COLUMN_NAME DATA_TYPE CHARACTER_MAXIMUM_LENGTH IS_NULLABLE COLUMN_DEFAULT
+----------- --------- ------------------------ ----------- --------------
+ID int NULL NO NULL
+PatientID int NULL NO NULL
+Admission int NULL NO NULL
+MRN int NULL NO ((0))
+AdmissionNumber nvarchar 20 NO NULL
+PatientName nvarchar 152 NO NULL
+ArabicFullName nvarchar 150 YES NULL
+MedicalRecordNumber nvarchar 50 NO NULL
+PatientDOB date NULL NO NULL
+Age int NULL YES NULL
+PatientGender nvarchar 1 NO NULL
+CheckInDate datetime NULL NO NULL
+CheckInClassID smallint NULL NO NULL
+CheckInClassDescription nvarchar 10 NO NULL
+MainInsuranceID int NULL NO NULL
+MainInsuranceDescription nvarchar 50 NO NULL
+MainInsuranceClassID int NULL NO NULL
+MainInsuranceClassDescription nvarchar 10 NO NULL
+ReferralPhysicianID int NULL NO NULL
+ReferralPhysicianName nvarchar 152 NO NULL
+AttendingPhysicianID int NULL YES NULL
+AttendingPhysicianName nvarchar 152 YES NULL
+MedicationUnitID int NULL NO NULL
+MedicationUnitDescription nvarchar -1 NO NULL
+RoomID int NULL YES NULL
+RoomDescription nvarchar 50 YES NULL
+BedID int NULL YES NULL
+BedDescription nvarchar 50 YES NULL
+FloorID int NULL YES NULL
+FloorDescription nvarchar 50 YES NULL
+InsuranceID int NULL NO NULL
+InsuranceDescription nvarchar 50 NO NULL
+GuarantorID int NULL NO NULL
+GuarantorDescription nvarchar 50 NO NULL
+CurrencyID int NULL NO NULL
+CurrencyDescription nvarchar 50 NO NULL
+ClassID smallint NULL NO NULL
+ClassDescription nvarchar 10 NO NULL
+ContextPriceID int NULL NO NULL
+ContextPriceDescription nvarchar 50 NO NULL
+ContextEnumerationID int NULL NO NULL
+ContextEnumerationDescription nvarchar 50 NO NULL
+AdmissionType smallint NULL NO NULL
+AdmissionTypeDescription nvarchar 50 NO NULL
+Contact nvarchar 300 YES NULL
+InsuredName nvarchar 150 YES NULL
+InsuredNameArabic nvarchar 150 YES NULL
+InsuredPhone nvarchar 50 YES NULL
+AuxiliaryInsuranceID int NULL YES NULL
+AuxiliaryInsuranceDescription nvarchar 50 YES NULL
+AuxiliaryInsuranceClassID int NULL YES NULL
+AuxiliaryInsuranceClassDescription nvarchar 10 YES NULL
+IsDischarged bit NULL NO ((0))
+DischargeDate datetime NULL YES NULL
+Comment nvarchar 255 YES NULL
+TotalAdvanceLBP decimal NULL YES NULL
+TotalAdvanceUSD decimal NULL YES NULL
+Diagnostic nvarchar 255 YES NULL
+VisaNumber nvarchar 50 YES NULL
+TotalUncollectedAdvanceLBP decimal NULL YES NULL
+TotalUncollectedAdvanceUSD decimal NULL YES NULL
+InvoiceGrossAmountLBP decimal NULL YES NULL
+InvoiceGrossAmountUSD decimal NULL YES NULL
+MainInvoiceNumber nvarchar 50 YES NULL
+IsPharmDisch bit NULL NO ((0))
+PharmDischDate datetime NULL YES NULL
+Notes image 2147483647 YES NULL
+IsDeleted bit NULL NO ((0))
+CreatedBy int NULL NO ((0))
+ModifiedBy int NULL YES NULL
+CreatedDate datetime NULL NO (getdate())
+ModifiedDate datetime NULL YES NULL
+AdmissionSite int NULL YES NULL
+IsNersingDischarge bit NULL NO ((0))
+NersingDischargeComment nvarchar -1 YES NULL
+OldBedID int NULL YES NULL
+Group int NULL YES NULL
+PatientShortName nvarchar 250 YES NULL
+PatientFormattedName nvarchar 250 YES NULL
+Status tinyint NULL YES NULL
+IsRecheckIn bit NULL NO ((0))
+HasInvoices bit NULL YES NULL
+RequireRegenerate bit NULL YES NULL
+DiagnosticGroup1 nvarchar 250 YES NULL
+DiagnosticGroup2 nvarchar 250 YES NULL
+DiagnosticGroup3 nvarchar 250 YES NULL
+OldComment nvarchar -1 YES NULL
+
+(87 rows affected)
+ID PatientID Admission MRN AdmissionNumber PatientName ArabicFullName MedicalRecordNumber PatientDOB Age PatientGender CheckInDate CheckInClassID CheckInClassDescription MainInsuranceID MainInsuranceDescription MainInsuranceClassID MainInsuranceClassDescription ReferralPhysicianID ReferralPhysicianName AttendingPhysicianID AttendingPhysicianName MedicationUnitID MedicationUnitDescription RoomID RoomDescription BedID BedDescription FloorID FloorDescription InsuranceID InsuranceDescription GuarantorID GuarantorDescription CurrencyID CurrencyDescription ClassID ClassDescription ContextPriceID ContextPriceDescription ContextEnumerationID ContextEnumerationDescription AdmissionType AdmissionTypeDescription Contact InsuredName InsuredNameArabic InsuredPhone AuxiliaryInsuranceID AuxiliaryInsuranceDescription AuxiliaryInsuranceClassID AuxiliaryInsuranceClassDescription IsDischarged DischargeDate Comment TotalAdvanceLBP TotalAdvanceUSD Diagnostic VisaNumber TotalUncollectedAdvanceLBP TotalUncollectedAdvanceUSD InvoiceGrossAmountLBP InvoiceGrossAmountUSD MainInvoiceNumber IsPharmDisch PharmDischDate Notes IsDeleted CreatedBy ModifiedBy CreatedDate ModifiedDate AdmissionSite IsNersingDischarge NersingDischargeComment OldBedID Group PatientShortName PatientFormattedName Status IsRecheckIn HasInvoices RequireRegenerate DiagnosticGroup1 DiagnosticGroup2 DiagnosticGroup3 OldComment
+-- --------- --------- --- --------------- ----------- -------------- ------------------- ---------- --- ------------- ----------- -------------- ----------------------- --------------- ------------------------ -------------------- ----------------------------- ------------------- --------------------- -------------------- ---------------------- ---------------- ------------------------- ------ --------------- ----- -------------- ------- ---------------- ----------- -------------------- ----------- -------------------- ---------- ------------------- ------- ---------------- -------------- ----------------------- -------------------- ----------------------------- ------------- ------------------------ ------- ----------- ----------------- ------------ -------------------- ----------------------------- ------------------------- ---------------------------------- ------------ ------------- ------- --------------- --------------- ---------- ---------- -------------------------- -------------------------- --------------------- --------------------- ----------------- ------------ -------------- ----- --------- --------- ---------- ----------- ------------ ------------- ------------------ ----------------------- -------- ----- ---------------- -------------------- ------ ----------- ----------- ----------------- ---------------- ---------------- ---------------- ----------
+99034 34837 100254 16976 03.01292.08.24 Bachar khaled KARMA ???? ???? ???? 16976 2001-01-01 24 M 2024-08-24 15:22:45.000 5 Out 5 Private 4 III 1193 ABED EL RAHMAN  SHARKAWI 1193 ABED EL RAHMAN  SHARKAWI 113  Clinics NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 14:56:02.823 NULL NULL NULL NULL NULL NULL NULL .00 20.000 54494 0 NULL NULL 0 338 338 2024-08-24 14:56:02.823 2024-08-24 14:56:04.813 3 0 NULL NULL 22 Bachar KARMA Bachar K. KARMA NULL 0 1 0 NULL NULL NULL NULL
+99033 27029 100253 9175 03.01291.08.24 Jalal ayoub AYOUB ???? ???? ???? 9175 1999-01-01 26 M 2024-08-24 15:00:45.000 5 Out 5 Private 4 III 881 Dr Firass Hallak NULL NULL 0  Clinics, URGENCES NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 14:25:34.413 NULL NULL NULL NULL NULL NULL NULL .00 20.000 54493 0 NULL NULL 0 338 338 2024-08-24 14:25:34.413 2024-08-24 14:25:36.280 3 0 NULL NULL 22 Jalal AYOUB Jalal A. AYOUB NULL 0 1 0 NULL NULL NULL NULL
+99032 35297 100252 17436 03.01290.08.24 Ali achraf KHALED ??? ???? ???? 17436 2023-01-01 2 M 2024-08-24 14:59:22.000 5 Out 5 Private 4 III 883 Lab Externe NULL NULL 68  Laboratory NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 14:23:35.823 NULL NULL NULL NULL NULL NULL NULL .00 5.000 54492 0 NULL NULL 0 343 343 2024-08-24 14:23:35.823 2024-08-24 14:23:37.820 3 0 NULL NULL 22 Ali KHALED Ali A. KHALED NULL 0 1 0 NULL NULL NULL NULL
+99031 38455 100251 20586 03.01289.08.24 Aline achraf KHALED ???? ???? ???? 20586 2022-01-01 3 F 2024-08-24 14:56:40.000 5 Out 5 Private 4 III 883 Lab Externe NULL NULL 68  Laboratory NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 14:22:08.450 NULL NULL NULL NULL NULL NULL NULL .00 5.000 54491 0 NULL NULL 0 343 343 2024-08-24 14:22:08.450 2024-08-24 14:22:10.423 3 0 NULL NULL 22 Aline KHALED Aline A. KHALED NULL 0 1 0 NULL NULL NULL NULL
+99030 38453 100250 20584 03.01288.08.24 Farah abdel rahman SAGHIR ??? ??? ?????? ???? 20584 1985-01-01 40 F 2024-08-24 14:18:18.000 5 Out 5 Private 4 III 883 Lab Externe NULL NULL 68  Laboratory NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 13:42:29.257 NULL NULL NULL NULL NULL NULL NULL .00 15.000 54490 0 NULL NULL 0 343 343 2024-08-24 13:42:29.257 2024-08-24 13:46:28.773 3 0 NULL NULL 22 Farah SAGHIR Farah A. SAGHIR NULL 0 1 0 NULL NULL NULL NULL
+99029 29726 100249 11869 03.01287.08.24 Razan khaled GHANEM ???? ???? ???? 11869 2006-06-24 19 F 2024-08-24 14:17:33.000 5 Out 5 Private 4 III 881 Dr Firass Hallak 881 Dr Firass Hallak 113  Clinics NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 0 NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL 0 NULL NULL 0 338 NULL 2024-08-24 13:42:00.977 NULL 3 0 NULL NULL 22 Razan GHANEM Razan K. GHANEM NULL 0 0 0 NULL NULL NULL NULL
+99028 38454 100248 20585 03.01286.08.24 Radwan mohammad BAKIR ????? ???? ????? 20585 2022-01-01 3 M 2024-08-24 14:15:59.000 5 Out 5 Private 4 III 883 Lab Externe NULL NULL 68  Laboratory NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 13:40:46.023 NULL NULL NULL NULL NULL NULL NULL .00 5.000 54489 0 NULL NULL 0 343 343 2024-08-24 13:40:46.023 2024-08-24 13:40:48.000 3 0 NULL NULL 22 Radwan BAKIR Radwan M. BAKIR NULL 0 1 0 NULL NULL NULL NULL
+99027 38453 100247 20584 03.01285.08.24 Farah abdel rahman SAGHIR ??? ??? ?????? ???? 20584 1985-01-01 40 F 2024-08-24 14:13:03.000 5 Out 5 Private 4 III 881 Dr Firass Hallak 881 Dr Firass Hallak 0  Clinics, URGENCES NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 15:22:12.103 NULL NULL NULL NULL NULL NULL NULL .00 90.000 54495 0 NULL NULL 0 338 338 2024-08-24 13:37:37.780 2024-08-24 15:22:14.730 3 0 NULL NULL 22 Farah SAGHIR Farah A. SAGHIR NULL 0 1 0 NULL NULL NULL NULL
+99026 25617 100246 7781 03.01284.08.24 Nida' abd al basset FREIK ???? ??? ?????? ???? 7781 1998-07-12 27 F 2024-08-24 15:03:36.000 5 Out 5 Private 4 III 926 Radio Externe NULL NULL 77  Radiology NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 13:25:50.153 NULL NULL NULL NULL NULL NULL NULL .00 8.000 54488 0 NULL NULL 0 324 324 2024-08-24 13:25:50.153 2024-08-24 13:25:52.093 3 0 NULL NULL 22 Nida' FREIK Nida' A. FREIK NULL 0 1 0 NULL NULL NULL NULL
+99025 26172 100245 8321 03.01283.08.24 Bassam mostafa TOHME ???? ????? ???? 8321 1972-01-01 53 M 2024-08-24 15:00:12.000 5 Out 5 Private 4 III 882 Abdel Monem SAMAD NULL NULL 77  Radiology NULL NULL NULL NULL NULL NULL 5 Private 9 Private 2 $$ 5 Out 4 Private 1 CNSS 3 OutPatient(Cash)  NULL NULL NULL 5 Private 4 III 1 2024-08-24 13:22:01.020 NULL NULL NULL NULL NULL NULL NULL .00 10.000 54487 0 NULL NULL 0 324 324 2024-08-24 13:22:01.020 2024-08-24 13:22:02.920 3 0 NULL NULL 22 Bassam TOHME Bassam M. TOHME NULL 0 1 0 NULL NULL NULL NULL
+
+(10 rows affected)
+TotalCount
+----------
+59954
+
+(1 rows affected)
+IndexName IndexType ColumnName
+--------- --------- ----------
+PK_ResidentPatient CLUSTERED ID
+
+(1 rows affected)

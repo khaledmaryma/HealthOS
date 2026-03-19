@@ -1,0 +1,129 @@
+<div class="container py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="m-0">Accounting Dashboard</h2>
+    <button class="btn btn-outline-secondary" (click)="toggleView()">
+      {{ isGridView ? 'Show Charts' : 'Show Grids' }}
+    </button>
+  </div>
+
+  <div *ngIf="!isGridView" class="charts-grid">
+    <div class="chart-card">
+      <div class="subchart">
+        <div class="subchart-title">USD</div>
+        <canvas #chartCanvas></canvas>
+      </div>
+      <div class="subchart mt-3">
+        <div class="subchart-title">LBP</div>
+        <canvas #chartCanvas></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="subchart">
+        <div class="subchart-title">USD</div>
+        <canvas #chartCanvas></canvas>
+      </div>
+      <div class="subchart mt-3">
+        <div class="subchart-title">LBP</div>
+        <canvas #chartCanvas></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <canvas #chartCanvas></canvas>
+    </div>
+    <div class="chart-card">
+      <canvas #chartCanvas></canvas>
+    </div>
+    <div class="chart-card">
+      <canvas #chartCanvas></canvas>
+    </div>
+    <div class="chart-card">
+      <canvas #chartCanvas></canvas>
+    </div>
+  </div>
+
+  <div *ngIf="isGridView" class="grids">
+    <div class="grid-card mb-3">
+      <h5 class="mb-2">Daily Cash by Department</h5>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle" *ngIf="dailyCashRows.length > 0; else emptyDailyCash">
+          <thead>
+            <tr>
+              <th>Department</th>
+              <th class="text-end">LBP</th>
+              <th class="text-end">USD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of dailyCashRows">
+              <td>{{ r.department }}</td>
+              <td class="text-end">{{ r.lbp | number:'1.0-0' }}</td>
+              <td class="text-end">{{ r.usd | number:'1.0-2' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th>Total</th>
+              <th class="text-end">{{ totalLBP | number:'1.0-0' }}</th>
+              <th class="text-end">{{ totalUSD | number:'1.0-2' }}</th>
+            </tr>
+          </tfoot>
+        </table>
+        <ng-template #emptyDailyCash>
+          <div class="text-muted small py-2">No rows returned. If this persists, verify API is reachable and contains data for today.</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="grid-card placeholder mb-3">
+      <h5 class="mb-2">Current Month Income by Account</h5>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped align-middle" *ngIf="incomeRows.length > 0; else emptyIncome">
+          <thead>
+            <tr>
+              <th>Account Code</th>
+              <th>Account Description</th>
+              <th class="text-end">LBP</th>
+              <th class="text-end">USD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of incomeRows">
+              <td>{{ r.accountCode }}</td>
+              <td>{{ r.accountDescription }}</td>
+              <td class="text-end">{{ r.lbp | number:'1.0-0' }}</td>
+              <td class="text-end">{{ r.usd | number:'1.0-2' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="2">Total</th>
+              <th class="text-end">{{ incomeTotalLBP | number:'1.0-0' }}</th>
+              <th class="text-end">{{ incomeTotalUSD | number:'1.0-2' }}</th>
+            </tr>
+          </tfoot>
+        </table>
+        <ng-template #emptyIncome>
+          <div class="text-muted small py-2">No rows returned for current month.</div>
+        </ng-template>
+      </div>
+    </div>
+    <div class="grid-card placeholder mb-3">
+      <h5 class="mb-2">Placeholder Grid 3</h5>
+      <div class="text-muted small">No data wired yet.</div>
+    </div>
+    <div class="grid-card placeholder mb-3">
+      <h5 class="mb-2">Placeholder Grid 4</h5>
+      <div class="text-muted small">No data wired yet.</div>
+    </div>
+    <div class="grid-card placeholder mb-3">
+      <h5 class="mb-2">Placeholder Grid 5</h5>
+      <div class="text-muted small">No data wired yet.</div>
+    </div>
+    <div class="grid-card placeholder mb-3">
+      <h5 class="mb-2">Placeholder Grid 6</h5>
+      <div class="text-muted small">No data wired yet.</div>
+    </div>
+  </div>
+</div>
+
+

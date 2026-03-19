@@ -1,0 +1,309 @@
+Changed database context to 'HospitalDefinition'.
+COLUMN_NAME DATA_TYPE CHARACTER_MAXIMUM_LENGTH IS_NULLABLE COLUMN_DEFAULT
+----------- --------- ------------------------ ----------- --------------
+ID int NULL NO NULL
+MedicalRecordNumber nvarchar 50 YES NULL
+FirstName nvarchar 50 NO NULL
+LastName nvarchar 50 NO NULL
+MiddleName nvarchar 50 YES NULL
+MaidenName nvarchar 50 YES NULL
+DOB datetime NULL YES NULL
+Gender nvarchar 1 NO NULL
+MaritalStatus smallint NULL YES NULL
+Profession int NULL YES NULL
+Nationality int NULL YES NULL
+IDNumber nvarchar 50 YES NULL
+Employee int NULL YES NULL
+HasImage bit NULL NO ((0))
+RegisterNumber nvarchar 10 YES NULL
+RegisterPlace nvarchar 50 YES NULL
+RegisterPlaceA nvarchar 50 YES NULL
+Phone nvarchar 50 YES NULL
+Address nvarchar -1 YES NULL
+BloodGroupID int NULL YES NULL
+ConfidentialityID int NULL YES NULL
+IsDeleted bit NULL NO ((0))
+CreatedBy int NULL NO NULL
+ModifiedBy int NULL YES NULL
+CreatedDate datetime NULL NO (getdate())
+ModifiedDate datetime NULL YES NULL
+Image image 2147483647 YES NULL
+ArabicFullName nvarchar 152 YES NULL
+MiddleNameA nvarchar 50 YES NULL
+OldMedicalRecordNumber nvarchar 50 YES NULL
+FullName nvarchar 152 YES NULL
+Name nvarchar 101 NO NULL
+GUID uniqueidentifier NULL YES NULL
+ContactName nvarchar 152 YES NULL
+ContactPhone nvarchar 60 YES NULL
+ContactType int NULL YES NULL
+
+(36 rows affected)
+ID MedicalRecordNumber FirstName LastName MiddleName MaidenName DOB Gender MaritalStatus Profession Nationality IDNumber Employee HasImage RegisterNumber RegisterPlace RegisterPlaceA Phone Address BloodGroupID ConfidentialityID IsDeleted CreatedBy ModifiedBy CreatedDate ModifiedDate Image ArabicFullName MiddleNameA OldMedicalRecordNumber FullName Name GUID ContactName ContactPhone ContactType
+-- ------------------- --------- -------- ---------- ---------- --- ------ ------------- ---------- ----------- -------- -------- -------- -------------- ------------- -------------- ----- ------- ------------ ----------------- --------- --------- ---------- ----------- ------------ ----- -------------- ----------- ---------------------- -------- ---- ---- ----------- ------------ -----------
+38455 20586 Aline KHALED achraf  2022-01-01 14:56:40.000 F NULL NULL 1 NULL NULL 0 NULL NULL NULL NULL NULL NULL NULL 0 343 NULL 2024-08-24 14:22:08.450 NULL NULL ???? ???? ???? ????? NULL Aline achraf KHALED Aline KHALED NULL NULL NULL NULL
+38454 20585 Radwan BAKIR mohammad  2022-01-01 14:15:59.000 M NULL NULL 1 NULL NULL 0 NULL NULL NULL 81/ 243 229 NULL NULL NULL 0 343 NULL 2024-08-24 13:40:46.023 NULL NULL ????? ???? ????? ????? NULL Radwan mohammad BAKIR Radwan BAKIR NULL NULL NULL NULL
+38453 20584 Farah SAGHIR abdel rahman  1985-01-01 14:13:03.000 F NULL NULL 1 NULL NULL 0 NULL NULL NULL 03/733704 NULL NULL NULL 0 338 NULL 2024-08-24 13:37:37.780 NULL NULL ??? ??? ?????? ???? ??? NULL Farah abdel rahman SAGHIR Farah SAGHIR NULL NULL NULL NULL
+38452 20583 Loutfiyeh YASSINE hasan  1975-01-01 14:56:52.000 F NULL NULL 1 NULL NULL 0 NULL NULL NULL 03/112970 NULL NULL NULL 0 324 NULL 2024-08-24 13:19:15.440 NULL NULL ????? ??? ????? NULL NULL Loutfiyeh hasan YASSINE Loutfiyeh YASSINE NULL NULL NULL NULL
+38451 20582 Rahaf AL HAMED ramzi  1997-01-01 11:01:12.000 F NULL NULL 1 NULL NULL 0 NULL NULL NULL 70/ 447 873 NULL NULL NULL 0 343 NULL 2024-08-24 10:28:44.693 NULL NULL ??? ???? ???? NULL NULL Rahaf ramzi AL HAMED Rahaf AL HAMED NULL NULL NULL NULL
+
+(5 rows affected)
+Changed database context to 'Admission'.
+COLUMN_NAME DATA_TYPE CHARACTER_MAXIMUM_LENGTH IS_NULLABLE COLUMN_DEFAULT
+----------- --------- ------------------------ ----------- --------------
+ID int NULL NO NULL
+Number nvarchar 20 YES NULL
+AdmissionSite int NULL NO NULL
+ExaminedBy int NULL YES NULL
+ReferralPhysician int NULL NO NULL
+AttendingPhysician int NULL YES NULL
+IsUnconscious bit NULL NO ((0))
+Companion nvarchar 50 YES NULL
+Period int NULL YES NULL
+MainInsurance int NULL NO NULL
+MainInsuranceClass smallint NULL YES NULL
+Insured smallint NULL NO NULL
+InsuredNumber nvarchar 50 YES NULL
+AuxiliaryInsurance int NULL NO NULL
+AuxiliaryInsuranceClass smallint NULL YES NULL
+CheckInClass smallint NULL YES NULL
+CheckInDate datetime NULL NO NULL
+CheckOutDate datetime NULL YES NULL
+Patient int NULL NO NULL
+PrimaryDiagnostic nvarchar -1 YES NULL
+Type smallint NULL NO NULL
+Groupe int NULL YES NULL
+IsWorkAccident bit NULL NO ((0))
+WorkAccidentDate datetime NULL YES NULL
+WorkAccidentBackToWorkDate datetime NULL YES NULL
+WorkAccidentComment nvarchar 255 YES NULL
+Comment nvarchar 255 YES NULL
+InsuredName nvarchar 150 YES NULL
+InsuredNameArabic nvarchar 150 YES NULL
+InsuredAddress nvarchar 255 YES NULL
+InsuredPhone nvarchar 50 YES NULL
+ExpectedResidenceDaysCount smallint NULL YES NULL
+ApprovalType smallint NULL YES NULL
+CompanyNumber nvarchar 50 YES NULL
+IsExtended bit NULL NO ((0))
+MilitaryNumber nvarchar 75 YES NULL
+MilitaryUnit nvarchar 75 YES NULL
+MilitaryGrade int NULL YES NULL
+OldNumber nvarchar 20 YES NULL
+Group int NULL YES NULL
+TempID int NULL YES NULL
+TransferTo smallint NULL YES NULL
+PatientStatus bit NULL YES NULL
+IsDeleted bit NULL NO ((0))
+CreatedBy int NULL NO NULL
+ModifiedBy int NULL YES NULL
+CreatedDate datetime NULL NO (getdate())
+ModifiedDate datetime NULL YES NULL
+Height decimal NULL YES NULL
+Weight decimal NULL YES NULL
+RequireRegenerate bit NULL NO ((0))
+Status tinyint NULL YES NULL
+IsInvoicesDirty bit NULL NO ((0))
+
+(53 rows affected)
+ID Number AdmissionSite ExaminedBy ReferralPhysician AttendingPhysician IsUnconscious Companion Period MainInsurance MainInsuranceClass Insured InsuredNumber AuxiliaryInsurance AuxiliaryInsuranceClass CheckInClass CheckInDate CheckOutDate Patient PrimaryDiagnostic Type Groupe IsWorkAccident WorkAccidentDate WorkAccidentBackToWorkDate WorkAccidentComment Comment InsuredName InsuredNameArabic InsuredAddress InsuredPhone ExpectedResidenceDaysCount ApprovalType CompanyNumber IsExtended MilitaryNumber MilitaryUnit MilitaryGrade OldNumber Group TempID TransferTo PatientStatus IsDeleted CreatedBy ModifiedBy CreatedDate ModifiedDate Height Weight RequireRegenerate Status IsInvoicesDirty
+-- ------ ------------- ---------- ----------------- ------------------ ------------- --------- ------ ------------- ------------------ ------- ------------- ------------------ ----------------------- ------------ ----------- ------------ ------- ----------------- ---- ------ -------------- ---------------- -------------------------- ------------------- ------- ----------- ----------------- -------------- ------------ -------------------------- ------------ ------------- ---------- -------------- ------------ ------------- --------- ----- ------ ---------- ------------- --------- --------- ---------- ----------- ------------ ------ ------ ----------------- ------ ---------------
+100254 03.01292.08.24 3 NULL 1193 1193 0 NULL NULL 5 4 0 NULL 5 4 5 2024-08-24 15:22:45.000 2024-08-24 14:56:02.823 34837  3 NULL 0 NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL 0 NULL NULL NULL NULL 22 NULL NULL NULL 0 338 338 2024-08-24 14:56:02.823 2024-08-24 14:56:04.813 NULL NULL 0 NULL 0
+100253 03.01291.08.24 3 NULL 881 NULL 0 NULL NULL 5 4 0 NULL 5 4 5 2024-08-24 15:00:45.000 2024-08-24 14:25:34.413 27029  3 NULL 0 NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL 0 NULL NULL NULL NULL 22 NULL NULL NULL 0 338 338 2024-08-24 14:25:34.413 2024-08-24 14:25:36.280 NULL NULL 0 NULL 0
+100252 03.01290.08.24 3 NULL 883 NULL 0 NULL NULL 5 4 0 NULL 5 4 5 2024-08-24 14:59:22.000 2024-08-24 14:23:35.823 35297  3 NULL 0 NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL 0 NULL NULL NULL NULL 22 NULL NULL NULL 0 343 343 2024-08-24 14:23:35.823 2024-08-24 14:23:37.820 NULL NULL 0 NULL 0
+100251 03.01289.08.24 3 NULL 883 NULL 0 NULL NULL 5 4 0 NULL 5 4 5 2024-08-24 14:56:40.000 2024-08-24 14:22:08.450 38455  3 NULL 0 NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL 0 NULL NULL NULL NULL 22 NULL NULL NULL 0 343 343 2024-08-24 14:22:08.450 2024-08-24 14:22:10.423 NULL NULL 0 NULL 0
+100250 03.01288.08.24 3 NULL 883 NULL 0 NULL NULL 5 4 0 NULL 5 4 5 2024-08-24 14:18:18.000 2024-08-24 13:42:29.257 38453  3 NULL 0 NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL NULL 0 NULL NULL NULL NULL 22 NULL NULL NULL 0 343 343 2024-08-24 13:42:29.257 2024-08-24 13:42:31.290 NULL NULL 0 NULL 0
+
+(5 rows affected)
+Changed database context to 'Billing'.
+COLUMN_NAME DATA_TYPE CHARACTER_MAXIMUM_LENGTH IS_NULLABLE COLUMN_DEFAULT
+----------- --------- ------------------------ ----------- --------------
+ID int NULL NO NULL
+SequenceNumber int NULL NO NULL
+Type nvarchar 75 NO NULL
+CounterTypeID int NULL NO NULL
+Counter nvarchar 50 NO NULL
+Date datetime NULL NO NULL
+Admission int NULL NO NULL
+Comment nvarchar 255 YES NULL
+HospitalAmount decimal NULL NO ((0))
+PhysicianAmount decimal NULL NO ((0))
+MedicamentAmount decimal NULL NO ((0))
+Discount decimal NULL NO ((0))
+DeniedAmount decimal NULL NO ((0))
+LumpSum decimal NULL NO ((0))
+AccountID int NULL NO NULL
+AccountDescription nvarchar 75 NO NULL
+ComplementaryAccountID int NULL YES NULL
+ComplementaryAccountDescription nvarchar 75 YES NULL
+CurrencyID int NULL NO NULL
+Currency nvarchar 75 NO NULL
+ExchangeRate decimal NULL NO ((0))
+CheckInClassID int NULL NO NULL
+CheckInClass nvarchar 75 NO NULL
+CoverageClassID int NULL NO NULL
+CoverageClass nvarchar 50 NO NULL
+CoverageRate decimal NULL NO NULL
+ReferralPhysicianID int NULL NO NULL
+ReferralPhysician nvarchar 150 NO NULL
+AttendingPhysicianID int NULL YES NULL
+AttendingPhysician nvarchar 150 YES NULL
+Reference nvarchar 25 YES NULL
+MainInvoice int NULL YES NULL
+OldMainInvoice int NULL YES NULL
+Net decimal NULL NO ((0))
+Gross decimal NULL NO ((0))
+NetGross decimal NULL NO ((0))
+Complementary decimal NULL NO ((0))
+ComplementaryOtherCurrency decimal NULL NO ((0))
+ComplementaryDifferenceOtherCurrency decimal NULL NO ((0))
+MRN nvarchar 50 NO NULL
+PatientName nvarchar 152 NO NULL
+AdmissionNumber nvarchar 20 NO NULL
+AdmissionDate datetime NULL NO NULL
+DepartmentID int NULL YES NULL
+Department nvarchar -1 YES NULL
+DischargeDate datetime NULL YES NULL
+ContextPriceID int NULL NO NULL
+ContextPrice nvarchar 50 NO NULL
+ReceiptNumber nvarchar 50 YES NULL
+ReceiptAmount decimal NULL NO ((0))
+ReceiptDate datetime NULL YES NULL
+RoundedAmount decimal NULL NO ((0))
+Insurance int NULL NO NULL
+AdmissionInsuranceCoverage int NULL YES NULL
+IsDRG bit NULL NO ((0))
+CollectionScheduleID int NULL YES NULL
+CollectionScheduleNumber int NULL YES NULL
+CollectionScheduleDate datetime NULL YES NULL
+ReceivedLBP decimal NULL NO ((0))
+ReceivedUSD decimal NULL NO ((0))
+Difference decimal NULL NO ((0))
+ReceivingDate datetime NULL YES NULL
+VoucherNumber int NULL YES NULL
+SplitedInvoice int NULL NO ((0))
+PrimaryDischargeDiagnostic nvarchar 255 YES NULL
+SecondaryDischargeDiagnostic nvarchar 255 YES NULL
+RequireRegenerate bit NULL NO ((0))
+LockedBy int NULL YES NULL
+LockedByName nvarchar 152 YES NULL
+LockedDate datetime NULL YES NULL
+AlternateInvoiceID int NULL YES NULL
+GlobalDiscount decimal NULL NO ((0))
+DifferenceAdjust decimal NULL NO ((0))
+ModifiedDate datetime NULL YES NULL
+IsDeleted bit NULL NO ((0))
+CreatedBy int NULL NO NULL
+ModifiedBy int NULL YES NULL
+CreatedDate datetime NULL NO NULL
+Group int NULL YES NULL
+AgreementNumber int NULL YES NULL
+ComplementaryDifferenceCalculationState int NULL YES ((0))
+IsReversed bit NULL YES ((0))
+CreditNoteNumber int NULL YES NULL
+CreditNoteDate datetime NULL YES NULL
+CreditNotePaidAmount decimal NULL YES NULL
+CreditNoteDiscount decimal NULL YES NULL
+EmployeeAccount nvarchar 25 YES NULL
+IsEmployee bit NULL YES NULL
+Status tinyint NULL YES NULL
+ContextEnumerationID int NULL YES NULL
+IsDirty bit NULL NO ((0))
+IsFromScratch bit NULL NO ((0))
+AgreementCreditAmount decimal NULL NO ((0))
+IsSelected bit NULL NO ((0))
+CreditNoteAssignedAmount decimal NULL NO ((0))
+CreditNoteVoucherNumber int NULL YES NULL
+PrepaymentAmount decimal NULL YES NULL
+PrepaymentDate datetime NULL YES NULL
+PrepaymentNumber int NULL YES NULL
+DiagnosticGroup1 nvarchar 250 YES NULL
+DiagnosticGroup2 nvarchar 250 YES NULL
+DiagnosticGroup3 nvarchar 250 YES NULL
+DiagnosticGroupID1 int NULL YES NULL
+DiagnosticGroupID2 int NULL YES NULL
+DiagnosticGroupID3 int NULL YES NULL
+
+(105 rows affected)
+ID SequenceNumber Type CounterTypeID Counter Date Admission Comment HospitalAmount PhysicianAmount MedicamentAmount Discount DeniedAmount LumpSum AccountID AccountDescription ComplementaryAccountID ComplementaryAccountDescription CurrencyID Currency ExchangeRate CheckInClassID CheckInClass CoverageClassID CoverageClass CoverageRate ReferralPhysicianID ReferralPhysician AttendingPhysicianID AttendingPhysician Reference MainInvoice OldMainInvoice Net Gross NetGross Complementary ComplementaryOtherCurrency ComplementaryDifferenceOtherCurrency MRN PatientName AdmissionNumber AdmissionDate DepartmentID Department DischargeDate ContextPriceID ContextPrice ReceiptNumber ReceiptAmount ReceiptDate RoundedAmount Insurance AdmissionInsuranceCoverage IsDRG CollectionScheduleID CollectionScheduleNumber CollectionScheduleDate ReceivedLBP ReceivedUSD Difference ReceivingDate VoucherNumber SplitedInvoice PrimaryDischargeDiagnostic SecondaryDischargeDiagnostic RequireRegenerate LockedBy LockedByName LockedDate AlternateInvoiceID GlobalDiscount DifferenceAdjust ModifiedDate IsDeleted CreatedBy ModifiedBy CreatedDate Group AgreementNumber ComplementaryDifferenceCalculationState IsReversed CreditNoteNumber CreditNoteDate CreditNotePaidAmount CreditNoteDiscount EmployeeAccount IsEmployee Status ContextEnumerationID IsDirty IsFromScratch AgreementCreditAmount IsSelected CreditNoteAssignedAmount CreditNoteVoucherNumber PrepaymentAmount PrepaymentDate PrepaymentNumber DiagnosticGroup1 DiagnosticGroup2 DiagnosticGroup3 DiagnosticGroupID1 DiagnosticGroupID2 DiagnosticGroupID3
+-- -------------- ---- ------------- ------- ---- --------- ------- -------------- --------------- ---------------- -------- ------------ ------- --------- ------------------ ---------------------- ------------------------------- ---------- -------- ------------ -------------- ------------ --------------- ------------- ------------ ------------------- ----------------- -------------------- ------------------ --------- ----------- -------------- --- ----- -------- ------------- -------------------------- ------------------------------------ --- ----------- --------------- ------------- ------------ ---------- ------------- -------------- ------------ ------------- ------------- ----------- ------------- --------- -------------------------- ----- -------------------- ------------------------ ---------------------- ----------- ----------- ---------- ------------- ------------- -------------- -------------------------- ---------------------------- ----------------- -------- ------------ ---------- ------------------ -------------- ---------------- ------------ --------- --------- ---------- ----------- ----- --------------- --------------------------------------- ---------- ---------------- -------------- -------------------- ------------------ --------------- ---------- ------ -------------------- ------- ------------- --------------------- ---------- ------------------------ ----------------------- ---------------- -------------- ---------------- ---------------- ---------------- ---------------- ------------------ ------------------ ------------------
+159694 54495 OutPatient(Cash) 4 54497 2024-08-24 14:13:03.000 100247 NULL .000 20.500 69.500 .000 .000 .000 9 Private NULL NULL 2 $$ 90000.000 5 Out 5 Out 100.00 881 Dr Firass Hallak 881 Dr Firass Hallak NULL NULL NULL 90.000 84.500 90.000 .000 .000 .000 20584 Farah abdel rahman SAGHIR 03.01285.08.24 2024-08-24 14:13:03.000 0  Clinics, URGENCES 2024-08-24 15:22:12.103 4 Private NULL .000 NULL .000 5 113286 0 NULL NULL NULL .000 90.000 .000 2024-08-24 14:13:03.000 74641 0 NULL NULL 0 NULL NULL NULL NULL .000 5.500 NULL 0 338 NULL 2024-08-24 15:22:12.103 22 NULL 0 0 NULL NULL NULL NULL  0 NULL 1 0 0 .000 0 .000 74641 NULL NULL NULL NULL NULL NULL NULL NULL NULL
+159693 54494 OutPatient(Cash) 4 54496 2024-08-24 15:22:45.000 100254 NULL .000 20.000 .000 .000 .000 .000 9 Private NULL NULL 2 $$ 90000.000 5 Out 5 Out 100.00 1193 ABED EL RAHMAN  SHARKAWI 1193 ABED EL RAHMAN  SHARKAWI NULL NULL NULL 20.000 10.000 20.000 .000 .000 .000 16976 Bachar khaled KARMA 03.01292.08.24 2024-08-24 15:22:45.000 113  Clinics 2024-08-24 14:56:02.823 4 Private NULL .000 NULL .000 5 113293 0 NULL NULL NULL 900000.000 10.000 .000 2024-08-24 15:22:45.000 74651 0 NULL NULL 0 NULL NULL NULL NULL .000 10.000 NULL 0 338 NULL 2024-08-24 14:56:02.823 22 NULL 0 0 NULL NULL NULL NULL  0 NULL 1 0 0 .000 0 .000 74651 NULL NULL NULL NULL NULL NULL NULL NULL NULL
+159692 54493 OutPatient(Cash) 4 54495 2024-08-24 15:00:45.000 100253 NULL .000 20.000 .000 .000 .000 .000 9 Private NULL NULL 2 $$ 90000.000 5 Out 5 Out 100.00 881 Dr Firass Hallak NULL NULL NULL NULL NULL 20.000 20.000 20.000 .000 .000 .000 9175 Jalal ayoub AYOUB 03.01291.08.24 2024-08-24 15:00:45.000 0  Clinics, URGENCES 2024-08-24 14:25:34.413 4 Private NULL .000 NULL .000 5 113292 0 NULL NULL NULL .000 20.000 .000 2024-08-24 15:00:45.000 74645 0 NULL NULL 0 NULL NULL NULL NULL .000 .000 NULL 0 338 NULL 2024-08-24 14:25:34.413 22 NULL 0 0 NULL NULL NULL NULL  0 NULL 1 0 0 .000 0 .000 74645 NULL NULL NULL NULL NULL NULL NULL NULL NULL
+159691 54492 OutPatient(Cash) 4 54494 2024-08-24 14:59:22.000 100252 NULL 5.000 .000 .000 .000 .000 .000 9 Private NULL NULL 2 $$ 90000.000 5 Out 5 Out 100.00 883 Lab Externe NULL NULL NULL NULL NULL 5.000 3.000 5.000 .000 .000 .000 17436 Ali achraf KHALED 03.01290.08.24 2024-08-24 14:59:22.000 68  Laboratory 2024-08-24 14:23:35.823 4 Private NULL .000 NULL .000 5 113291 0 NULL NULL NULL 450000.000 .000 .000 2024-08-24 14:59:22.000 74616 0 NULL NULL 0 NULL NULL NULL NULL .000 2.000 NULL 0 343 NULL 2024-08-24 14:23:35.823 22 NULL 0 0 NULL NULL NULL NULL  0 NULL 1 0 0 .000 0 .000 74616 NULL NULL NULL NULL NULL NULL NULL NULL NULL
+159690 54491 OutPatient(Cash) 4 54493 2024-08-24 14:56:40.000 100251 NULL 5.000 .000 .000 .000 .000 .000 9 Private NULL NULL 2 $$ 90000.000 5 Out 5 Out 100.00 883 Lab Externe NULL NULL NULL NULL NULL 5.000 3.000 5.000 .000 .000 .000 20586 Aline achraf KHALED 03.01289.08.24 2024-08-24 14:56:40.000 68  Laboratory 2024-08-24 14:22:08.450 4 Private NULL .000 NULL .000 5 113290 0 NULL NULL NULL .000 5.000 .000 2024-08-24 14:56:40.000 74618 0 NULL NULL 0 NULL NULL NULL NULL .000 2.000 NULL 0 343 NULL 2024-08-24 14:22:08.450 22 NULL 0 0 NULL NULL NULL NULL  0 NULL 1 0 0 .000 0 .000 74618 NULL NULL NULL NULL NULL NULL NULL NULL NULL
+
+(5 rows affected)
+COLUMN_NAME DATA_TYPE CHARACTER_MAXIMUM_LENGTH IS_NULLABLE COLUMN_DEFAULT
+----------- --------- ------------------------ ----------- --------------
+ID int NULL NO NULL
+PrescriptionDate datetime NULL YES NULL
+PrescribedBy int NULL YES NULL
+MedicationUnit int NULL NO NULL
+MedicationUnitDescription nvarchar 50 NO ('')
+Admission int NULL NO NULL
+Patient int NULL NO NULL
+Denomination int NULL NO NULL
+DenominationCode nvarchar 25 YES NULL
+DenominationDescription nvarchar 255 YES NULL
+DenominationCoeffCode nvarchar 10 YES NULL
+DenominationCoeffValue decimal NULL NO NULL
+DenominationCoeffPrice decimal NULL NO NULL
+Quantity decimal NULL NO ((1))
+UnitPrice decimal NULL NO NULL
+NetPrice decimal NULL NO ((0))
+NetUnitPrice decimal NULL NO ((0))
+DifferenceAmount decimal NULL NO ((0))
+DeniedAmount decimal NULL NO ((0))
+Discount decimal NULL NO ((0))
+LumpSum decimal NULL NO ((0))
+ComplementaryAmount decimal NULL YES ((0))
+ComplementaryAmountOtherCurrency decimal NULL YES NULL
+ComplementaryDifferenceOtherCurrency decimal NULL YES NULL
+OperatingPhysician int NULL YES NULL
+IsMedicalResultOk bit NULL YES NULL
+MedicalResultDate datetime NULL YES NULL
+RequireApproval bit NULL YES NULL
+ApprovalReference nvarchar 25 YES NULL
+ApprovalDate datetime NULL YES NULL
+IsDenied bit NULL YES NULL
+ApprovedBy nvarchar 255 YES NULL
+DueDate datetime NULL YES NULL
+ExecutionDate datetime NULL YES NULL
+InvoiceHeader int NULL NO NULL
+ReferralPhysician int NULL NO NULL
+CostCenter int NULL NO NULL
+ProfitCenter int NULL NO NULL
+PacIndex smallint NULL YES NULL
+PreInvoiceDetail int NULL YES NULL
+DetailDate datetime NULL YES NULL
+MainDetailID int NULL YES NULL
+CopyFlag bit NULL NO ((0))
+DetailDateHelper datetime NULL YES NULL
+IsDoubtfull bit NULL NO ((0))
+Procedure smallint NULL YES NULL
+IsDeleted bit NULL NO ((0))
+CreatedBy int NULL NO NULL
+ModifiedBy int NULL YES NULL
+CreatedDate datetime NULL NO NULL
+ModifiedDate datetime NULL YES NULL
+PreviousDetailID int NULL YES NULL
+OrderDetailSequenceNumber int NULL YES NULL
+Source char 1 YES NULL
+IsCanceled bit NULL NO ((0))
+CancelComment nvarchar 300 YES NULL
+OldOrderDetailSequenceNumber int NULL YES NULL
+IsApproved int NULL YES NULL
+InvoiceNumber int NULL YES NULL
+PatientAmount decimal NULL YES NULL
+
+(60 rows affected)
+ID PrescriptionDate PrescribedBy MedicationUnit MedicationUnitDescription Admission Patient Denomination DenominationCode DenominationDescription DenominationCoeffCode DenominationCoeffValue DenominationCoeffPrice Quantity UnitPrice NetPrice NetUnitPrice DifferenceAmount DeniedAmount Discount LumpSum ComplementaryAmount ComplementaryAmountOtherCurrency ComplementaryDifferenceOtherCurrency OperatingPhysician IsMedicalResultOk MedicalResultDate RequireApproval ApprovalReference ApprovalDate IsDenied ApprovedBy DueDate ExecutionDate InvoiceHeader ReferralPhysician CostCenter ProfitCenter PacIndex PreInvoiceDetail DetailDate MainDetailID CopyFlag DetailDateHelper IsDoubtfull Procedure IsDeleted CreatedBy ModifiedBy CreatedDate ModifiedDate PreviousDetailID OrderDetailSequenceNumber Source IsCanceled CancelComment OldOrderDetailSequenceNumber IsApproved InvoiceNumber PatientAmount
+-- ---------------- ------------ -------------- ------------------------- --------- ------- ------------ ---------------- ----------------------- --------------------- ---------------------- ---------------------- -------- --------- -------- ------------ ---------------- ------------ -------- ------- ------------------- -------------------------------- ------------------------------------ ------------------ ----------------- ----------------- --------------- ----------------- ------------ -------- ---------- ------- ------------- ------------- ----------------- ---------- ------------ -------- ---------------- ---------- ------------ -------- ---------------- ----------- --------- --------- --------- ---------- ----------- ------------ ---------------- ------------------------- ------ ---------- ------------- ---------------------------- ---------- ------------- -------------
+2964469 NULL NULL 66 URGENCES 100247 38453 996 CSH CONSULTATION CS 1.000 10.000 1.00 10.000 10.000 10.000 .000 .000 .000 .000 .000 .000 .000 881 NULL NULL 0 NULL NULL 0 NULL NULL NULL 159694 881 12 3 NULL 1054530 2024-08-24 15:22:12.103 NULL 0 NULL 0 NULL 0 338 NULL 2024-08-24 15:22:12.103 NULL NULL 172903 O 0 NULL NULL 1 NULL NULL
+2964468 NULL NULL 66 URGENCES 100247 38453 1434 CodInf5 Code Infermier 5 K 1.000 5.000 1.00 5.000 10.500 10.500 5.500 .000 .000 .000 .000 .000 .000 NULL NULL NULL 0 NULL NULL 0 NULL NULL NULL 159694 881 11 3 NULL 1054529 2024-08-24 15:22:12.103 NULL 0 NULL 0 NULL 0 338 NULL 2024-08-24 15:22:12.103 NULL NULL 172902 O 0 NULL NULL 1 NULL NULL
+2964467 NULL NULL 99 Pharmacy 100247 38453 466 SR Serum SER 1.000 20.000 1.00 20.000 20.000 20.000 .000 .000 .000 .000 .000 .000 .000 NULL NULL NULL 0 NULL NULL 0 NULL NULL NULL 159694 881 26 2 NULL 1054528 2024-08-24 15:22:12.103 NULL 0 NULL 0 NULL 0 338 NULL 2024-08-24 15:22:12.103 NULL NULL 172901 O 0 NULL NULL 1 NULL NULL
+2964466 NULL NULL 99 Pharmacy 100247 38453 465 MS Medical Supplies MS 1.000 3.000 1.00 3.000 3.000 3.000 .000 .000 .000 .000 .000 .000 .000 NULL NULL NULL 0 NULL NULL 0 NULL NULL NULL 159694 881 25 2 NULL 1054527 2024-08-24 15:22:12.103 NULL 0 NULL 0 NULL 0 338 NULL 2024-08-24 15:22:12.103 NULL NULL 172900 O 0 NULL NULL 1 NULL NULL
+2964465 NULL NULL 99 Pharmacy 100247 38453 464 MDC Medication MED 1.000 46.500 1.00 46.500 46.500 46.500 .000 .000 .000 .000 .000 .000 .000 NULL NULL NULL 0 NULL NULL 0 NULL NULL NULL 159694 881 14 2 NULL 1054526 2024-08-24 15:22:12.103 NULL 0 NULL 0 NULL 0 338 NULL 2024-08-24 15:22:12.103 NULL NULL 172899 O 0 NULL NULL 1 NULL NULL
+
+(5 rows affected)

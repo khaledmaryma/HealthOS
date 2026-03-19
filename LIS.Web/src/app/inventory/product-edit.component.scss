@@ -1,0 +1,36 @@
+.product-edit-shell {
+  padding: 1.5rem;
+}
+
+.product-edit-header {
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #6c757d;
+  }
+}
+
+.product-edit-content {
+  .section-card {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+
+    .card-header {
+      font-weight: 600;
+      background-color: #f8f9fa;
+    }
+  }
+
+  .tabs-header {
+    padding-bottom: 0;
+  }
+}
+
+

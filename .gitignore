@@ -1,0 +1,46 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+.vs/
+
+# Angular
+node_modules/
+dist/
+.angular/
+*.log
+
+# Database backups
+Latest/*.bak
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.vsidx
+*.vspscc
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Temp files
+*.tmp
+*.temp
+invoice_columns_result.txt
+

@@ -1,0 +1,873 @@
+<div class="d-flex align-items-center justify-content-between my-3">
+  <div>
+    <h1 class="h5 mb-0">Lab Test Definitions</h1>
+    <small class="text-muted">Manage available lab tests, codes, and result settings</small>
+  </div>
+  <div class="d-flex gap-2">
+    <input type="search" class="form-control" style="min-width:260px" placeholder="Search by code or description" [ngModel]="query()" (ngModelChange)="onSearchChange($event)" />
+    <div class="btn-group">
+      <button type="button" class="btn btn-primary d-flex align-items-center gap-1" (click)="clickAdd()">
+        <i class="bi bi-plus-lg"></i>
+        <span>Add</span>
+      </button>
+      <button type="button" class="btn btn-outline-secondary d-flex align-items-center gap-1" (click)="clickEdit()" [disabled]="!selectedItem()">
+        <i class="bi bi-pencil"></i>
+        <span>Edit</span>
+      </button>
+      <button type="button" class="btn btn-outline-danger d-flex align-items-center gap-1" (click)="remove()" [disabled]="!selectedItem()">
+        <i class="bi bi-trash"></i>
+        <span>Delete</span>
+      </button>
+    </div>
+    <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" (click)="resetColumnWidths()" title="Reset column widths">
+      <i class="bi bi-arrow-clockwise"></i>
+      <span>Reset Columns</span>
+    </button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th [style.width.px]="columnWidths()[0]"
+              class="resizable-header sortable-header"
+              [class.sorted]="isSorted('code')"
+              (click)="sortBy('code', $event)"
+              (dblclick)="onColumnDoubleClick(0)">
+            <span class="header-content">
+              Code
+              <i [class]="'bi ' + getSortIcon('code') + ' sort-icon'"></i>
+            </span>
+            <div class="resize-handle" (mousedown)="onResizeStart($event, 0)" title="Drag to resize"></div>
+          </th>
+          <th [style.width.px]="columnWidths()[1]"
+              class="resizable-header sortable-header"
+              [class.sorted]="isSorted('description')"
+              (click)="sortBy('description', $event)"
+              (dblclick)="onColumnDoubleClick(1)">
+            <span class="header-content">
+              Description
+              <i [class]="'bi ' + getSortIcon('description') + ' sort-icon'"></i>
+            </span>
+            <div class="resize-handle" (mousedown)="onResizeStart($event, 1)" title="Drag to resize"></div>
+          </th>
+          <th [style.width.px]="columnWidths()[2]"
+              class="resizable-header sortable-header"
+              [class.sorted]="isSorted('display')"
+              (click)="sortBy('display', $event)"
+              (dblclick)="onColumnDoubleClick(2)">
+            <span class="header-content">
+              Display
+              <i [class]="'bi ' + getSortIcon('display') + ' sort-icon'"></i>
+            </span>
+            <div class="resize-handle" (mousedown)="onResizeStart($event, 2)" title="Drag to resize"></div>
+          </th>
+          <th [style.width.px]="columnWidths()[3]"
+              class="resizable-header sortable-header"
+              [class.sorted]="isSorted('resultType')"
+              (click)="sortBy('resultType', $event)"
+              (dblclick)="onColumnDoubleClick(3)">
+            <span class="header-content">
+              Result Type
+              <i [class]="'bi ' + getSortIcon('resultType') + ' sort-icon'"></i>
+            </span>
+            <div class="resize-handle" (mousedown)="onResizeStart($event, 3)" title="Drag to resize"></div>
+          </th>
+          <th [style.width.px]="columnWidths()[4]"
+              class="resizable-header sortable-header"
+              [class.sorted]="isSorted('collection')"
+              (click)="sortBy('collection', $event)"
+              (dblclick)="onColumnDoubleClick(4)">
+            <span class="header-content">
+              Collection
+              <i [class]="'bi ' + getSortIcon('collection') + ' sort-icon'"></i>
+            </span>
+            <div class="resize-handle" (mousedown)="onResizeStart($event, 4)" title="Drag to resize"></div>
+          </th>
+          <th [style.width.px]="columnWidths()[5]"
+              class="resizable-header sortable-header"
+              [class.sorted]="isSorted('refRange')"
+              (click)="sortBy('refRange', $event)"
+              (dblclick)="onColumnDoubleClick(5)">
+            <span class="header-content">
+              Ref Range
+              <i [class]="'bi ' + getSortIcon('refRange') + ' sort-icon'"></i>
+            </span>
+            <div class="resize-handle" (mousedown)="onResizeStart($event, 5)" title="Drag to resize"></div>
+          </th>
+          <th [style.width.px]="columnWidths()[6]"
+              class="resizable-header sortable-header"
+              [class.sorted]="isSorted('ageRef')"
+              (click)="sortBy('ageRef', $event)"
+              (dblclick)="onColumnDoubleClick(6)">
+            <span class="header-content">
+              Age Ref
+              <i [class]="'bi ' + getSortIcon('ageRef') + ' sort-icon'"></i>
+            </span>
+            <div class="resize-handle" (mousedown)="onResizeStart($event, 6)" title="Drag to resize"></div>
+          </th>
+          <th [style.width.px]="columnWidths()[7]"
+              class="resizable-header sortable-header"
+              [class.sorted]="isSorted('gynecoRef')"
+              (click)="sortBy('gynecoRef', $event)"
+              (dblclick)="onColumnDoubleClick(7)">
+            <span class="header-content">
+              Gyneco Ref
+              <i [class]="'bi ' + getSortIcon('gynecoRef') + ' sort-icon'"></i>
+            </span>
+            <div class="resize-handle" (mousedown)="onResizeStart($event, 7)" title="Drag to resize"></div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of paged()"
+            (click)="selectRow(t)"
+            [class.selected-row]="isSelected(t)">
+          <td><code>{{ t.code || '-' }}</code></td>
+          <td>{{ t.testDesciption || '-' }}</td>
+          <td>{{ t.displayOrder }}</td>
+          <td><span class="badge" [class.text-bg-info]="t.resultType === 1" [class.text-bg-primary]="t.resultType === 2" [class.text-bg-secondary]="!t.resultType">{{ getResultTypeLabel(t.resultType) }}</span></td>
+          <td><span class="badge" [class.text-bg-success]="t.isACollection" [class.text-bg-secondary]="!t.isACollection">{{ chip(t.isACollection) }}</span></td>
+          <td><span class="badge" [class.text-bg-success]="t.hasReferenceRange" [class.text-bg-secondary]="!t.hasReferenceRange">{{ chip(t.hasReferenceRange) }}</span></td>
+          <td><span class="badge" [class.text-bg-success]="t.referenceRelatesToAge" [class.text-bg-secondary]="!t.referenceRelatesToAge">{{ chip(t.referenceRelatesToAge) }}</span></td>
+          <td><span class="badge" [class.text-bg-success]="t.referencerelatesToGyneco" [class.text-bg-secondary]="!t.referencerelatesToGyneco">{{ chip(t.referencerelatesToGyneco) }}</span></td>
+        </tr>
+      </tbody>
+      <tfoot *ngIf="paged().length === 0">
+        <tr><td colspan="8" class="text-center text-muted py-3">No lab tests found</td></tr>
+      </tfoot>
+    </table>
+  </div>
+  <div class="card-footer d-flex align-items-center justify-content-between">
+    <div class="text-muted small d-flex align-items-center gap-2">
+      <span>Page {{ pageIndex() + 1 }} of {{ totalPages() }} • Total {{ filtered().length }}</span>
+      <div class="input-group input-group-sm" style="width: 150px;">
+        <label class="input-group-text" for="pageSizeFooter">Rows</label>
+        <select id="pageSizeFooter" class="form-select" [ngModel]="pageSize()" (ngModelChange)="setPageSize($event)">
+          <option *ngFor="let s of pageSizeOptions" [ngValue]="s">{{ s }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-outline-secondary btn-sm" (click)="firstPage()" [disabled]="pageIndex() === 0">First</button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="prevPage()" [disabled]="pageIndex() === 0">Previous</button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="nextPage()" [disabled]="pageIndex() + 1 >= totalPages()">Next</button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="lastPage()" [disabled]="pageIndex() + 1 >= totalPages()">Last</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade show" tabindex="-1" style="display:block; background: rgba(0,0,0,.5);" *ngIf="showForm()">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editItem()?.id ? 'Edit Lab Test' : 'Add Lab Test' }}</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="cancel()"></button>
+      </div>
+      <form (ngSubmit)="save($event)" #f="ngForm">
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- Left Side - Form Fields -->
+            <div class="col-md-4">
+              <div class="d-flex flex-column gap-3">
+                <div>
+              <label class="form-label">Code</label>
+              <input [(ngModel)]="editItem()!.code" name="code" class="form-control" />
+            </div>
+                <div>
+                  <label class="form-label">Denomination</label>
+                  <select [(ngModel)]="editItem()!.denomination" name="denomination" class="form-select">
+                    <option [ngValue]="null">-- Select Denomination --</option>
+                    <option *ngFor="let denom of denominations()" [ngValue]="denom.id">
+                      {{ denom.code }} - {{ denom.smallDescription }}
+                    </option>
+                  </select>
+                </div>
+                <div>
+              <label class="form-label">Description</label>
+                  <textarea [(ngModel)]="editItem()!.testDesciption" name="testDesciption" class="form-control" rows="3"></textarea>
+                </div>
+                <div>
+                  <label class="form-label text-danger">Display Order</label>
+                  <input [(ngModel)]="editItem()!.displayOrder" name="displayOrder" class="form-control" required />
+            </div>
+                <div>
+                  <label class="form-label text-danger">Result Type</label>
+                  <select [(ngModel)]="editItem()!.resultType" name="resultType" class="form-select" required>
+                    <option *ngFor="let rt of resultTypes()" [ngValue]="rt.id">{{ rt.description }}</option>
+                  </select>
+            </div>
+                <div>
+                  <label class="form-label text-danger">Unit of Measure</label>
+                  <select [(ngModel)]="editItem()!.uom" name="uom" class="form-select" required>
+                    <option *ngFor="let uom of unitOfMeasures()" [ngValue]="uom.id">
+                      {{ uom.description }}
+                    </option>
+              </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Side - Conditional Content -->
+            <div class="col-md-8">
+              <!-- Show Rich Text Editor when Result Type is Text -->
+              <div *ngIf="isTextResultType()">
+              <label class="form-label">
+                Default Text Result
+                  <small class="text-muted">(Rich text editor for Text result type)</small>
+              </label>
+              <div class="rich-text-editor-wrapper">
+                <div class="rich-text-toolbar" role="toolbar">
+                  <!-- Font Size -->
+                  <div class="toolbar-group me-2">
+                    <label class="toolbar-label">Format:</label>
+                    <select class="form-select form-select-sm"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (change)="formatBlock($event)"
+                            style="width: auto;">
+                      <option value="">Normal</option>
+                      <option value="h1">Heading 1</option>
+                      <option value="h2">Heading 2</option>
+                      <option value="h3">Heading 3</option>
+                      <option value="p">Paragraph</option>
+                    </select>
+                  </div>
+
+                  <!-- Text Style -->
+                  <div class="btn-group btn-group-sm me-2" role="group">
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('bold')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('bold')"
+                            title="Bold (Ctrl+B)">
+                      <i class="bi bi-type-bold"></i>
+                      <span class="btn-label">Bold</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('italic')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('italic')"
+                            title="Italic (Ctrl+I)">
+                      <i class="bi bi-type-italic"></i>
+                      <span class="btn-label">Italic</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('underline')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('underline')"
+                            title="Underline (Ctrl+U)">
+                      <i class="bi bi-type-underline"></i>
+                      <span class="btn-label">Underline</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('strikeThrough')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('strikeThrough')"
+                            title="Strikethrough">
+                      <i class="bi bi-type-strikethrough"></i>
+                      <span class="btn-label">Strike</span>
+                    </button>
+                  </div>
+
+                  <!-- Text Color -->
+                  <div class="toolbar-group me-2">
+                    <label class="toolbar-label">Text:</label>
+                    <input type="color"
+                           class="form-control form-control-sm color-picker"
+                           (mousedown)="onToolbarMouseDown($event)"
+                           (change)="changeTextColor($event)"
+                           value="#000000"
+                           title="Text Color">
+                  </div>
+
+                  <!-- Background Color -->
+                  <div class="toolbar-group me-2">
+                    <label class="toolbar-label">Highlight:</label>
+                    <input type="color"
+                           class="form-control form-control-sm color-picker"
+                           (mousedown)="onToolbarMouseDown($event)"
+                           (change)="changeBackgroundColor($event)"
+                           value="#ffff00"
+                           title="Background Color">
+                  </div>
+
+                  <!-- Alignment -->
+                  <div class="btn-group btn-group-sm me-2" role="group">
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('justifyLeft')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('justifyLeft')"
+                            title="Align Left">
+                      <i class="bi bi-text-left"></i>
+                      <span class="btn-label">Left</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('justifyCenter')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('justifyCenter')"
+                            title="Align Center">
+                      <i class="bi bi-text-center"></i>
+                      <span class="btn-label">Center</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('justifyRight')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('justifyRight')"
+                            title="Align Right">
+                      <i class="bi bi-text-right"></i>
+                      <span class="btn-label">Right</span>
+                    </button>
+                  </div>
+
+                  <!-- Lists -->
+                  <div class="btn-group btn-group-sm me-2" role="group">
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('ul')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('insertUnorderedList')"
+                            title="Bullet List">
+                      <i class="bi bi-list-ul"></i>
+                      <span class="btn-label">Bullets</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            [class.active]="isFormatActive('ol')"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('insertOrderedList')"
+                            title="Numbered List">
+                      <i class="bi bi-list-ol"></i>
+                      <span class="btn-label">Numbers</span>
+                    </button>
+                  </div>
+
+                  <!-- Indent -->
+                  <div class="btn-group btn-group-sm me-2" role="group">
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('indent')"
+                            title="Indent">
+                      <i class="bi bi-indent"></i>
+                      <span class="btn-label">Indent</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('outdent')"
+                            title="Outdent">
+                      <i class="bi bi-outdent"></i>
+                      <span class="btn-label">Outdent</span>
+                    </button>
+                  </div>
+
+                  <!-- Insert Link -->
+                  <div class="btn-group btn-group-sm me-2" role="group">
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="insertLink()"
+                            title="Insert Link">
+                      <i class="bi bi-link-45deg"></i>
+                      <span class="btn-label">Link</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('unlink')"
+                            title="Remove Link">
+                      <i class="bi bi-link-45deg"></i>
+                      <span class="btn-label">Unlink</span>
+                    </button>
+                  </div>
+
+                  <!-- Insert Line -->
+                  <div class="btn-group btn-group-sm me-2" role="group">
+                    <button type="button"
+                            class="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('insertHorizontalRule')"
+                            title="Insert Horizontal Line">
+                      <i class="bi bi-dash-lg"></i>
+                      <span class="btn-label">Line</span>
+                    </button>
+                  </div>
+
+                  <!-- Table Operations -->
+                  <div class="btn-group btn-group-sm me-2 position-relative" role="group">
+                    <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-1" (click)="toggleTablePicker()" title="Insert Table">
+                      <i class="bi bi-table"></i>
+                      <span class="btn-label">Table</span>
+                    </button>
+
+                    <!-- Table Grid Picker -->
+                    <div class="table-picker-dropdown" *ngIf="showTablePicker()">
+                      <div class="table-picker-title">Insert Table</div>
+                      <div class="table-picker-grid">
+                        <div *ngFor="let row of [0,1,2,3,4,5,6,7]" class="table-picker-row">
+                          <div *ngFor="let col of [0,1,2,3,4,5,6,7,8,9]"
+                               class="table-picker-cell"
+                               [class.highlighted]="row < tablePickerRows() && col < tablePickerCols()"
+                               (mouseenter)="onTableGridHover(row, col)"
+                               (click)="insertTableFromPicker()">
+                          </div>
+                        </div>
+                      </div>
+                      <div class="table-picker-info">{{ tablePickerRows() }} x {{ tablePickerCols() }}</div>
+                    </div>
+
+                    <button type="button"
+                            class="btn btn-outline-info d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="insertTableRow()"
+                            title="Insert Row After">
+                      <i class="bi bi-plus-square"></i>
+                      <span class="btn-label">+Row</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-info d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="insertTableColumn()"
+                            title="Insert Column After">
+                      <i class="bi bi-plus-square"></i>
+                      <span class="btn-label">+Col</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-warning d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="deleteTableRow()"
+                            title="Delete Current Row">
+                      <i class="bi bi-dash-square"></i>
+                      <span class="btn-label">-Row</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-warning d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="deleteTableColumn()"
+                            title="Delete Current Column">
+                      <i class="bi bi-dash-square"></i>
+                      <span class="btn-label">-Col</span>
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-danger d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="deleteTable()"
+                            title="Delete Table">
+                      <i class="bi bi-trash"></i>
+                      <span class="btn-label">Del Table</span>
+                    </button>
+                  </div>
+
+                  <!-- Table Border Options -->
+                  <div class="toolbar-group me-2">
+                    <label class="toolbar-label">Border:</label>
+                    <select class="form-select form-select-sm" (change)="applyTableBorderStyle($any($event.target).value)" style="width: auto;">
+                      <option value="">Style</option>
+                      <option value="all">All Borders</option>
+                      <option value="outer">Outer Only</option>
+                      <option value="horizontal">Horizontal</option>
+                      <option value="none">No Borders</option>
+                    </select>
+                    <input type="color" class="form-control form-control-sm color-picker" (change)="changeTableBorderColor($event)" value="#dee2e6" title="Border Color">
+                  </div>
+
+                  <!-- Clear Formatting -->
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button type="button"
+                            class="btn btn-outline-danger d-flex align-items-center gap-1"
+                            (mousedown)="onToolbarMouseDown($event)"
+                            (click)="execCommand('removeFormat')"
+                            title="Clear Formatting">
+                      <i class="bi bi-eraser"></i>
+                      <span class="btn-label">Clear</span>
+                    </button>
+                  </div>
+                </div>
+                <div
+                  #richTextEditor
+                  class="rich-text-editor form-control"
+                  contenteditable="true"
+                  (input)="onRichTextChange($event)"
+                  (blur)="onRichTextBlur($event)"
+                  (focus)="onRichTextFocus($event)"
+                  (mouseup)="saveSelection(); updateFormattingState()"
+                  (keyup)="saveSelection(); updateFormattingState()"
+                  (click)="saveSelection(); updateFormattingState()"
+                  placeholder="Enter default text result...">
+                </div>
+              </div>
+            </div>
+
+              <!-- Show Boolean Fields when Result Type is Numeric -->
+              <div *ngIf="!isTextResultType() && editItem()!.resultType">
+                <label class="form-label">
+                  Test Properties
+                  <small class="text-muted">(Configuration for Numeric result type)</small>
+                </label>
+                <div class="card mb-3">
+                  <div class="card-body">
+                    <div class="d-flex gap-4 align-items-center">
+                      <div class="form-check">
+                        <input type="checkbox"
+                               [(ngModel)]="editItem()!.isACollection"
+                               name="isACollection"
+                               class="form-check-input"
+                               id="isACollection"
+                               (ngModelChange)="onCollectionChange($event)">
+                  <label class="form-check-label" for="isACollection">Collection</label>
+                </div>
+                      <div class="form-check">
+                        <input type="checkbox"
+                               [(ngModel)]="editItem()!.referenceRelatesToAge"
+                               name="referenceRelatesToAge"
+                               class="form-check-input"
+                               id="referenceRelatesToAge"
+                               (ngModelChange)="onAgeReferenceChange($event)">
+                        <label class="form-check-label" for="referenceRelatesToAge">Reference Relates to Age</label>
+                      </div>
+                      <div class="form-check">
+                        <input type="checkbox"
+                               [(ngModel)]="editItem()!.referencerelatesToGyneco"
+                               name="referencerelatesToGyneco"
+                               class="form-check-input"
+                               id="referencerelatesToGyneco"
+                               (ngModelChange)="onGynecoReferenceChange($event)">
+                        <label class="form-check-label" for="referencerelatesToGyneco">Reference Relates to Gyneco</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Show related tables only when at least one checkbox is selected -->
+                <div *ngIf="hasAnyCheckboxSelected()">
+                  <!-- Show LabTestSub table when Collection is checked -->
+                  <div *ngIf="editItem()!.isACollection" class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <h6 class="mb-0">Sub-Tests <small class="text-muted">({{ sortedSubs().length }} items)</small></h6>
+                      <button type="button" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Add Sub-Test
+                      </button>
+                    </div>
+                    <div class="card">
+                      <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                          <thead class="table-light">
+                            <tr>
+                              <th (click)="sortSubColumn('description')" style="cursor: pointer;">
+                                Description
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': subSortColumn() === 'description' && subSortDirection() === 'asc',
+                                  'bi-arrow-down': subSortColumn() === 'description' && subSortDirection() === 'desc',
+                                  'bi-arrow-down-up': subSortColumn() !== 'description'
+                                }"></i>
+                              </th>
+                              <th (click)="sortSubColumn('displayOrder')" style="cursor: pointer;">
+                                Display Order
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': subSortColumn() === 'displayOrder' && subSortDirection() === 'asc',
+                                  'bi-arrow-down': subSortColumn() === 'displayOrder' && subSortDirection() === 'desc',
+                                  'bi-arrow-down-up': subSortColumn() !== 'displayOrder'
+                                }"></i>
+                              </th>
+                              <th (click)="sortSubColumn('defaultNoramlMin')" style="cursor: pointer;">
+                                Default Min
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': subSortColumn() === 'defaultNoramlMin' && subSortDirection() === 'asc',
+                                  'bi-arrow-down': subSortColumn() === 'defaultNoramlMin' && subSortDirection() === 'desc',
+                                  'bi-arrow-down-up': subSortColumn() !== 'defaultNoramlMin'
+                                }"></i>
+                              </th>
+                              <th (click)="sortSubColumn('defaultNormalMax')" style="cursor: pointer;">
+                                Default Max
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': subSortColumn() === 'defaultNormalMax' && subSortDirection() === 'asc',
+                                  'bi-arrow-down': subSortColumn() === 'defaultNormalMax' && subSortDirection() === 'desc',
+                                  'bi-arrow-down-up': subSortColumn() !== 'defaultNormalMax'
+                                }"></i>
+                              </th>
+                              <th style="width: 100px;">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let item of pagedSubs()">
+                              <td>{{ item.description ?? '-' }}</td>
+                              <td>{{ item.displayOrder ?? '-' }}</td>
+                              <td>{{ item.defaultNoramlMin ?? '-' }}</td>
+                              <td>{{ item.defaultNormalMax ?? '-' }}</td>
+                              <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete">
+                                  <i class="bi bi-trash"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr *ngIf="sortedSubs().length === 0">
+                              <td colspan="5" class="text-center text-muted py-2">No sub-tests defined</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- Pagination footer -->
+                      <div class="card-footer d-flex justify-content-between align-items-center" *ngIf="sortedSubs().length > 0">
+                        <div class="d-flex align-items-center gap-2">
+                          <label class="mb-0">Page size:</label>
+                          <select class="form-select form-select-sm" style="width: auto;" [ngModel]="subPageSize()" (ngModelChange)="setSubPageSize($event)">
+                            <option [value]="5">5</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                          </select>
+                          <span class="text-muted">
+                            {{ subPageIndex() * subPageSize() + 1 }}-{{ Math.min((subPageIndex() + 1) * subPageSize(), sortedSubs().length) }} of {{ sortedSubs().length }}
+                          </span>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                          <button class="btn btn-outline-secondary" (click)="subFirstPage()" [disabled]="subPageIndex() === 0">
+                            <i class="bi bi-chevron-double-left"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary" (click)="subPrevPage()" [disabled]="subPageIndex() === 0">
+                            <i class="bi bi-chevron-left"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary disabled">{{ subPageIndex() + 1 }} / {{ subTotalPages() }}</button>
+                          <button class="btn btn-outline-secondary" (click)="subNextPage()" [disabled]="subPageIndex() >= subTotalPages() - 1">
+                            <i class="bi bi-chevron-right"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary" (click)="subLastPage()" [disabled]="subPageIndex() >= subTotalPages() - 1">
+                            <i class="bi bi-chevron-double-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Show LabTestAge table when Reference Relates to Age is checked -->
+                  <div *ngIf="editItem()!.referenceRelatesToAge" class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <h6 class="mb-0">Age-Based Reference Ranges <small class="text-muted">({{ sortedAges().length }} items)</small></h6>
+                      <button type="button" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Add Age Range
+                      </button>
+                    </div>
+                    <div class="card">
+                      <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                          <thead class="table-light">
+                            <tr>
+                              <th (click)="sortAgeColumn('description')" style="cursor: pointer;">
+                                Description
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': ageSortColumn() === 'description' && ageSortDirection() === 'asc',
+                                  'bi-arrow-down': ageSortColumn() === 'description' && ageSortDirection() === 'desc',
+                                  'bi-arrow-down-up': ageSortColumn() !== 'description'
+                                }"></i>
+                              </th>
+                              <th (click)="sortAgeColumn('lower')" style="cursor: pointer;">
+                                Age From
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': ageSortColumn() === 'lower' && ageSortDirection() === 'asc',
+                                  'bi-arrow-down': ageSortColumn() === 'lower' && ageSortDirection() === 'desc',
+                                  'bi-arrow-down-up': ageSortColumn() !== 'lower'
+                                }"></i>
+                              </th>
+                              <th (click)="sortAgeColumn('higher')" style="cursor: pointer;">
+                                Age To
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': ageSortColumn() === 'higher' && ageSortDirection() === 'asc',
+                                  'bi-arrow-down': ageSortColumn() === 'higher' && ageSortDirection() === 'desc',
+                                  'bi-arrow-down-up': ageSortColumn() !== 'higher'
+                                }"></i>
+                              </th>
+                              <th (click)="sortAgeColumn('defaultMin')" style="cursor: pointer;">
+                                Default Min
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': ageSortColumn() === 'defaultMin' && ageSortDirection() === 'asc',
+                                  'bi-arrow-down': ageSortColumn() === 'defaultMin' && ageSortDirection() === 'desc',
+                                  'bi-arrow-down-up': ageSortColumn() !== 'defaultMin'
+                                }"></i>
+                              </th>
+                              <th (click)="sortAgeColumn('defaultMax')" style="cursor: pointer;">
+                                Default Max
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': ageSortColumn() === 'defaultMax' && ageSortDirection() === 'asc',
+                                  'bi-arrow-down': ageSortColumn() === 'defaultMax' && ageSortDirection() === 'desc',
+                                  'bi-arrow-down-up': ageSortColumn() !== 'defaultMax'
+                                }"></i>
+                              </th>
+                              <th style="width: 100px;">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let item of pagedAges()">
+                              <td>{{ item.description ?? '-' }}</td>
+                              <td>{{ item.lower ?? '-' }}</td>
+                              <td>{{ item.higher ?? '-' }}</td>
+                              <td>{{ item.defaultMin ?? '-' }}</td>
+                              <td>{{ item.defaultMax ?? '-' }}</td>
+                              <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete">
+                                  <i class="bi bi-trash"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr *ngIf="sortedAges().length === 0">
+                              <td colspan="6" class="text-center text-muted py-2">No age ranges defined</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- Pagination footer -->
+                      <div class="card-footer d-flex justify-content-between align-items-center" *ngIf="sortedAges().length > 0">
+                        <div class="d-flex align-items-center gap-2">
+                          <label class="mb-0">Page size:</label>
+                          <select class="form-select form-select-sm" style="width: auto;" [ngModel]="agePageSize()" (ngModelChange)="setAgePageSize($event)">
+                            <option [value]="5">5</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                          </select>
+                          <span class="text-muted">
+                            {{ agePageIndex() * agePageSize() + 1 }}-{{ Math.min((agePageIndex() + 1) * agePageSize(), sortedAges().length) }} of {{ sortedAges().length }}
+                          </span>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                          <button class="btn btn-outline-secondary" (click)="ageFirstPage()" [disabled]="agePageIndex() === 0">
+                            <i class="bi bi-chevron-double-left"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary" (click)="agePrevPage()" [disabled]="agePageIndex() === 0">
+                            <i class="bi bi-chevron-left"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary disabled">{{ agePageIndex() + 1 }} / {{ ageTotalPages() }}</button>
+                          <button class="btn btn-outline-secondary" (click)="ageNextPage()" [disabled]="agePageIndex() >= ageTotalPages() - 1">
+                            <i class="bi bi-chevron-right"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary" (click)="ageLastPage()" [disabled]="agePageIndex() >= ageTotalPages() - 1">
+                            <i class="bi bi-chevron-double-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Show LabTestGyneco table when Reference Relates to Gyneco is checked -->
+                  <div *ngIf="editItem()!.referencerelatesToGyneco" class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <h6 class="mb-0">Gynecological Reference Ranges <small class="text-muted">({{ sortedGynecos().length }} items)</small></h6>
+                      <button type="button" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> Add Gyneco Range
+                      </button>
+                    </div>
+                    <div class="card">
+                      <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                          <thead class="table-light">
+                            <tr>
+                              <th (click)="sortGynecoColumn('description')" style="cursor: pointer;">
+                                Description
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': gynecoSortColumn() === 'description' && gynecoSortDirection() === 'asc',
+                                  'bi-arrow-down': gynecoSortColumn() === 'description' && gynecoSortDirection() === 'desc',
+                                  'bi-arrow-down-up': gynecoSortColumn() !== 'description'
+                                }"></i>
+                              </th>
+                              <th (click)="sortGynecoColumn('femaleNormalMin')" style="cursor: pointer;">
+                                Female Min
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': gynecoSortColumn() === 'femaleNormalMin' && gynecoSortDirection() === 'asc',
+                                  'bi-arrow-down': gynecoSortColumn() === 'femaleNormalMin' && gynecoSortDirection() === 'desc',
+                                  'bi-arrow-down-up': gynecoSortColumn() !== 'femaleNormalMin'
+                                }"></i>
+                              </th>
+                              <th (click)="sortGynecoColumn('femaleNormalMax')" style="cursor: pointer;">
+                                Female Max
+                                <i class="bi" [ngClass]="{
+                                  'bi-arrow-up': gynecoSortColumn() === 'femaleNormalMax' && gynecoSortDirection() === 'asc',
+                                  'bi-arrow-down': gynecoSortColumn() === 'femaleNormalMax' && gynecoSortDirection() === 'desc',
+                                  'bi-arrow-down-up': gynecoSortColumn() !== 'femaleNormalMax'
+                                }"></i>
+                              </th>
+                              <th style="width: 100px;">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let item of pagedGynecos()">
+                              <td>{{ item.description ?? '-' }}</td>
+                              <td>{{ item.femaleNormalMin ?? '-' }}</td>
+                              <td>{{ item.femaleNormalMax ?? '-' }}</td>
+                              <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete">
+                                  <i class="bi bi-trash"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <tr *ngIf="sortedGynecos().length === 0">
+                              <td colspan="4" class="text-center text-muted py-2">No gyneco ranges defined</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- Pagination footer -->
+                      <div class="card-footer d-flex justify-content-between align-items-center" *ngIf="sortedGynecos().length > 0">
+                        <div class="d-flex align-items-center gap-2">
+                          <label class="mb-0">Page size:</label>
+                          <select class="form-select form-select-sm" style="width: auto;" [ngModel]="gynecoPageSize()" (ngModelChange)="setGynecoPageSize($event)">
+                            <option [value]="5">5</option>
+                            <option [value]="10">10</option>
+                            <option [value]="20">20</option>
+                            <option [value]="50">50</option>
+                          </select>
+                          <span class="text-muted">
+                            {{ gynecoPageIndex() * gynecoPageSize() + 1 }}-{{ Math.min((gynecoPageIndex() + 1) * gynecoPageSize(), sortedGynecos().length) }} of {{ sortedGynecos().length }}
+                          </span>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                          <button class="btn btn-outline-secondary" (click)="gynecoFirstPage()" [disabled]="gynecoPageIndex() === 0">
+                            <i class="bi bi-chevron-double-left"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary" (click)="gynecoPrevPage()" [disabled]="gynecoPageIndex() === 0">
+                            <i class="bi bi-chevron-left"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary disabled">{{ gynecoPageIndex() + 1 }} / {{ gynecoTotalPages() }}</button>
+                          <button class="btn btn-outline-secondary" (click)="gynecoNextPage()" [disabled]="gynecoPageIndex() >= gynecoTotalPages() - 1">
+                            <i class="bi bi-chevron-right"></i>
+                          </button>
+                          <button class="btn btn-outline-secondary" (click)="gynecoLastPage()" [disabled]="gynecoPageIndex() >= gynecoTotalPages() - 1">
+                            <i class="bi bi-chevron-double-right"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+                </div>
+              </div>
+
+              <!-- Message when no result type selected -->
+              <div *ngIf="!editItem()!.resultType" class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Please select a Result Type to configure additional properties
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary d-flex align-items-center gap-1" (click)="cancel()">
+            <i class="bi bi-x-circle"></i>
+            <span>Cancel</span>
+          </button>
+          <button type="submit" class="btn btn-primary d-flex align-items-center gap-1">
+            <i class="bi bi-check-circle"></i>
+            <span>Save</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+

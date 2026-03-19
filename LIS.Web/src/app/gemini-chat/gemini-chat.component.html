@@ -1,0 +1,100 @@
+<div class="container-fluid gemini-chat-container">
+  <!-- Header -->
+  <div class="page-header p-3 bg-primary text-white">
+    <h4 class="mb-0">
+      <i class="bi bi-robot me-2"></i>
+      AI Assistant (Gemini - Free)
+    </h4>
+    <p class="mb-0 mt-2 small">Ask questions and get AI-powered responses using Google Gemini (Free API)</p>
+  </div>
+
+  <div class="chat-content p-4">
+    <div class="row h-100">
+      <!-- Conversation History -->
+      <div class="col-md-8 mb-4 mb-md-0">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Conversation</h5>
+            <button class="btn btn-sm btn-outline-secondary" (click)="clearConversation()" type="button">
+              <i class="bi bi-trash me-1"></i>Clear
+            </button>
+          </div>
+          <div class="card-body conversation-area" style="max-height: 600px; overflow-y: auto;">
+            <div *ngIf="conversationHistory().length === 0" class="text-center text-muted py-5">
+              <i class="bi bi-chat-left-text display-4 d-block mb-3"></i>
+              <p>No conversation yet. Enter a prompt below to start chatting with AI Assistant.</p>
+            </div>
+            <div *ngFor="let message of conversationHistory()" class="message mb-3">
+              <div [class]="message.role === 'user' ? 'message-user' : 'message-assistant'">
+                <div class="message-header d-flex justify-content-between align-items-center mb-2">
+                  <strong>
+                    <i [class]="message.role === 'user' ? 'bi bi-person-fill' : 'bi bi-robot'" class="me-2"></i>
+                    {{ message.role === 'user' ? 'You' : 'AI Assistant' }}
+                  </strong>
+                  <small class="text-muted">{{ formatTimestamp(message.timestamp) }}</small>
+                </div>
+                <div class="message-content">{{ message.content }}</div>
+              </div>
+            </div>
+            <div *ngIf="isLoading()" class="text-center py-3">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2 text-muted">AI Assistant is thinking...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompt Input Area -->
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Enter Prompt</h5>
+          </div>
+          <div class="card-body d-flex flex-column">
+            <form (ngSubmit)="sendPrompt()" class="flex-grow-1 d-flex flex-column">
+              <div class="mb-3 flex-grow-1">
+                <label class="form-label">Your Question or Prompt</label>
+                <textarea 
+                  class="form-control" 
+                  [(ngModel)]="promptText" 
+                  name="promptText"
+                  rows="12" 
+                  placeholder="Enter your question or prompt here...&#10;&#10;Example:&#10;What are the normal ranges for blood pressure?&#10;Explain the difference between systolic and diastolic pressure."
+                  [disabled]="isLoading()"
+                  style="resize: none;"></textarea>
+              </div>
+              
+              <!-- Error Message -->
+              <div *ngIf="errorMessage()" class="alert alert-danger mb-3">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {{ errorMessage() }}
+              </div>
+
+              <div class="d-grid">
+                <button 
+                  type="submit" 
+                  class="btn btn-primary btn-lg" 
+                  [disabled]="isLoading() || !promptText.trim()">
+                  <span *ngIf="isLoading()" class="spinner-border spinner-border-sm me-2"></span>
+                  <i *ngIf="!isLoading()" class="bi bi-send-fill me-2"></i>
+                  {{ isLoading() ? 'Sending...' : 'Send to AI Assistant' }}
+                </button>
+              </div>
+            </form>
+
+            <!-- Info Box -->
+            <div class="alert alert-info mt-3 mb-0">
+              <small>
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Free API:</strong> Using Google Gemini (Free tier: 60 requests/minute). Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="alert-link">Google AI Studio</a> and add it to appsettings.json as "GeminiApiKey"
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

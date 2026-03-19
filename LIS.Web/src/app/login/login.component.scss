@@ -1,0 +1,19 @@
+.login-page {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fb;
+  padding: 2rem;
+}
+
+.login-card {
+  width: 360px;
+  max-width: 90vw;
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  display: grid;
+  gap: 0.5rem;
+}

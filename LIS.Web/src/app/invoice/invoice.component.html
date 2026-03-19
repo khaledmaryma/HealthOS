@@ -1,0 +1,257 @@
+<div class="invoice-container">
+  <!-- Header Section -->
+  <div class="invoice-header">
+    <h2>Invoice Management</h2>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="showInvoiceForm.set(true)" [disabled]="isLoading()">
+        <i class="fas fa-plus"></i> New Invoice
+      </button>
+      <div class="search-box">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search invoices..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($event.target.value)"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="alert alert-danger" *ngIf="errorMessage()" role="alert">
+    {{ errorMessage() }}
+    <button type="button" class="btn-close" (click)="errorMessage.set('')"></button>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="text-center" *ngIf="isLoading()">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div class="invoice-content" *ngIf="!isLoading()">
+    <!-- Invoice List -->
+    <div class="invoice-list-section">
+      <h3>Invoices</h3>
+      <div class="invoice-list">
+        <div
+          class="invoice-item"
+          *ngFor="let invoice of filteredInvoices()"
+          [class.selected]="selectedInvoice()?.id === invoice.id"
+          (click)="selectInvoice(invoice)"
+        >
+          <div class="invoice-info">
+            <div class="invoice-number">{{ invoice.invoiceNumber }}</div>
+            <div class="invoice-details">
+              <span class="mrn" *ngIf="invoice.mrn">MRN: {{ invoice.mrn }}</span>
+              <span class="admission" *ngIf="invoice.admissionNumber">Admission: {{ invoice.admissionNumber }}</span>
+              <span class="date">{{ invoice.invoiceDate | date:'short' }}</span>
+            </div>
+          </div>
+          <div class="invoice-amount">
+            <div class="total">{{ formatCurrency(invoice.totalAmount) }}</div>
+            <div class="status" [class]="'status-' + invoice.status.toLowerCase()">{{ invoice.status }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice Details and Totals -->
+    <div class="invoice-details-section" *ngIf="selectedInvoice()">
+      <div class="details-header">
+        <h3>Invoice Details - {{ selectedInvoice()?.invoiceNumber }}</h3>
+        <button class="btn btn-success" (click)="showDetailForm.set(true)">
+          <i class="fas fa-plus"></i> Add Item
+        </button>
+      </div>
+
+      <!-- Items Grid -->
+      <div class="items-grid">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Discount</th>
+              <th>Tax</th>
+              <th>Total</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let detail of invoiceDetails()">
+              <td>{{ detail.itemDescription }}</td>
+              <td>{{ detail.quantity }}</td>
+              <td>{{ formatCurrency(detail.unitPrice) }}</td>
+              <td>{{ formatCurrency(detail.discountAmount || 0) }}</td>
+              <td>{{ formatCurrency(detail.taxAmount || 0) }}</td>
+              <td>{{ formatCurrency(calculateLineTotal(detail)) }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" (click)="updateDetail(detail)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteDetail(detail)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Totals Section -->
+      <div class="totals-section">
+        <div class="totals-card">
+          <h4>Invoice Totals</h4>
+          <div class="totals-grid">
+            <div class="total-row">
+              <span class="label">Subtotal:</span>
+              <span class="value">{{ formatCurrency(totals().subtotal) }}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Total Discount:</span>
+              <span class="value discount">-{{ formatCurrency(totals().totalDiscount) }}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Total Tax:</span>
+              <span class="value">{{ formatCurrency(totals().totalTax) }}</span>
+            </div>
+            <div class="total-row total-amount">
+              <span class="label">Total Amount:</span>
+              <span class="value">{{ formatCurrency(totals().totalAmount) }}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Item Count:</span>
+              <span class="value">{{ totals().itemCount }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Invoice Modal -->
+  <div class="modal" [class.show]="showInvoiceForm()" *ngIf="showInvoiceForm()">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create New Invoice</h5>
+          <button type="button" class="btn-close" (click)="showInvoiceForm.set(false)"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="mb-3">
+              <label class="form-label">Patient ID</label>
+              <input type="number" class="form-control" [(ngModel)]="newInvoice().patientId" name="patientId">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">MRN</label>
+              <input type="text" class="form-control" [(ngModel)]="newInvoice().mrn" name="mrn">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Admission Number</label>
+              <input type="text" class="form-control" [(ngModel)]="newInvoice().admissionNumber" name="admissionNumber">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Invoice Date</label>
+              <input type="date" class="form-control" [(ngModel)]="newInvoice().invoiceDate" name="invoiceDate">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" [(ngModel)]="newInvoice().notes" name="notes" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showInvoiceForm.set(false)">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="createInvoice()">Create Invoice</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Item Modal -->
+  <div class="modal" [class.show]="showDetailForm()" *ngIf="showDetailForm()">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ editingDetail() ? 'Edit Item' : 'Add New Item' }}</h5>
+          <button type="button" class="btn-close" (click)="resetDetailForm()"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <!-- Denomination Search -->
+            <div class="mb-3">
+              <label class="form-label">Search Denominations</label>
+              <div class="position-relative">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Type to search denominations..."
+                  [value]="denominationSearchQuery()"
+                  (input)="denominationSearchQuery.set($event.target.value); searchDenominations()"
+                  #denominationSearchInput
+                >
+                <div class="dropdown-menu" [class.show]="showDenominationDropdown()" *ngIf="filteredDenominations().length > 0">
+                  <div
+                    class="dropdown-item"
+                    *ngFor="let denomination of filteredDenominations()"
+                    (click)="selectDenomination(denomination)"
+                  >
+                    {{ denomination.smallDescription }} - {{ denomination.code || 'No Code' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Item Description *</label>
+              <input type="text" class="form-control" [(ngModel)]="newDetail().itemDescription" name="itemDescription" required>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Quantity *</label>
+                  <input type="number" class="form-control" [(ngModel)]="newDetail().quantity" name="quantity" min="1" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Unit Price *</label>
+                  <input type="number" class="form-control" [(ngModel)]="newDetail().unitPrice" name="unitPrice" min="0" step="0.01" required>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Discount Amount</label>
+                  <input type="number" class="form-control" [(ngModel)]="newDetail().discountAmount" name="discountAmount" min="0" step="0.01">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Tax Amount</label>
+                  <input type="number" class="form-control" [(ngModel)]="newDetail().taxAmount" name="taxAmount" min="0" step="0.01">
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" [(ngModel)]="newDetail().notes" name="notes" rows="2"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="resetDetailForm()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="editingDetail() ? saveDetailUpdate() : addDetail()">
+            {{ editingDetail() ? 'Update Item' : 'Add Item' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

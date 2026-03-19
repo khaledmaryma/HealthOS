@@ -1,0 +1,196 @@
+<div class="trial-balance">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Trial Balance</h4>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary btn-sm" (click)="exportToExcel()">
+        <i class="fas fa-download me-1"></i>Export Excel
+      </button>
+      <button class="btn btn-outline-secondary btn-sm" (click)="printTrialBalance()">
+        <i class="fas fa-print me-1"></i>Print
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">From Date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="filter().FromDate" (change)="onFilterChange()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">To Date</label>
+          <input type="date" class="form-control form-control-sm"
+                 [(ngModel)]="filter().ToDate" (change)="onFilterChange()">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Exclude Opening/Closing</label>
+          <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="excludeOpeningClosing"
+                   [(ngModel)]="filter().ExcludeOpeningClosing" (change)="onFilterChange()">
+            <label class="form-check-label" for="excludeOpeningClosing">
+              Exclude voucher types 17 & 18
+            </label>
+          </div>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-primary btn-sm" (click)="loadTrialBalance()">
+            <i class="fas fa-search me-1"></i>Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Pagination Controls -->
+  <div class="d-flex justify-content-between align-items-center mb-3" *ngIf="!isLoading() && accounts().length > 0">
+    <div class="d-flex gap-2 align-items-center">
+      <div class="input-group input-group-sm" style="width: 300px;">
+        <span class="input-group-text"><i class="fas fa-search"></i></span>
+        <input type="text" class="form-control" placeholder="Search accounts..."
+               [(ngModel)]="searchTerm" (input)="onSearchChange()">
+      </div>
+      <span class="text-muted small">
+        {{ filteredAndPagedAccounts().length }} of {{ accounts().length }} accounts
+      </span>
+    </div>
+
+    <div class="d-flex gap-2 align-items-center">
+      <label class="form-label mb-0 me-2">Page Size:</label>
+      <select class="form-select form-select-sm" style="width: 80px;" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+
+      <nav *ngIf="totalPages() > 1">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <a class="page-link" href="#" (click)="onPageChange(currentPage() - 1); $event.preventDefault()">«</a>
+          </li>
+          <li class="page-item" *ngFor="let page of [].constructor(totalPages()) | slice:0:5; let i = index"
+              [class.active]="currentPage() === i + 1">
+            <a class="page-link" href="#" (click)="onPageChange(i + 1); $event.preventDefault()">{{ i + 1 }}</a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+            <a class="page-link" href="#" (click)="onPageChange(currentPage() + 1); $event.preventDefault()">»</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div *ngIf="errorMsg()" class="alert alert-danger">{{ errorMsg() }}</div>
+  <div *ngIf="isLoading()" class="text-muted small">Loading trial balance...</div>
+
+  <!-- Regular View -->
+  <div class="table-responsive" *ngIf="!isLoading() && !showPrintView() && accounts().length > 0">
+    <table class="table table-sm table-bordered">
+      <thead>
+        <tr>
+          <th>Account Code</th>
+          <th>Currency</th>
+          <th>Description</th>
+          <th class="text-end">Debit Local</th>
+          <th class="text-end">Credit Local</th>
+          <th class="text-end">Balance Local</th>
+          <th class="text-end">Debit Main</th>
+          <th class="text-end">Credit Main</th>
+          <th class="text-end">Balance Main</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let account of paginatedAccounts(); let i = index">
+          <tr [class]="i % 2 === 0 ? 'table-light' : ''">
+            <td>{{ account.code || account['accountCode'] }}</td>
+            <td>{{ getCurrencyLabel(account.currency || account['currency']) }}</td>
+            <td>{{ account.description || account['desciption'] || account['description'] }}</td>
+            <td class="text-end">{{ (account.debitLocal || 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (account.creditLocal || 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ getBalance(account.debitLocal, account.creditLocal) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (account.debitMain || 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (account.creditMain || 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ getBalance(account.debitMain, account.creditMain) | number:'1.2-2' }}</td>
+          </tr>
+        </ng-container>
+      </tbody>
+      <tfoot>
+        <tr class="fw-semibold table-primary">
+          <td colspan="3">Totals (Filtered)</td>
+          <td class="text-end">{{ totals()['debitLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ totals()['creditLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ getBalance(totals()['debitLocal'], totals()['creditLocal']) | number:'1.2-2' }}</td>
+          <td class="text-end">{{ totals()['debitMain'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ totals()['creditMain'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ getBalance(totals()['debitMain'], totals()['creditMain']) | number:'1.2-2' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Print View (Hierarchical) -->
+  <div class="print-view" *ngIf="showPrintView()">
+    <div class="print-header">
+      <h2>Trial Balance Report</h2>
+      <div class="print-filters">
+        <p *ngIf="filter().FromDate || filter().ToDate">
+          Period: {{ filter().FromDate || 'Start' }} to {{ filter().ToDate || 'End' }}
+        </p>
+        <p *ngIf="filter().ExcludeOpeningClosing">Excluding Opening/Closing Vouchers (Types 17, 18)</p>
+      </div>
+    </div>
+
+    <table class="table table-sm print-table">
+      <thead>
+        <tr>
+          <th>Account Code</th>
+          <th>Description</th>
+          <th>Currency</th>
+          <th class="text-end">Debit Local</th>
+          <th class="text-end">Credit Local</th>
+          <th class="text-end">Balance Local</th>
+          <th class="text-end">Debit Main</th>
+          <th class="text-end">Credit Main</th>
+          <th class="text-end">Balance Main</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let account of filteredAndPagedAccounts()">
+          <tr class="account-row">
+            <td class="account-code">{{ account.code || account['accountCode'] }}</td>
+            <td class="account-description">{{ account.description || account['desciption'] || account['description'] }}</td>
+            <td>{{ getCurrencyLabel(account.currency || account['currency']) }}</td>
+            <td class="text-end">{{ (account.debitLocal || 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (account.creditLocal || 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ getBalance(account.debitLocal, account.creditLocal) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (account.debitMain || 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ (account.creditMain || 0) | number:'1.2-2' }}</td>
+            <td class="text-end">{{ getBalance(account.debitMain, account.creditMain) | number:'1.2-2' }}</td>
+          </tr>
+        </ng-container>
+      </tbody>
+      <tfoot>
+        <tr class="total-row">
+          <td colspan="3" class="fw-bold">TOTALS</td>
+          <td class="text-end fw-bold">{{ totals()['debitLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end fw-bold">{{ totals()['creditLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end fw-bold">{{ getBalance(totals()['debitLocal'], totals()['creditLocal']) | number:'1.2-2' }}</td>
+          <td class="text-end fw-bold">{{ totals()['debitMain'] | number:'1.2-2' }}</td>
+          <td class="text-end fw-bold">{{ totals()['creditMain'] | number:'1.2-2' }}</td>
+          <td class="text-end fw-bold">{{ getBalance(totals()['debitMain'], totals()['creditMain']) | number:'1.2-2' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="print-footer">
+      <p>Report generated on {{ currentDate | date:'medium' }}</p>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading() && accounts().length === 0 && !errorMsg()" class="text-muted small py-3">
+    No trial balance data found.
+  </div>
+</div>

@@ -1,0 +1,143 @@
+<div class="account-statement">
+  <h4>Account Statement</h4>
+  <div class="filter-panel mb-3">
+    <div class="row gy-2">
+      <div class="col-auto">
+        <label class="form-label">From</label>
+        <input type="date" class="form-control form-control-sm" [value]="fromDate()" (change)="fromDate.set($any($event.target).value)" />
+      </div>
+      <div class="col-auto">
+        <label class="form-label">To</label>
+        <input type="date" class="form-control form-control-sm" [value]="toDate()" (change)="toDate.set($any($event.target).value)" />
+      </div>
+      <div class="col-auto align-self-end">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" [checked]="isDueDate()" (change)="isDueDate.set($any($event.target).checked)" />
+          <label class="form-check-label">Use Due Date</label>
+        </div>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Account</label>
+        <input list="accounts" type="text" class="form-control form-control-sm" placeholder="code or name" [value]="accountText()" (input)="accountText.set($any($event.target).value)" />
+        <datalist id="accounts">
+          <option *ngFor="let a of accountsList()" [value]="formatAccount(a)"></option>
+        </datalist>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Job</label>
+        <input type="number" class="form-control form-control-sm" [value]="jobId()" (change)="jobId.set($any($event.target).valueAsNumber || null)" />
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Group</label>
+        <input type="number" class="form-control form-control-sm" [value]="groupId()" (change)="groupId.set($any($event.target).valueAsNumber || null)" />
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Voucher Types</label>
+        <select multiple class="form-select form-select-sm" [value]="voucherTypeIds()" (change)="onVoucherTypeChange($event)">
+          <option *ngFor="let vt of voucherTypesList()" [value]="vt['ID']">{{ vt['Code'] || vt['Description'] || vt['Name'] }}</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label">Currency</label>
+        <select class="form-select form-select-sm" [value]="accountCurrencyId()" (change)="accountCurrencyId.set($any($event.target).value ? +$any($event.target).value : null)">
+          <option value="">All Currencies</option>
+          <option *ngFor="let curr of currencyOptions" [value]="curr.id">{{ curr.label }}</option>
+        </select>
+      </div>
+      <div class="col-auto flex-grow-1">
+        <label class="form-label">Comment</label>
+        <input type="text" class="form-control form-control-sm" [(ngModel)]="comment" />
+      </div>
+      <div class="col-auto align-self-end">
+        <button class="btn btn-sm btn-primary" (click)="search()" [disabled]="isLoading()">Search</button>
+        <button class="btn btn-sm btn-secondary" (click)="clear()">Clear</button>
+        <button class="btn btn-sm btn-info" (click)="printReport()" [disabled]="rows().length === 0 || isLoading()">Print Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="errorMsg()" class="alert alert-danger">{{ errorMsg() }}</div>
+  <div *ngIf="isLoading()" class="text-muted small">Loading...</div>
+
+  <div *ngIf="!isLoading() && rows().length === 0 && !errorMsg()" class="text-muted small py-3">
+    No account statement data found. Please adjust your filters and try again.
+  </div>
+
+  <div class="table-responsive" *ngIf="rows().length > 0 && !isLoading()">
+    <table class="table table-sm table-bordered">
+      <thead>
+        <tr>
+          <th>Voucher #</th>
+          <th>Voucher Date</th>
+          <th>Account Code</th>
+          <th>Account Description</th>
+          <th>Comments</th>
+          <th class="text-end">Debit L.L</th>
+          <th class="text-end">Credit L.L</th>
+          <th class="text-end">Balance L.L</th>
+          <th class="text-end">Debit $$</th>
+          <th class="text-end">Credit $$</th>
+          <th class="text-end">Balance $$</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of paginatedRows(); let i = index" [class]="i % 2 === 0 ? 'table-light' : 'table-secondary'">
+          <td>{{ r['voucherNumber'] }}</td>
+          <td>{{ r['voucherDate'] | date }}</td>
+          <td>{{ r['accountCode'] }}</td>
+          <td>{{ r['accountDescription'] }}</td>
+          <td>{{ r['comments'] }}</td>
+          <td class="text-end">{{ r['debitLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ r['creditLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ r['balanceLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ r['debitMain'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ r['creditMain'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ r['balanceMain'] | number:'1.2-2' }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr class="fw-semibold">
+          <td colspan="5">Totals</td>
+          <td class="text-end">{{ totals()['debitLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ totals()['creditLocal'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ (totals()['debitLocal'] || 0) - (totals()['creditLocal'] || 0) | number:'1.2-2' }}</td>
+          <td class="text-end">{{ totals()['debitMain'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ totals()['creditMain'] | number:'1.2-2' }}</td>
+          <td class="text-end">{{ (totals()['debitMain'] || 0) - (totals()['creditMain'] || 0) | number:'1.2-2' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="totalPages() > 1">
+      <div class="d-flex align-items-center">
+        <label class="form-label me-2 mb-0">Page Size:</label>
+        <select class="form-select form-select-sm" style="width: auto;" [value]="pageSize()" (change)="onPageSizeChange(+$any($event.target).value)">
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+
+      <nav aria-label="Account statement pagination">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item" [class.disabled]="currentPage() === 1">
+            <a class="page-link" href="#" (click)="onPageChange(currentPage() - 1); $event.preventDefault()">Previous</a>
+          </li>
+          
+          <li class="page-item" *ngFor="let page of [].constructor(totalPages()); let i = index" 
+              [class.active]="currentPage() === i + 1">
+            <a class="page-link" href="#" (click)="onPageChange(i + 1); $event.preventDefault()">{{ i + 1 }}</a>
+          </li>
+          
+          <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+            <a class="page-link" href="#" (click)="onPageChange(currentPage() + 1); $event.preventDefault()">Next</a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="text-muted small">
+        Showing {{ (currentPage() - 1) * pageSize() + 1 }} to {{ getMin(currentPage() * pageSize(), totalItems()) }} of {{ totalItems() }} entries
+      </div>
+    </div>

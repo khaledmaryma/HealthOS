@@ -1,0 +1,171 @@
+
+Product	dbo	user table	2015-03-25 09:45:07.417
+
+id	int	no	4	10   	0    	no	(n/a)	(n/a)	NULL
+StockType	int	no	4	10   	0    	no	(n/a)	(n/a)	NULL
+ProductLine	int	no	4	10   	0    	no	(n/a)	(n/a)	NULL
+Category	int	no	4	10   	0    	no	(n/a)	(n/a)	NULL
+Manufacturer	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+Code	nvarchar	no	50	     	     	no	(n/a)	(n/a)	Arabic_CI_AS
+SmallDescription	nvarchar	no	250	     	     	no	(n/a)	(n/a)	Arabic_CI_AS
+LongDescription	nvarchar	no	510	     	     	yes	(n/a)	(n/a)	Arabic_CI_AS
+ROA	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+Ingredient	nvarchar	no	510	     	     	yes	(n/a)	(n/a)	Arabic_CI_AS
+BarCode	nvarchar	no	50	     	     	yes	(n/a)	(n/a)	Arabic_CI_AS
+Identifier	nvarchar	no	50	     	     	yes	(n/a)	(n/a)	Arabic_CI_AS
+Prefix	nvarchar	no	10	     	     	yes	(n/a)	(n/a)	Arabic_CI_AS
+Suffix	nvarchar	no	10	     	     	yes	(n/a)	(n/a)	Arabic_CI_AS
+DisplayOrder	nvarchar	no	50	     	     	yes	(n/a)	(n/a)	Arabic_CI_AS
+DefaultPack	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+Image	image	no	16	     	     	yes	(n/a)	(n/a)	NULL
+Status	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+CanNotBeSold	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+CanNotBePurchased	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+CanNotBeTransferred	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+CanNotBeDamaged	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+SalePriceLocal	decimal	no	9	14   	3    	yes	(n/a)	(n/a)	NULL
+SalePriceMain	decimal	no	9	14   	3    	yes	(n/a)	(n/a)	NULL
+VatSales	decimal	no	5	6    	2    	yes	(n/a)	(n/a)	NULL
+IncludedSale	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+LastPurchLocal	decimal	no	9	14   	3    	yes	(n/a)	(n/a)	NULL
+LastPurchMain	decimal	no	9	14   	3    	yes	(n/a)	(n/a)	NULL
+VatPurchase	decimal	no	5	6    	2    	yes	(n/a)	(n/a)	NULL
+InCludedPurch	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+AverageLocal	decimal	no	9	14   	3    	yes	(n/a)	(n/a)	NULL
+AverageMain	decimal	no	9	14   	3    	yes	(n/a)	(n/a)	NULL
+DefaultQty	int	no	4	10   	0    	no	(n/a)	(n/a)	NULL
+DisplaySalePriceLocal	nvarchar	no	50	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CS_AS
+DisplaySalePriceMain	nvarchar	no	50	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CS_AS
+HasExpiry	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+HasSerial	bit	no	1	     	     	yes	(n/a)	(n/a)	NULL
+MinimumQty	decimal	no	9	18   	3    	yes	(n/a)	(n/a)	NULL
+MaximumQty	decimal	no	9	18   	3    	yes	(n/a)	(n/a)	NULL
+ROP	decimal	no	9	18   	3    	no	(n/a)	(n/a)	NULL
+ProductStat	int	no	4	10   	0    	no	(n/a)	(n/a)	NULL
+IsSelected	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+GQty	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+StartDateTime	datetime	no	8	     	     	yes	(n/a)	(n/a)	NULL
+StopDateTime	datetime	no	8	     	     	yes	(n/a)	(n/a)	NULL
+Morning	bit	no	1	     	     	yes	(n/a)	(n/a)	NULL
+Noon	bit	no	1	     	     	yes	(n/a)	(n/a)	NULL
+AfterNoon	bit	no	1	     	     	yes	(n/a)	(n/a)	NULL
+Evening	bit	no	1	     	     	yes	(n/a)	(n/a)	NULL
+Night	bit	no	1	     	     	yes	(n/a)	(n/a)	NULL
+NbOfHours	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+ReceivedQty	nvarchar	no	100	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+ReceivedBy	nvarchar	no	100	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+PackageID	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+ToDelete	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+StartDate	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+StartDateLabel	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+StopDate	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+StopDateLabel	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+Strenght	decimal	no	9	18   	2    	yes	(n/a)	(n/a)	NULL
+Comment	nvarchar	no	-1	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CS_AS
+Quantity	decimal	no	9	18   	2    	yes	(n/a)	(n/a)	NULL
+DefaultDiscount	decimal	no	9	18   	3    	no	(n/a)	(n/a)	NULL
+ModifiedBy	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+ModifiedDate	datetime	no	8	     	     	yes	(n/a)	(n/a)	NULL
+CreatedBy	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+CreatedDate	datetime	no	8	     	     	yes	(n/a)	(n/a)	NULL
+IsDeleted	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+IgnoreDenied	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+IsRecycled	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+HasRecycle	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+AccountSeparated	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+CanBeSold	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+CanBePurchased	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+CanBeTransferred	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+CanBeDamaged	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+LastPursFC	decimal	no	9	14   	3    	yes	(n/a)	(n/a)	NULL
+RequireValidation	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+PagerHelperID	int	no	4	10   	0    	no	(n/a)	(n/a)	NULL
+LastRequestDate	datetime	no	8	     	     	yes	(n/a)	(n/a)	NULL
+LastRequestNB	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+LeadTime	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+LastPurchaseQty	decimal	no	9	18   	3    	yes	(n/a)	(n/a)	NULL
+LastRequestQty	decimal	no	9	18   	3    	yes	(n/a)	(n/a)	NULL
+TotalIn	decimal	no	9	18   	3    	no	(n/a)	(n/a)	NULL
+TotalOut	decimal	no	9	18   	3    	no	(n/a)	(n/a)	NULL
+IsServiceProduct	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+IsPOSProduct	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+DenominationID	int	no	4	10   	0    	yes	(n/a)	(n/a)	NULL
+IsHISRelated	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+
+
+id	1	1	0
+
+No rowguidcol column defined.
+
+PRIMARY
+
+PK_Product	clustered, unique, primary key located on PRIMARY	id
+
+DEFAULT on column AccountSeparated	DF_Product_AccountSeparated	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column CanNotBeDamaged	DF_Product_CanBeDamaged	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column CanNotBePurchased	DF_Product_CanBePurchased	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column CanNotBeSold	DF_Product_CanBeSold	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column CanNotBeTransferred	DF_Product_CanBeTransferred	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column CanBeDamaged	DF_Product_CanNotBeDamaged1	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column CanBePurchased	DF_Product_CanNotBePurchased1	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column CanBeSold	DF_Product_CanNotBeSold1	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column CanBeTransferred	DF_Product_CanNotBeTransferred1	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column DefaultDiscount	DF_Product_DefaultDiscount	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column DefaultQty	DF_Product_DefaultQty	(n/a)	(n/a)	(n/a)	(n/a)	((1))
+DEFAULT on column HasExpiry	DF_Product_HasExpiry	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column HasRecycle	DF_Product_HasRecycle	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column HasSerial	DF_Product_HasSerial	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column IgnoreDenied	DF_Product_IgnoreDenied	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column InCludedPurch	DF_Product_InCludedPurch	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column IncludedSale	DF_Product_IncludedSale	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column IsDeleted	DF_Product_IsDeleted	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column IsHISRelated	DF_Product_IsHISRelated	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column IsPOSProduct	DF_Product_IsPOSProduct	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column IsRecycled	DF_Product_IsRecycled	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column IsSelected	DF_Product_IsSelected	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column IsServiceProduct	DF_Product_IsServiceProduct	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column LastPursFC	DF_Product_LastPursFC	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column PagerHelperID	DF_Product_ProductHelperID	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column ProductStat	DF_Product_ProductStat	(n/a)	(n/a)	(n/a)	(n/a)	((4))
+DEFAULT on column RequireValidation	DF_Product_RequireValidation	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column ROP	DF_Product_ROP	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column ToDelete	DF_Product_ToDelete	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column TotalIn	DF_Product_TotalIn	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+DEFAULT on column TotalOut	DF_Product_TotalOut	(n/a)	(n/a)	(n/a)	(n/a)	((0))
+FOREIGN KEY	FK_Product_Category	No Action	No Action	Enabled	Is_For_Replication	Category
+ 	 	 	 	 	 	REFERENCES Inventory.dbo.Category (id)
+FOREIGN KEY	FK_Product_Manufacturer	No Action	No Action	Enabled	Is_For_Replication	Manufacturer
+ 	 	 	 	 	 	REFERENCES Inventory.dbo.Manufacturer (id)
+FOREIGN KEY	FK_Product_Package	No Action	No Action	Enabled	Is_For_Replication	DefaultPack
+ 	 	 	 	 	 	REFERENCES Inventory.dbo.Package (id)
+FOREIGN KEY	FK_Product_ProductLine	No Action	No Action	Enabled	Is_For_Replication	ProductLine
+ 	 	 	 	 	 	REFERENCES Inventory.dbo.ProductLine (id)
+FOREIGN KEY	FK_Product_ROA	No Action	No Action	Enabled	Is_For_Replication	ROA
+ 	 	 	 	 	 	REFERENCES Inventory.dbo.ROA (id)
+FOREIGN KEY	FK_Product_StockType	No Action	No Action	Enabled	Is_For_Replication	StockType
+ 	 	 	 	 	 	REFERENCES Inventory.dbo.StockType (id)
+PRIMARY KEY (clustered)	PK_Product	(n/a)	(n/a)	(n/a)	(n/a)	id
+
+
+Inventory.dbo.AlternateProduct: FK_AlternateProduct_Product2
+Inventory.dbo.AlternateProduct: FK_AlternateProduct_Product3
+Inventory.dbo.DeliverItem: FK_DeliverItem_Product
+Inventory.dbo.DeniedProduct: FK_DemitProduct_Product
+Inventory.dbo.DrugInvoiceItems: FK_DrugInvoiceItems_Product
+Inventory.dbo.ExpensesDetail: FK_ExpensesDetail_Product
+Inventory.dbo.InvoiceItem: FK_InvoiceItem_Product
+Inventory.dbo.OrderItem: FK_OrderItem_Product
+Inventory.dbo.POSDetail: FK_POSDetail_Product
+Inventory.dbo.ProductAccount: FK_ProductAccount_Product
+Inventory.dbo.ProductContextPrice: FK_ProductContextPrice_Product
+Inventory.dbo.ProductDocument: FK_ProductDocument_Product
+Inventory.dbo.ProductLocation: FK_ProductLocation_Product
+Inventory.dbo.ProductPackage: FK_ProductPackage_Product
+Inventory.dbo.ProductRejected: FK_ProductRejected_Product
+Inventory.dbo.ProductReorderPoint: FK_ProductReorderPoint_Product
+Inventory.dbo.ProductStorage: FK_ProductStorage_Product
+Inventory.dbo.ReceivedDetails: FK_ReceiptDetails_Product
+Inventory.dbo.SalesmanCommision: FK_SalesmanCommision_Product
+Inventory.dbo.TempAdjustmentDetail: FK_TempAdjustmentDetail_Product
+Inventory.dbo.WareHouseFavoritesProduct: FK_WareHouseFavoritesProduct_Product
+Inventory.dbo.WarehouseProduct: FK_WarehouseProduct_Product

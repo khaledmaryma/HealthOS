@@ -1,0 +1,91 @@
+-- Scan tables for Quick Admission feature
+
+-- Patient table structure
+USE HospitalDefinition;
+GO
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    IS_NULLABLE,
+    COLUMN_DEFAULT
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'Patient'
+ORDER BY ORDINAL_POSITION;
+
+-- Sample patient data
+SELECT TOP 5 *
+FROM Patient WITH (NOLOCK)
+ORDER BY ID DESC;
+
+-- Admission table structure
+USE Admission;
+GO
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    IS_NULLABLE,
+    COLUMN_DEFAULT
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'Admission'
+ORDER BY ORDINAL_POSITION;
+
+-- Sample admission data
+SELECT TOP 5 *
+FROM Admission WITH (NOLOCK)
+ORDER BY ID DESC;
+
+-- Invoice Header table structure
+USE Billing;
+GO
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    IS_NULLABLE,
+    COLUMN_DEFAULT
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'InvoiceHeader'
+ORDER BY ORDINAL_POSITION;
+
+-- Sample invoice header
+SELECT TOP 5 *
+FROM InvoiceHeader WITH (NOLOCK)
+ORDER BY ID DESC;
+
+-- Invoice Detail table structure
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    IS_NULLABLE,
+    COLUMN_DEFAULT
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'InvoiceDetail'
+ORDER BY ORDINAL_POSITION;
+
+-- Sample invoice detail
+SELECT TOP 5 *
+FROM InvoiceDetail WITH (NOLOCK)
+ORDER BY ID DESC;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

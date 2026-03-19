@@ -1,0 +1,256 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <div class="d-flex align-items-center">
+      <button
+        type="button"
+        class="btn btn-link app-launcher-button p-0 me-2"
+        (click)="toggleLauncher()"
+        title="Open app launcher"
+      >
+        <i class="bi bi-grid-3x3-gap-fill"></i>
+      </button>
+
+      <a class="navbar-brand" href="#">
+        <i class="bi bi-hospital"></i>
+        <span *ngIf="activeApp() === 'LIS'">LIS - Laboratory Information System</span>
+        <span *ngIf="activeApp() === 'Inventory'">Inventory Management</span>
+        <span *ngIf="activeApp() === 'UserManagement'">User Management</span>
+      <span *ngIf="activeApp() === 'Accounting'">Accounting</span>
+      </a>
+    </div>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav" *ngIf="activeApp() === 'LIS'">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/labtests" routerLinkActive="active">
+            <i class="bi bi-clipboard2-pulse me-1"></i>
+            Lab Tests
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/patient-results" routerLinkActive="active">
+            <i class="bi bi-person-lines-fill me-1"></i>
+            Patient Results
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/resident-patients" routerLinkActive="active">
+            <i class="bi bi-people-fill me-1"></i>
+            Resident Patients
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting" routerLinkActive="active">
+            <i class="bi bi-bar-chart-line me-1"></i>
+            Accounting Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/gemini-chat" routerLinkActive="active">
+            <i class="bi bi-robot me-1"></i>
+            AI Assistant
+          </a>
+        </li>
+      </ul>
+
+      <ul class="navbar-nav" *ngIf="activeApp() === 'Inventory'">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/inventory" routerLinkActive="active">
+            <i class="bi bi-box-seam me-1"></i>
+            Product Definition
+          </a>
+        </li>
+        <!-- Additional Inventory menus can be added here later -->
+      </ul>
+
+      <ul class="navbar-nav" *ngIf="activeApp() === 'UserManagement'">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/user-management/users" routerLinkActive="active">
+            <i class="bi bi-person-badge me-1"></i>
+            Users
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/user-management/profiles" routerLinkActive="active">
+            <i class="bi bi-person-lines-fill me-1"></i>
+            Profiles
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/user-management/permissions" routerLinkActive="active">
+            <i class="bi bi-shield-lock me-1"></i>
+            Permissions
+          </a>
+        </li>
+      </ul>
+
+      <ul class="navbar-nav" *ngIf="activeApp() === 'Accounting'">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting/chart-of-accounts" routerLinkActive="active">
+            <i class="bi bi-tree me-1"></i>
+            Chart of Accounts
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting/journal-voucher" routerLinkActive="active">
+            <i class="bi bi-journal-text me-1"></i>
+            Journal Voucher
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting/account-statement" routerLinkActive="active">
+            <i class="bi bi-file-text me-1"></i>
+            Account Statement
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting/trial-balance" routerLinkActive="active">
+            <i class="bi bi-calculator me-1"></i>
+            Trial Balance
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting/opening-closing" routerLinkActive="active">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>
+            Opening/Closing
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting/configuration" routerLinkActive="active">
+            <i class="bi bi-gear me-1"></i>
+            Configuration
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting" routerLinkActive="active">
+            <i class="bi bi-bar-chart me-1"></i>
+            Dashboard
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="app-toolbar ms-auto">
+      <div class="toolbar-item">
+        <span class="toolbar-label">User:</span>
+        <span class="toolbar-value">{{ loggedInUser() }}</span>
+      </div>
+      <div class="toolbar-item">
+        <span class="toolbar-label">Time:</span>
+        <span class="toolbar-value">{{ currentTime() }}</span>
+      </div>
+      <div class="toolbar-item toolbar-control">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text" title="Font size">
+            <i class="bi bi-fonts"></i>
+          </span>
+          <select
+            id="fontSizeSelect"
+            class="form-select"
+            [value]="fontScale()"
+            (change)="onFontScaleChange($any($event.target).value)"
+          >
+            <option value="0.9">Small</option>
+            <option value="1">Normal</option>
+            <option value="1.1">Large</option>
+            <option value="1.2">X-Large</option>
+          </select>
+        </div>
+      </div>
+      <div class="toolbar-item toolbar-control">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text" title="Control size">
+            <i class="bi bi-ui-checks-grid"></i>
+          </span>
+          <select
+            id="controlSizeSelect"
+            class="form-select"
+            [value]="controlScale()"
+            (change)="onControlScaleChange($any($event.target).value)"
+          >
+            <option value="0.85">Small</option>
+            <option value="1">Normal</option>
+            <option value="1.1">Large</option>
+            <option value="1.2">X-Large</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-launcher-panel" *ngIf="isLauncherOpen()">
+    <div class="app-launcher-header">
+      <span>Applications</span>
+    </div>
+    <div class="app-launcher-body">
+      <button
+        type="button"
+        class="app-tile"
+        [class.active]="activeApp() === 'LIS'"
+        [class.disabled]="!isAppAllowed('LIS')"
+        [disabled]="!isAppAllowed('LIS')"
+        (click)="selectApp('LIS')"
+        [attr.title]="!isAppAllowed('LIS') ? 'No access' : null"
+      >
+        <div class="app-icon lis-icon">LIS</div>
+        <div class="app-text">
+          <div class="app-name">LIS</div>
+          <div class="app-description">Laboratory Information System</div>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        class="app-tile"
+        [class.active]="activeApp() === 'Inventory'"
+        [class.disabled]="!isAppAllowed('Inventory')"
+        [disabled]="!isAppAllowed('Inventory')"
+        (click)="selectApp('Inventory')"
+        [attr.title]="!isAppAllowed('Inventory') ? 'No access' : null"
+      >
+        <div class="app-icon inventory-icon">INV</div>
+        <div class="app-text">
+          <div class="app-name">Inventory</div>
+          <div class="app-description">Inventory Management App</div>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        class="app-tile"
+        [class.active]="activeApp() === 'UserManagement'"
+        [class.disabled]="!isAppAllowed('UserManagement')"
+        [disabled]="!isAppAllowed('UserManagement')"
+        (click)="selectApp('UserManagement')"
+        [attr.title]="!isAppAllowed('UserManagement') ? 'No access' : null"
+      >
+        <div class="app-icon lis-icon">UM</div>
+        <div class="app-text">
+          <div class="app-name">User Management</div>
+          <div class="app-description">Users, Profiles, and Permissions</div>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        class="app-tile"
+        [class.active]="activeApp() === 'Accounting'"
+        [class.disabled]="!isAppAllowed('Accounting')"
+        [disabled]="!isAppAllowed('Accounting')"
+        (click)="selectApp('Accounting')"
+        [attr.title]="!isAppAllowed('Accounting') ? 'No access' : null"
+      >
+        <div class="app-icon accounting-icon">ACC</div>
+        <div class="app-text">
+          <div class="app-name">Accounting</div>
+          <div class="app-description">Journal vouchers and cash</div>
+        </div>
+      </button>
+    </div>
+  </div>
+</nav>
+<router-outlet />

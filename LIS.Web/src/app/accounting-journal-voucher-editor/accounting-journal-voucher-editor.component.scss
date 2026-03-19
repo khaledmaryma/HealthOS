@@ -1,0 +1,132 @@
+.voucher-editor {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.editor-section {
+  background: #fff;
+  border: 1px solid #e1e5ea;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.editor-top-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.form-grid .full-width {
+  grid-column: span 4;
+}
+
+.detail-entry-layout {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 1rem;
+}
+
+.detail-entry-left {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.detail-entry-right {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+
+.amount-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.comment-block textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.autocomplete-dropdown {
+  position: absolute;
+  z-index: 2000;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  max-height: 200px;
+  overflow-y: auto;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  width: 100%;
+  top: 100%;
+  left: 0;
+}
+
+.autocomplete-item {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.autocomplete-item:hover {
+  background-color: #e3f2fd;
+}
+
+.autocomplete-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #212529;
+}
+
+.autocomplete-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
+.currency-badge {
+  font-weight: 600;
+  color: #0d6efd;
+}
+
+.details-table {
+  thead th {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  tfoot td {
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+  }
+}
+
+.balance-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  font-weight: 600;
+}

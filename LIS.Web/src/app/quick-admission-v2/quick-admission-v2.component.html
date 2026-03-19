@@ -1,0 +1,53 @@
+<!-- A basic form layout for the new Quick Admission screen -->
+<div class="quick-admission-v2">
+  <form [formGroup]="form" (ngSubmit)="saveComplete()">
+    <fieldset formGroupName="patientInfo">
+      <legend>Patient Information</legend>
+      <label>First Name:<input formControlName="firstName" /></label>
+      <label>Last Name:<input formControlName="lastName" /></label>
+      <label>Middle Name:<input formControlName="middleName" /></label>
+      <label>Gender:<select formControlName="gender">
+          <option value="M">Male</option>
+          <option value="F">Female</option>
+        </select></label>
+      <label>DOB:<input type="date" formControlName="dob" /></label>
+      <label>Phone:<input formControlName="phone" /></label>
+      <label>Arabic Full Name:<input formControlName="arabicFullName" /></label>
+    </fieldset>
+
+    <fieldset formGroupName="admissionInfo">
+      <legend>Admission Details</legend>
+      <label>Admission Site:<input type="number" formControlName="admissionSite" /></label>
+      <label>Referral Physician ID:<input type="number" formControlName="referralPhysicianId" /></label>
+      <label>Department ID:<input type="number" formControlName="departmentId" /></label>
+      <label>Check-in Date:<input type="date" formControlName="checkInDate" /></label>
+      <label>Check-out Date:<input type="date" formControlName="checkOutDate" /></label>
+    </fieldset>
+
+    <fieldset formGroupName="invoiceInfo">
+      <legend>Invoice Information</legend>
+      <label>Hospital Amount:<input type="number" formControlName="hospitalAmount" /></label>
+      <label>Physician Amount:<input type="number" formControlName="physicianAmount" /></label>
+      <label>Gross:<input type="number" formControlName="gross" /></label>
+      <label>Net:<input type="number" formControlName="net" /></label>
+    </fieldset>
+
+    <fieldset formArrayName="invoiceDetail">
+      <legend>Invoice Details</legend>
+      <div *ngFor="let detailCtrl of invoiceDetailArray.controls; let i = index" [formGroupName]="i" class="invoice-detail-row">
+        <label>Denomination:<input type="number" formControlName="denomination" /></label>
+        <label>Quantity:<input type="number" formControlName="quantity" /></label>
+        <label>Unit Price:<input type="number" formControlName="unitPrice" /></label>
+        <label>Discount:<input type="number" formControlName="discount" /></label>
+        <label>Lump Sum:<input type="number" formControlName="lumpSum" /></label>
+        <button type="button" (click)="removeInvoiceDetail(i)">Remove</button>
+      </div>
+      <button type="button" (click)="addInvoiceDetail()">Add Detail</button>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit" [disabled]="isSaving">Save</button>
+      <button type="button" (click)="router.navigate(['/'])">Cancel</button>
+    </div>
+  </form>
+</div>

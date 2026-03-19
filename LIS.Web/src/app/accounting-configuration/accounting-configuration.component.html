@@ -1,0 +1,29 @@
+<div class="config-page">
+  <div class="config-header">
+    <div>
+      <h3>Accounting Configuration</h3>
+      <p class="text-muted small">Manage settings from ConfigurationTable.</p>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary" (click)="load()" [disabled]="isLoading()">
+      {{ isLoading() ? 'Loading...' : 'Refresh' }}
+    </button>
+  </div>
+
+  <div class="config-body">
+    <div class="config-form" *ngFor="let row of rows()">
+      <div class="form-grid">
+        <div class="form-field" *ngFor="let col of columns()">
+          <label class="form-label">{{ col }}</label>
+          <input
+            class="form-control form-control-sm"
+            [value]="row[col] ?? ''"
+            (input)="updateRowValue(row, col, $any($event.target).value)"
+          />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-sm btn-primary" (click)="saveRow(row)">Save</button>
+      </div>
+    </div>
+  </div>
+</div>

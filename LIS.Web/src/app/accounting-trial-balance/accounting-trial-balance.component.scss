@@ -1,0 +1,78 @@
+.trial-balance {
+  .table {
+    th, td {
+      font-size: 0.875rem;
+      padding: 0.5rem;
+    }
+  }
+
+  // Alternating row colors
+  tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+  }
+
+  tbody tr:hover {
+    background-color: #e9ecef;
+  }
+
+  // Print styles
+  .print-view {
+    display: none;
+  }
+
+  @media print {
+    .print-view {
+      display: block !important;
+    }
+
+    .card, .d-flex, .btn, .input-group, .pagination, .alert {
+      display: none !important;
+    }
+
+    .print-header {
+      text-align: center;
+      margin-bottom: 2rem;
+
+      h2 {
+        margin-bottom: 0.5rem;
+      }
+
+      .print-filters {
+        font-size: 0.9rem;
+        color: #666;
+      }
+    }
+
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th, td {
+        border: 1px solid #000;
+        padding: 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      th {
+        background-color: #f0f0f0 !important;
+        font-weight: bold;
+      }
+
+      .account-row {
+        page-break-inside: avoid;
+      }
+
+      .total-row {
+        border-top: 2px solid #000;
+        background-color: #e0e0e0 !important;
+      }
+    }
+
+    .print-footer {
+      margin-top: 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #666;
+    }
+  }
+}

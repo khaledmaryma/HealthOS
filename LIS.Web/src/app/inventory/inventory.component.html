@@ -1,0 +1,115 @@
+<div class="inventory-shell">
+  <header class="inventory-header">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div>
+        <h1>Inventory</h1>
+        <p class="subtitle">Inventory application – products and upcoming inventory features.</p>
+      </div>
+      <a class="btn btn-success" routerLink="/inventory/product/new">
+        <i class="bi bi-plus-lg me-1"></i>
+        New Product
+      </a>
+    </div>
+
+    <ul class="nav nav-pills inventory-menu">
+      <li class="nav-item">
+        <span class="nav-link active">
+          <i class="bi bi-box-seam me-1"></i>
+          Product Definition
+        </span>
+      </li>
+      <li class="nav-item">
+        <span class="nav-link disabled">
+          Stock Levels (coming)
+        </span>
+      </li>
+      <li class="nav-item">
+        <span class="nav-link disabled">
+          Purchase Orders (coming)
+        </span>
+      </li>
+    </ul>
+  </header>
+
+  <section class="inventory-content">
+    <div class="info-card">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle">
+          <thead>
+          <tr>
+            <th style="width: 80px;">ID</th>
+            <th style="width: 140px;">Code</th>
+            <th>Description</th>
+            <th style="width: 90px;">Category</th>
+            <th style="width: 90px;">Manufacturer</th>
+            <th style="width: 120px;">Sale Price</th>
+            <th style="width: 70px;">Expiry</th>
+            <th style="width: 70px;">Can Sell</th>
+            <th style="width: 70px;">Can Buy</th>
+            <th style="width: 80px;"></th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngIf="isLoading">
+            <td colspan="10" class="text-center">
+              Loading products...
+            </td>
+          </tr>
+          <tr *ngFor="let p of products">
+            <td>{{ p.id }}</td>
+            <td>{{ p.code }}</td>
+            <td>{{ p.smallDescription }}</td>
+            <td>{{ p.category }}</td>
+            <td>{{ p.manufacturer ?? '-' }}</td>
+            <td>{{ p.salePriceLocal ?? '-' }}</td>
+            <td>
+              <span class="badge" [ngClass]="p.hasExpiry ? 'bg-success' : 'bg-secondary'">
+                {{ p.hasExpiry ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="p.canBeSold ? 'bg-success' : 'bg-secondary'">
+                {{ p.canBeSold ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="p.canBePurchased ? 'bg-success' : 'bg-secondary'">
+                {{ p.canBePurchased ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" [routerLink]="['/inventory/product', p.id]">
+                <i class="bi bi-pencil-square"></i>
+              </a>
+            </td>
+          </tr>
+          <tr *ngIf="!isLoading && products.length === 0">
+            <td colspan="10" class="text-center text-muted">
+              No products found.
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <div>
+          Page {{ page }} / {{ totalPages }} &nbsp;
+          <span class="text-muted">({{ totalCount }} products)</span>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!canGoPrev()" (click)="loadProducts(page - 1)">
+            ‹ Prev
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="!canGoNext()" (click)="loadProducts(page + 1)">
+            Next ›
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+
+

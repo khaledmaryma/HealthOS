@@ -1,0 +1,131 @@
+<div class="journal-layout">
+  <div class="journal-list">
+    <div class="list-header">
+      <h4>Journal Vouchers</h4>
+      <div class="header-actions">
+        <button class="btn btn-sm btn-primary" (click)="createVoucher()">New</button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="editVoucher()" [disabled]="!selectedHeader()">
+          Edit
+        </button>
+        <button class="btn btn-sm btn-outline-danger" (click)="deleteVoucher()" [disabled]="!selectedHeader()">
+          Delete
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" (click)="loadHeaders()" [disabled]="isLoadingHeaders()">
+          {{ isLoadingHeaders() ? 'Loading...' : 'Refresh' }}
+        </button>
+      </div>
+    </div>
+    <div class="list-filters">
+      <input
+        type="text"
+        class="form-control form-control-sm"
+        placeholder="Filter by number..."
+        [value]="filterNumber()"
+        (input)="filterNumber.set($any($event.target).value); onFilterChange()"
+      />
+      <div class="filter-row">
+        <div>
+          <label class="form-label">From</label>
+          <input
+            type="date"
+            class="form-control form-control-sm"
+            [value]="filterFrom()"
+            (change)="filterFrom.set($any($event.target).value); onFilterChange()"
+          />
+        </div>
+        <div>
+          <label class="form-label">To</label>
+          <input
+            type="date"
+            class="form-control form-control-sm"
+            [value]="filterTo()"
+            (change)="filterTo.set($any($event.target).value); onFilterChange()"
+          />
+        </div>
+      </div>
+    </div>
+    <div *ngIf="isLoadingHeaders()" class="text-muted small py-2">Loading vouchers...</div>
+    <div *ngIf="!isLoadingHeaders() && filteredHeaders().length === 0" class="text-muted small py-2">
+      No vouchers found.
+    </div>
+    <div class="list-body">
+      <button
+        type="button"
+        class="list-item"
+        *ngFor="let header of filteredHeaders()"
+        [class.active]="isSelected(header)"
+        (click)="selectHeader(header)"
+      >
+        <div class="list-title">{{ getHeaderTitle(header) }}</div>
+        <div class="list-subtitle">{{ getHeaderSubtitle(header) }}</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="journal-details">
+    <div class="details-header">
+      <h4>Voucher Details</h4>
+      <div class="text-muted small" *ngIf="selectedHeader()">Selected ID: {{ getHeaderId(selectedHeader()!) }}</div>
+    </div>
+    <div class="voucher-summary" *ngIf="selectedHeader()">
+      <div>
+        <div class="summary-label">Voucher #</div>
+        <div class="summary-value">{{ getHeaderNumber(selectedHeader()!) }}</div>
+      </div>
+      <div>
+        <div class="summary-label">Voucher Date</div>
+        <div class="summary-value">{{ getHeaderDateText(selectedHeader()!) }}</div>
+      </div>
+      <div>
+        <div class="summary-label">Voucher Type</div>
+        <div class="summary-value">{{ getVoucherTypeCode(selectedHeader()!) || '-' }}</div>
+      </div>
+      <div>
+        <div class="summary-label">Due Date</div>
+        <div class="summary-value">{{ getHeaderDueDateText(selectedHeader()!) }}</div>
+      </div>
+    </div>
+    <div *ngIf="isLoadingDetails()" class="text-muted small py-2">Loading details...</div>
+    <div *ngIf="!isLoadingDetails() && details().length === 0" class="text-muted small py-2">
+      No details available.
+    </div>
+    <div class="table-responsive" *ngIf="details().length > 0">
+      <table class="table table-sm table-hover align-middle details-table">
+        <thead>
+          <tr>
+            <th
+              *ngFor="let col of detailColumns()"
+              [class.text-end]="col.key === 'debitLocal' || col.key === 'debitMain' || col.key === 'creditLocal' || col.key === 'creditMain'"
+            >
+              {{ col.label }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of details()">
+            <td
+              *ngFor="let col of detailColumns()"
+              [class.text-end]="col.key === 'debitLocal' || col.key === 'debitMain' || col.key === 'creditLocal' || col.key === 'creditMain'"
+            >
+              {{ col.value(row) }}
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="fw-semibold">
+            <td *ngFor="let col of detailColumns()">
+              <ng-container [ngSwitch]="col.key">
+                <span *ngSwitchCase="'account'">Totals</span>
+                <span class="text-end d-block" *ngSwitchCase="'debitLocal'">{{ formatNumber(totals().debitLocal) }}</span>
+                <span class="text-end d-block" *ngSwitchCase="'debitMain'">{{ formatNumber(totals().debitMain) }}</span>
+                <span class="text-end d-block" *ngSwitchCase="'creditLocal'">{{ formatNumber(totals().creditLocal) }}</span>
+                <span class="text-end d-block" *ngSwitchCase="'creditMain'">{{ formatNumber(totals().creditMain) }}</span>
+                <span *ngSwitchDefault></span>
+              </ng-container>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+.department-report-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.page-header {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.report-content {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.department-section {
+  background-color: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.department-header {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.table {
+  font-size: 0.9rem;
+}
+
+.table th {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.grand-totals-section {
+  border: 2px solid #dee2e6;
+}
+
+.card {
+  border: 1px solid #dee2e6;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media print {
+  .page-header {
+    display: none;
+  }
+
+  .department-section {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+  }
+
+  .table {
+    font-size: 0.8rem;
+  }
+
+  .grand-totals-section {
+    page-break-inside: avoid;
+  }
+}

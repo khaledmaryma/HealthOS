@@ -1,0 +1,104 @@
+<div class="um-page">
+  <div class="um-header">
+    <div>
+      <h2>User Management - Profile Permissions</h2>
+      <p>Set CRUD access for each component per profile.</p>
+    </div>
+    <div class="um-actions">
+      <button class="btn btn-sm btn-primary" (click)="saveAll()" [disabled]="isSaving()">
+        {{ isSaving() ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="um-toolbar">
+    <label class="form-label">Profile</label>
+    <select
+      class="form-select form-select-sm"
+      [ngModel]="selectedProfileId()"
+      (ngModelChange)="onProfileChange($event)"
+    >
+      <option *ngFor="let profile of profiles()" [value]="profile.id">
+        {{ profile.name }} <span *ngIf="profile.isAdmin">(Admin)</span>
+      </option>
+    </select>
+  </div>
+
+  <div class="um-table">
+    <table class="table table-sm table-hover">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Can See</th>
+          <th>Can Add</th>
+          <th>Can Modify</th>
+          <th>Can Delete</th>
+          <th>Access Menu</th>
+          <th>Access App</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of rows()">
+          <td>
+            <div class="fw-semibold">{{ row.permission.name }}</div>
+            <div class="text-muted small">{{ row.permission.code }}</div>
+          </td>
+          <td>
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [checked]="row.canSee"
+              [disabled]="row.isAppPermission"
+              (change)="toggle(row.permission.id, 'canSee', $any($event.target).checked)"
+            />
+          </td>
+          <td>
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [checked]="row.canAdd"
+              [disabled]="row.isAppPermission"
+              (change)="toggle(row.permission.id, 'canAdd', $any($event.target).checked)"
+            />
+          </td>
+          <td>
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [checked]="row.canModify"
+              [disabled]="row.isAppPermission"
+              (change)="toggle(row.permission.id, 'canModify', $any($event.target).checked)"
+            />
+          </td>
+          <td>
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [checked]="row.canDelete"
+              [disabled]="row.isAppPermission"
+              (change)="toggle(row.permission.id, 'canDelete', $any($event.target).checked)"
+            />
+          </td>
+          <td>
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [checked]="row.hasAccessToMenu"
+              [disabled]="row.isAppPermission"
+              (change)="toggle(row.permission.id, 'hasAccessToMenu', $any($event.target).checked)"
+            />
+          </td>
+          <td>
+            <input
+              type="checkbox"
+              class="form-check-input"
+              [checked]="row.hasAccessToApp"
+              [disabled]="row.isScreenPermission"
+              (change)="toggle(row.permission.id, 'hasAccessToApp', $any($event.target).checked)"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

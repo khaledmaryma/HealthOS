@@ -1,0 +1,1140 @@
+.print-container {
+  max-width: 210mm; // A4 width
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+// Hide print actions when printing
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-container {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  // Hospital header - fixed at top on every page
+  .hospital-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 8px 15px 8px 15px;
+    border-bottom: 2px solid #000;
+    z-index: 1000;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+    display: block !important;
+
+    .d-flex {
+      display: flex !important;
+    }
+
+    .hospital-logo-center .logo {
+      display: block !important;
+    }
+  }
+
+  // Patient header repeats on every page - below hospital header
+  .patient-header-repeating {
+    position: fixed;
+    top: 110px; // Below hospital header (hospital header is ~110px tall with logo)
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 8px 15px;
+    border-bottom: 2px solid #000;
+    z-index: 999;
+  }
+
+  // Add spacing for content - below both headers
+  .lab-results-section {
+    margin-top: 210px; // Space for both hospital header (~110px) + patient header (~100px)
+    page-break-inside: auto;
+  }
+
+  .main-result-row {
+    page-break-inside: avoid;
+  }
+
+  // Ensure table header repeats on every page
+  .results-table {
+    // Caption repeats on every page automatically with table-caption
+    caption.numeric-results-title {
+      display: table-caption;
+      caption-side: top;
+      font-size: 14px !important;
+      font-weight: bold;
+      color: #2c3e50;
+      padding: 8px 0;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #3498db;
+      page-break-after: avoid;
+    }
+
+    thead {
+      display: table-header-group; // Repeat thead on each page
+    }
+
+    tbody {
+      display: table-row-group;
+    }
+  }
+}
+
+// Loading and Error States
+.loading-state,
+.error-state {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+// Print Actions
+.print-actions {
+  margin-bottom: 20px;
+  text-align: right;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+
+  .btn {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+}
+
+// Hospital Header
+.hospital-header {
+  margin-bottom: 15px;
+  padding: 10px 0 10px 0;
+  border-bottom: 2px solid #000;
+
+  .hospital-name-left {
+    flex: 1;
+    text-align: left;
+    font-size: 18px;
+    color: #000;
+  }
+
+  .hospital-logo-center {
+    flex: 0 0 auto;
+    text-align: center;
+    padding: 0 15px;
+
+    .logo {
+      max-height: 100px;
+      max-width: 200px;
+      object-fit: contain;
+      display: block;
+    }
+  }
+
+  .hospital-name-right {
+    flex: 1;
+    text-align: right;
+    font-size: 18px;
+    color: #000;
+    direction: rtl;
+  }
+}
+
+@media print {
+  .hospital-header {
+    margin-bottom: 0;
+    padding: 8px 15px 8px 15px;
+
+    .hospital-name-left,
+    .hospital-name-right {
+      font-size: 16px;
+    }
+
+    .hospital-logo-center .logo {
+      max-height: 90px;
+      max-width: 180px;
+    }
+  }
+}
+
+// Patient Header Repeating (for print)
+.patient-header-repeating {
+  padding: 8px 12px;
+  margin-bottom: 15px;
+  background: white;
+  border: 1px solid #dee2e6;
+
+  .info-two-column-grid {
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 11px;
+      line-height: 1.6;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .left-column,
+      .right-column {
+        flex: 1;
+        display: flex;
+        align-items: center;
+      }
+
+      .right-column {
+        justify-content: flex-start;
+        padding-left: 20px;
+      }
+
+      .info-label {
+        font-weight: 400;
+        color: #333;
+        margin-right: 5px;
+      }
+
+      .info-value {
+        color: #333;
+        margin-right: 10px;
+
+        &.fw-bold {
+          font-weight: 700;
+          color: #000;
+        }
+      }
+
+      .ms-4 {
+        margin-left: 20px;
+      }
+    }
+  }
+
+  .patient-header-divider {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 8px 0 0 0;
+  }
+}
+
+// Report Header
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+
+  .hospital-logo {
+    flex: 1;
+
+    .hospital-name {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .hospital-subtitle {
+      font-size: 16px;
+      color: #7f8c8d;
+      margin: 5px 0 0 0;
+    }
+  }
+
+  .report-info {
+    text-align: right;
+    font-size: 12px;
+    color: #555;
+
+    .report-number,
+    .report-date {
+      margin-bottom: 5px;
+    }
+
+    strong {
+      color: #333;
+    }
+  }
+}
+
+.header-divider {
+  border: none;
+  border-top: 1px solid #dee2e6;
+  margin: 10px 0;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #e9ecef;
+  margin: 10px 0;
+}
+
+// Patient Information Section
+.patient-info-section {
+  margin-bottom: 12px;
+
+  .section-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #3498db;
+  }
+
+  .info-grid {
+    .info-row {
+      display: flex;
+      margin-bottom: 10px;
+
+      .info-item {
+        flex: 1;
+        display: flex;
+        font-size: 13px;
+
+        .info-label {
+          font-weight: 600;
+          color: #555;
+          min-width: 140px;
+          margin-right: 10px;
+        }
+
+        .info-value {
+          color: #333;
+          font-weight: 400;
+        }
+      }
+    }
+  }
+
+  // Two-column styling for standard format
+  &.two-column {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0;
+
+    .info-two-column-grid {
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 11px;
+        line-height: 1.6;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .left-column,
+        .right-column {
+          flex: 1;
+          display: flex;
+          align-items: center;
+        }
+
+        .right-column {
+          justify-content: flex-start;
+          padding-left: 20px;
+        }
+
+        .info-label {
+          font-weight: 400;
+          color: #333;
+          margin-right: 5px;
+        }
+
+        .info-value {
+          color: #333;
+          margin-right: 10px;
+
+          &.fw-bold {
+            font-weight: 700;
+            color: #000;
+          }
+        }
+
+        .ms-4 {
+          margin-left: 20px;
+        }
+      }
+    }
+  }
+}
+
+// Lab Results Section
+.lab-results-section {
+  margin-bottom: 20px;
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 12px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 5px;
+  }
+}
+
+// Results Table
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-top: 10px;
+
+  caption.numeric-results-title {
+    caption-side: top;
+    text-align: left;
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #3498db;
+  }
+
+  thead {
+    background: #f8f9fa;
+    color: #000;
+
+    th {
+      padding: 8px 6px;
+      text-align: left;
+      font-weight: 700;
+      border: 2px solid #333;
+
+      &.col-test {
+        width: 28%;
+      }
+
+      &.col-result {
+        width: 12%;
+        text-align: center;
+      }
+
+      &.col-status {
+        width: 4%;
+        text-align: center;
+      }
+
+      &.col-unit {
+        width: 10%;
+        text-align: center;
+      }
+
+      &.col-range {
+        width: 16%;
+        text-align: center;
+      }
+
+      &.col-last {
+        width: 12%;
+        text-align: center;
+      }
+
+      &.col-last-date {
+        width: 12%;
+        text-align: center;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #e9ecef;
+
+      &.main-result-row {
+        background: #fff;
+
+        &.result-collection {
+          background: #f8f9fa;
+          font-weight: 500;
+        }
+
+        &.result-panic {
+          background: #fff5f5;
+        }
+
+        &.result-normal {
+          background: #f8fffd;
+        }
+      }
+
+      &.sub-test-row {
+        background: #fafbfc;
+
+        .sub-test-name {
+          padding-left: 20px;
+          font-size: 11px;
+        }
+      }
+
+      &.comments-row {
+        background: #fff9e6;
+
+        .comments-cell {
+          padding: 10px 8px;
+          font-size: 11px;
+          font-style: italic;
+          color: #555;
+        }
+      }
+
+      td {
+        padding: 6px;
+        border: 1px solid #e9ecef;
+
+        &.test-name {
+          .test-category {
+            font-size: 10px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+          }
+
+          .test-description {
+            font-weight: 600;
+            color: #2c3e50;
+          }
+
+          &.sub-test-name {
+            padding-left: 25px;
+            color: #555;
+          }
+        }
+
+        &.test-result {
+          text-align: center;
+          font-weight: 600;
+          font-size: 13px;
+
+          .see-below {
+            font-style: italic;
+            color: #7f8c8d;
+            font-weight: normal;
+            font-size: 11px;
+          }
+        }
+
+        &.test-unit {
+          text-align: center;
+          color: #555;
+        }
+
+        &.test-range {
+          text-align: center;
+          color: #555;
+          font-size: 11px;
+
+          .age-based-range {
+            font-size: 9px;
+            line-height: 1.4;
+            display: block;
+            white-space: pre-line; // Preserve newlines
+            word-break: break-word;
+            text-align: center;
+          }
+        }
+
+        &.test-status {
+          text-align: center;
+          font-weight: bold;
+          font-size: 14px;
+
+          .status-marker {
+            display: inline-block;
+
+            &.panic-marker {
+              color: #dc3545;
+              font-size: 16px;
+            }
+
+            &.abnormal-marker {
+              color: #ff6b6b;
+              font-size: 14px;
+            }
+          }
+        }
+
+        &.test-last {
+          text-align: center;
+          color: #555;
+          font-weight: 600;
+          font-size: 11px;
+        }
+
+        &.test-last-date {
+          text-align: center;
+          color: #666;
+          font-size: 10px;
+        }
+      }
+    }
+  }
+}
+
+// Status Badges
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.status-normal {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  &.status-abnormal {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+  }
+
+  &.status-panic {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    font-weight: bold;
+  }
+}
+
+// Text Results Section
+.text-results-print-section {
+  margin-top: 30px;
+
+  .text-results-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #3498db;
+    page-break-after: avoid;
+  }
+
+  .text-result-item {
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+
+    .text-result-header {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #2c3e50;
+
+      strong {
+        font-weight: 600;
+      }
+
+      .text-muted {
+        font-size: 12px;
+        color: #7f8c8d;
+      }
+    }
+
+    .text-result-content {
+      padding: 10px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      font-size: 12px;
+      line-height: 1.6;
+
+      h1, h2, h3, h4, h5, h6 {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      h1 { font-size: 1.2rem; }
+      h2 { font-size: 1.1rem; }
+      h3 { font-size: 1rem; }
+
+      p {
+        margin-bottom: 0.5rem;
+      }
+
+      ul, ol {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.5rem 0;
+
+        td, th {
+          border: 1px solid #dee2e6;
+          padding: 0.4rem;
+        }
+
+        th {
+          background-color: #e9ecef;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .text-result-divider {
+      border: none;
+      border-top: 1px dashed #dee2e6;
+      margin: 15px 0;
+    }
+  }
+}
+
+// Antibiogram Results Section
+.antibiogram-print-section {
+  margin-top: 30px;
+
+  .antibiogram-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #27ae60;
+    page-break-after: avoid;
+  }
+
+  .antibiogram-item {
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+
+    .antibiogram-header {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #2c3e50;
+
+      strong {
+        font-weight: 600;
+      }
+
+      .text-muted {
+        font-size: 12px;
+        color: #7f8c8d;
+      }
+    }
+
+    .specimen-info {
+      margin-bottom: 15px;
+
+      .info-table {
+        width: 100%;
+        border-collapse: collapse;
+
+        tr {
+          border-bottom: 1px solid #eee;
+
+          td {
+            padding: 8px 10px;
+            font-size: 12px;
+
+            &.label {
+              font-weight: 600;
+              width: 150px;
+              color: #555;
+            }
+
+            &.value {
+              color: #2c3e50;
+            }
+          }
+        }
+      }
+    }
+
+    .antibiogram-note {
+      background: #e8f5e9;
+      padding: 10px;
+      border-left: 3px solid #27ae60;
+      margin-bottom: 15px;
+
+      p {
+        margin: 5px 0;
+        font-size: 12px;
+      }
+
+      .sensitivity-legend {
+        font-size: 11px;
+        color: #555;
+      }
+    }
+
+    .sensitivity-table {
+      margin: 15px 0;
+
+      .antibiotic-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+
+        thead {
+          background-color: #e9ecef;
+
+          th {
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #dee2e6;
+            font-size: 11px;
+          }
+        }
+
+        tbody {
+          tr {
+            td {
+              padding: 6px 8px;
+              border: 1px solid #dee2e6;
+            }
+          }
+        }
+
+        .col-antibiotic {
+          width: 30%;
+        }
+
+        .col-sensitive {
+          width: 12%;
+          text-align: center;
+          background-color: #d1e7dd;
+        }
+
+        .col-resistant {
+          width: 12%;
+          text-align: center;
+          background-color: #f8d7da;
+        }
+
+        .col-intermediate {
+          width: 12%;
+          text-align: center;
+          background-color: #fff3cd;
+        }
+
+        .col-charge {
+          width: 17%;
+          text-align: center;
+        }
+
+        .col-diameter {
+          width: 17%;
+          text-align: center;
+        }
+
+        .antibiotic-name {
+          font-weight: 500;
+        }
+
+        .sensitivity-check {
+          text-align: center;
+          font-size: 14px;
+
+          &.sensitive-col {
+            background-color: #d1e7dd;
+          }
+
+          &.resistant-col {
+            background-color: #f8d7da;
+          }
+
+          &.intermediate-col {
+            background-color: #fff3cd;
+          }
+
+          .check-mark {
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+          }
+
+          .empty-mark {
+            color: #adb5bd;
+          }
+        }
+
+        .charge-cell,
+        .diameter-cell {
+          text-align: center;
+        }
+      }
+    }
+
+    .sensitivity-table-placeholder {
+      padding: 15px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      text-align: center;
+      margin-bottom: 15px;
+
+      p {
+        margin: 0;
+        font-size: 12px;
+        color: #7f8c8d;
+      }
+    }
+
+    .antibiogram-comments {
+      padding: 10px;
+      background: #fff9e6;
+      border-left: 3px solid #f39c12;
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 10px;
+
+      strong {
+        color: #d68910;
+      }
+    }
+
+    .antibiogram-divider {
+      border: none;
+      border-top: 1px dashed #dee2e6;
+      margin: 15px 0;
+    }
+  }
+}
+
+// Report Footer
+.report-footer {
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #dee2e6;
+
+  .footer-section {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+
+    .signature-block {
+      text-align: center;
+      width: 200px;
+
+      .signature-line {
+        border-bottom: 1px solid #333;
+        margin-bottom: 5px;
+        height: 40px;
+      }
+
+      .signature-label {
+        font-size: 11px;
+        color: #555;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .footer-notes {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+
+    .note,
+    .disclaimer {
+      font-size: 10px;
+      color: #555;
+      margin: 5px 0;
+      line-height: 1.4;
+    }
+
+    .disclaimer {
+      color: #c0392b;
+      font-weight: 600;
+    }
+  }
+
+  .footer-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #7f8c8d;
+
+    .page-number,
+    .report-id {
+      margin: 0;
+    }
+  }
+}
+
+// Print-specific styles
+@media print {
+  .print-container {
+    font-size: 10px;
+  }
+
+  .report-header {
+    .hospital-name {
+      font-size: 20px;
+    }
+
+    .hospital-subtitle {
+      font-size: 12px;
+    }
+  }
+
+  .report-header {
+    margin-bottom: 8px;
+  }
+
+  .header-divider {
+    margin: 5px 0;
+  }
+
+  .patient-header-repeating {
+    padding: 8px 12px;
+    font-size: 9px;
+    border-bottom: 2px solid #000;
+
+    .info-row {
+      font-size: 9px;
+      line-height: 1.4;
+      margin-bottom: 3px;
+    }
+
+    .patient-header-divider {
+      margin: 5px 0 0 0;
+      border-top: 1px solid #000;
+    }
+  }
+
+  .section-divider {
+    margin: 5px 0;
+  }
+
+  .lab-results-section {
+    margin-bottom: 15px;
+  }
+
+  .results-table {
+    font-size: 9px;
+    margin-top: 5px;
+    page-break-inside: auto;
+
+    thead {
+      display: table-header-group !important; // Force repeat on every page
+
+      th {
+        padding: 6px 4px;
+        font-weight: 700 !important;
+        border: 2px solid #000 !important;
+        background: #f0f0f0 !important;
+        page-break-inside: avoid;
+        page-break-after: avoid;
+      }
+    }
+
+    tbody {
+      display: table-row-group;
+
+      td {
+        padding: 4px 3px;
+        border: 1px solid #ccc;
+
+        &.test-status {
+          .status-marker {
+            &.panic-marker {
+              color: #dc3545 !important;
+              font-size: 14px !important;
+              font-weight: bold !important;
+            }
+
+            &.abnormal-marker {
+              color: #ff6b6b !important;
+              font-size: 12px !important;
+              font-weight: bold !important;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .section-title {
+    font-size: 13px !important;
+    margin-bottom: 5px !important;
+    padding-bottom: 3px !important;
+  }
+
+  .report-footer {
+    position: relative;
+    margin-top: 30px;
+    page-break-inside: avoid;
+    page-break-before: auto;
+  }
+
+  // Ensure footer appears after all content, not overlapping
+  .lab-results-section {
+    margin-bottom: 40px; // Space for footer
+  }
+}
+
+// Responsive adjustments for screen view
+@media screen and (max-width: 768px) {
+  .print-container {
+    padding: 10px;
+  }
+
+  .report-header {
+    flex-direction: column;
+
+    .report-info {
+      text-align: left;
+      margin-top: 10px;
+    }
+  }
+
+  .patient-info-section.two-column .info-two-column-grid .info-row {
+    flex-direction: column;
+
+    .left-column,
+    .right-column {
+      margin-bottom: 5px;
+      padding-left: 0;
+    }
+  }
+
+  .results-table {
+    font-size: 10px;
+
+    thead th,
+    tbody td {
+      padding: 5px 3px;
+    }
+  }
+
+  .report-footer .footer-section {
+    flex-direction: column;
+    align-items: center;
+
+    .signature-block {
+      margin-bottom: 20px;
+    }
+  }
+}
+

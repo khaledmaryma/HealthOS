@@ -1,0 +1,134 @@
+.resident-patient-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .page-header {
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .filters-section {
+    flex-shrink: 0;
+  }
+
+  .table-responsive {
+    flex: 1;
+    overflow-y: auto;
+
+    table {
+      margin-bottom: 0;
+
+      thead.sticky-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      th {
+        font-weight: 600;
+        white-space: nowrap;
+        font-size: 0.9rem;
+      }
+
+      td {
+        vertical-align: middle;
+        font-size: 0.875rem;
+      }
+
+      tbody tr {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: rgba(13, 110, 253, 0.1) !important;
+        }
+      }
+    }
+  }
+
+  .pagination-section {
+    flex-shrink: 0;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+  }
+}
+
+// Badge styling
+.badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+
+  &.bg-info {
+    background-color: #17a2b8 !important;
+  }
+
+  &.bg-success {
+    background-color: #28a745 !important;
+  }
+
+  &.bg-secondary {
+    background-color: #6c757d !important;
+  }
+}
+
+// Gender icons
+.bi-gender-male {
+  font-size: 1.2rem;
+}
+
+.bi-gender-female {
+  font-size: 1.2rem;
+}
+
+// Scrollbar styling
+.table-responsive {
+  scrollbar-width: thin;
+  scrollbar-color: #bbb #f1f1f1;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 4px;
+
+    &:hover {
+      background: #999;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .resident-patient-container {
+    .table-responsive {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

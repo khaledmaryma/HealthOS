@@ -1,0 +1,152 @@
+<div class="um-page">
+  <div class="um-header">
+    <div>
+      <h2>User Management - Permissions</h2>
+      <p>Create permission actions for each screen.</p>
+    </div>
+    <div class="um-actions">
+      <button class="btn btn-sm btn-primary" (click)="clickAdd()">Add</button>
+      <button class="btn btn-sm btn-outline-secondary" [disabled]="!selectedItem()" (click)="clickEdit()">Edit</button>
+      <button class="btn btn-sm btn-outline-danger" [disabled]="!selectedItem()" (click)="remove()">Delete</button>
+    </div>
+  </div>
+
+  <div class="um-toolbar">
+    <input
+      type="text"
+      class="form-control form-control-sm"
+      placeholder="Search code, name, description..."
+      [value]="query()"
+      (input)="onSearchChange(($any($event.target).value))"
+    />
+  </div>
+
+  <div class="um-table">
+    <table class="table table-sm table-hover">
+      <thead>
+        <tr>
+          <th>Application</th>
+          <th>Screen</th>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Created By</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let item of filtered()"
+          (click)="selectRow(item)"
+          [class.table-active]="isSelected(item)"
+        >
+          <td>{{ getApplicationLabel(item.applicationId) }}</td>
+          <td>{{ getScreenLabel(item.screenId) }}</td>
+          <td>{{ item.code }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.description || '-' }}</td>
+          <td>{{ getCreatedByLabel(item.createdBy) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="um-form-backdrop" *ngIf="showForm()">
+    <form class="um-form" (submit)="save($event)">
+      <div class="um-form-header">
+        <h5>{{ editItem()?.id ? 'Edit Permission' : 'New Permission' }}</h5>
+      </div>
+      <div class="um-form-body">
+        <label class="form-label">Application</label>
+        <div class="position-relative">
+          <div class="input-group input-group-sm">
+            <input
+              class="form-control"
+              [value]="applicationInput()"
+              (input)="onApplicationInput($any($event.target).value)"
+              (focus)="onApplicationFocus()"
+              (blur)="hideApplicationDropdown()"
+              placeholder="Type to search..."
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              (click)="onApplicationIconClick(); $event.stopPropagation()"
+              (mousedown)="$event.preventDefault()"
+              title="Show options"
+            >
+              <i class="bi bi-chevron-down"></i>
+            </button>
+          </div>
+          <div *ngIf="showApplicationDropdown() && filteredApplications().length > 0" class="autocomplete-dropdown">
+            <div
+              *ngFor="let app of filteredApplications()"
+              class="autocomplete-item"
+              (mousedown)="selectApplication(app, $event)"
+            >
+              <strong>{{ app.code }}</strong>
+              <span class="text-muted ms-2">{{ app.name }}</span>
+            </div>
+          </div>
+          <div
+            *ngIf="showApplicationDropdown() && filteredApplications().length === 0 && applicationInput().length >= 1"
+            class="autocomplete-dropdown"
+          >
+            <div class="autocomplete-item text-muted">No applications found</div>
+          </div>
+        </div>
+
+        <label class="form-label">Screen</label>
+        <div class="position-relative">
+          <div class="input-group input-group-sm">
+            <input
+              class="form-control"
+              [value]="screenInput()"
+              (input)="onScreenInput($any($event.target).value)"
+              (focus)="onScreenFocus()"
+              (blur)="hideScreenDropdown()"
+              placeholder="Type to search..."
+            />
+            <button
+              class="btn btn-outline-secondary"
+              type="button"
+              (click)="onScreenIconClick(); $event.stopPropagation()"
+              (mousedown)="$event.preventDefault()"
+              title="Show options"
+            >
+              <i class="bi bi-chevron-down"></i>
+            </button>
+          </div>
+          <div *ngIf="showScreenDropdown() && filteredScreens().length > 0" class="autocomplete-dropdown">
+            <div
+              *ngFor="let screen of filteredScreens()"
+              class="autocomplete-item"
+              (mousedown)="selectScreen(screen, $event)"
+            >
+              <strong>{{ screen.code }}</strong>
+              <span class="text-muted ms-2">{{ screen.name }}</span>
+            </div>
+          </div>
+          <div
+            *ngIf="showScreenDropdown() && filteredScreens().length === 0 && screenInput().length >= 1"
+            class="autocomplete-dropdown"
+          >
+            <div class="autocomplete-item text-muted">No screens found</div>
+          </div>
+        </div>
+
+        <label class="form-label">Code</label>
+        <input class="form-control form-control-sm" [(ngModel)]="editItem()!.code" name="code" required />
+
+        <label class="form-label">Name</label>
+        <input class="form-control form-control-sm" [(ngModel)]="editItem()!.name" name="name" required />
+
+        <label class="form-label">Description</label>
+        <input class="form-control form-control-sm" [(ngModel)]="editItem()!.description" name="description" />
+      </div>
+      <div class="um-form-footer">
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancel()">Cancel</button>
+        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+</div>

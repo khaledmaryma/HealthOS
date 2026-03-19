@@ -1,0 +1,1002 @@
+Changed database context to 'LIS'.
+Text                                                                                                                                                                                                                                                           
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CREATE PROCEDURE [dbo].[GenerateTempPatientLabTestHeader] @CaseNumber int, @Session int, @Reset bit, @PatientLabResultsHeaderID int out, @ErrorMessage nvarchar(255) out
+                                                                                     
+AS
+                                                                                                                                                                                                                                                           
+BEGIN
+                                                                                                                                                                                                                                                        
+	SET NOCOUNT ON;
+                                                                                                                                                                                                                                             
+	
+                                                                                                                                                                                                                                                            
+	SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+                                                                                                                                                                                                              
+	BEGIN TRANSACTION
+                                                                                                                                                                                                                                           
+	BEGIN TRY
+                                                                                                                                                                                                                                                   
+	
+                                                                                                                                                                                                                                                            
+		---------------------------------------------------- Settings -------------------------------------------------------
+                                                                                                                                      
+		Declare @AdmissionID int, @PatientID int, @Gender nvarchar(1), @Age int, @BacteriologyID int = null, @TextType int = null, @NumericType int = null, @Male nvarchar(1) = null, @Female nvarchar(1) = null, @OutPatientCash int, @OutPatientCredit int, @Labora
+toryRequestType int
+                                                                                                                                                                                                                                          
+		Select @OutPatientCash = [OutPatient(Cash)], @OutPatientCredit = [OutPatient(Credit)], @TextType = TextID, @NumericType = NumericID, @BacteriologyID = BaterioLabTestID, @Male = Male, @Female = Female, @LaboratoryRequestType = LaboratoryID from Transacti
+onsTemp.dbo.LISConfigurationSummary	
+                                                                                                                                                                                                                         
+		-----------------------------------------------------------------------------------------------------------------------------
+                                                                                                                              
+		
+                                                                                                                                                                                                                                                           
+		if (@Reset = 1)
+                                                                                                                                                                                                                                            
+		Begin
+                                                                                                                                                                                                                                                      
+			Update PatientLabResultsHeader set IsDeleted = 1 where CaseNumber = @CaseNumber and IsDeleted = 0
+                                                                                                                                                         
+			
+                                                                                                                                                                                                                                                          
+			Update PatientLabResult set IsDeleted = 1 from PatientLabResult
+                                                                                                                                                                                           
+			inner join PatientLabResultsHeader on PatientLabResultsHeader.ID = PatientLabResult.PatientHeaderID
+                                                                                                                                                       
+			where PatientLabResultsHeader.CaseNumber = @CaseNumber and PatientLabResultsHeader.IsDeleted = 0
+                                                                                                                                                          
+			
+                                                                                                                                                                                                                                                          
+			Update PatientLabSub set IsDeleted = 1 from PatientLabSub 
+                                                                                                                                                                                                
+			inner join PatientLabResult on PatientLabResult.ID = PatientLabSub.PatientLabTestID
+                                                                                                                                                                       
+			inner join PatientLabResultsHeader on PatientLabResultsHeader.ID = PatientLabResult.PatientHeaderID
+                                                                                                                                                       
+			where PatientLabResultsHeader.CaseNumber = @CaseNumber and PatientLabResultsHeader.IsDeleted = 0
+                                                                                                                                                          
+		
+                                                                                                                                                                                                                                                           
+			Update PatientLabBacteriologyHeader set IsDeleted = 1 from PatientLabBacteriologyHeader 
+                                                                                                                                                                  
+			inner join PatientLabResult on PatientLabResult.ID = PatientLabBacteriologyHeader.PatientLabResultID
+                                                                                                                                                      
+			inner join PatientLabResultsHeader on PatientLabResultsHeader.ID = PatientLabResult.PatientHeaderID
+                                                                                                                                                       
+			where PatientLabResultsHeader.CaseNumber = @CaseNumber and PatientLabResultsHeader.IsDeleted = 0
+                                                                                                                                                          
+		
+                                                                                                                                                                                                                                                           
+			Update PatientLabBacteriology set IsDeleted = 1 from PatientLabBacteriology 
+                                                                                                                                                                              
+			inner join PatientLabBacteriologyHeader on PatientLabBacteriologyHeader.ID = PatientLabBacteriology.PatientHeader
+                                                                                                                                         
+			inner join PatientLabResult on PatientLabResult.ID = PatientLabBacteriologyHeader.PatientLabResultID
+                                                                                                                                                      
+			inner join PatientLabResultsHeader on PatientLabResultsHeader.ID = PatientLabResult.PatientHeaderID
+                                                                                                                                                       
+			where PatientLabResultsHeader.CaseNumber = @CaseNumber and PatientLabResultsHeader.IsDeleted = 0
+                                                                                                                                                          
+		End
+                                                                                                                                                                                                                                                        
+		
+                                                                                                                                                                                                                                                           
+		Select @PatientLabResultsHeaderID = ID from PatientLabResultsHeader where CaseNumber = @CaseNumber and IsDeleted = 0
+                                                                                                                                       
+		
+                                                                                                                                                                                                                                                           
+		----------------------------------------------------  New PLRH  -------------------------------------------------------		
+                                                                                                                                  
+		if (@PatientLabResultsHeaderID is null)
+                                                                                                                                                                                                                    
+		Begin
+                                                                                                                                                                                                                                                      
+			insert into TransactionsTemp.dbo.TempPatientLabResultsHeader (CaseNumber, ResidentPatientID, PatientID, MRN, AdmissionID, AdmissionNumber, Gender, ResultNB, RequestDate, Age, Room, Floor, Bed,  Department, CreatedBy, Counter) 
+                        
+			
+                                                                                                                                                                                                                                                          
+			Select  @CaseNumber, RP.ID, RP.PatientID, MRN, RP.Admission, RP.AdmissionNumber, PatientGender, NULL, (OH.Date + cast(OH.Time as DateTime)), datediff(hour,[PatientDOB], CheckInDate)/(8766), RoomDescription, FloorDescription, BedDescription, case when (
+RP.AdmissionType = @OutPatientCash OR RP.AdmissionType = @OutPatientCredit) then 'Out Patient' else MedicationUnitDescription end, @Session, PH.Counter
+                                                                                                      
+			from Billing.dbo.PreInvoiceHeaderMedicalCase PHMC
+                                                                                                                                                                                                         
+			inner join Billing.dbo.PreInvoiceHeader OH on PHMC.PreInvoiceHeader = OH.ID
+                                                                                                                                                                               
+			inner join Admission.dbo.ResidentPatient RP on RP.Admission = OH.Admission
+                                                                                                                                                                                
+			left join EMR.dbo.OrderRequest PH on PH.CaseNumber = PHMC.CaseNumber and PH.RequestType = @LaboratoryRequestType
+                                                                                                                                          
+			where PHMC.CaseNumber = @CaseNumber and PHMC.IsDeleted = 0 and RP.IsDeleted = 0 and OH.IsDeleted = 0 and ISNULL(OH.Status, 0) <> 6 and Isnull(PH.IsDeleted, 0) = 0
+                                                                                        
+			 
+                                                                                                                                                                                                                                                         
+			set @PatientLabResultsHeaderID = SCOPE_IDENTITY()
+                                                                                                                                                                                                         
+			Select @AdmissionID = AdmissionID, @PatientID = PatientID, @Gender = Gender, @Age = Age from TransactionsTemp.dbo.TempPatientLabResultsHeader where ID = @PatientLabResultsHeaderID
+                                                                       
+			 
+                                                                                                                                                                                                                                                         
+			Declare @GUID uniqueidentifier, @SequenceNumber int
+                                                                                                                                                                                                       
+			Declare @LabTestID int, @LabTestDescription nvarchar(max)
+                                                                                                                                                                                                 
+			Declare @MedicalClassID int, @MedicalClassDescription nvarchar(max)
+                                                                                                                                                                                       
+			Declare @DisplayOrder nvarchar(150), @IsCollection bit, @ResultType int, @Group int
+                                                                                                                                                                       
+			
+                                                                                                                                                                                                                                                          
+			
+                                                                                                                                                                                                                                                          
+			DECLARE myCursor1 CURSOR LOCAL FAST_FORWARD FOR
+                                                                                                                                                                                                           
+			SELECT LabTest.ID, LabTest.TestDesciption, PreInvoiceDetail.GUID, MedicalClass.ID, MedicalClass.Desciption, PreInvoiceDetail.SequenceNumber, IsACollection, ResultType, [Group], IsNULL (MedicalClass.DisplayOrder, '') + IsNull(LabTest.DisplayOrder, '')
+
+			FROM Billing.dbo.PreInvoiceHeader
+                                                                                                                                                                                                                         
+			INNER JOIN Billing.dbo.PreInvoiceDetail ON PreInvoiceHeader.ID = PreInvoiceDetail.PreInvoiceHeader
+                                                                                                                                                        
+			INNER JOIN dbo.LabTest ON LabTest.Denomination = PreInvoiceDetail.Denomination
+                                                                                                                                                                            
+			INNER JOIN HospitalDefinition.dbo.MedicalClass on MedicalClass.ID = LabTest.MedicalClass
+                                                                                                                                                                  
+			WHERE  PreInvoiceHeader.Admission = @AdmissionID and PreInvoiceDetail.CaseNumber = @CaseNumber 
+                                                                                                                                                           
+			and LabTest.IsDeleted = 0 and MedicalClass.IsDeleted = 0
+                                                                                                                                                                                                  
+			and PreInvoiceDetail.IsDeleted = 0 and PreInvoiceDetail.IsCanceled = 0 and PreInvoiceHeader.IsDeleted = 0 and ISNULL(PreInvoiceHeader.Status, 0) <> 6
+                                                                                                     
+
+                                                                                                                                                                                                                                                             
+			OPEN myCursor1
+                                                                                                                                                                                                                                            
+			FETCH NEXT FROM myCursor1 INTO @LabTestID, @LabTestDescription, @GUID, @MedicalClassID, @MedicalClassDescription, @SequenceNumber, @IsCollection, @ResultType, @Group, @DisplayOrder
+                                                                      
+			WHILE @@FETCH_STATUS = 0 
+                                                                                                                                                                                                                                 
+				BEGIN
+                                                                                                                                                                                                                                                    
+					----------------------------------------- Bacteriology -----------------------------------
+                                                                                                                                                              
+					if (@LabTestID = @BacteriologyID)
+                                                                                                                                                                                                                       
+					begin
+                                                                                                                                                                                                                                                   
+						Insert into TransactionsTemp.dbo.TempPatientLabResult (TempPatientHeaderID, LabTestID, LabTestDescription, MedicalClassID, MedicalClass, DisplayOrder, PreInvoiceDetailSequence, ResultType, [Group], IsCollection, CreatedBy, GUID)
+                   
+						values (@PatientLabResultsHeaderID, @LabTestID, @LabTestDescription, @MedicalClassID, @MedicalClassDescription, @DisplayOrder, @SequenceNumber, @ResultType, @Group, @IsCollection, @Session, @GUID)
+                                                   
+						
+                                                                                                                                                                                                                                                       
+						Insert into TransactionsTemp.dbo.TempPatientLabBacteriologyHeader (TempPatientLabResultID, CreatedBy) values (SCOPE_IDENTITY(), @Session)	
+                                                                                                             
+					end
+                                                                                                                                                                                                                                                     
+					-------------------------------------------------------------------------------------------
+                                                                                                                                                             
+					
+                                                                                                                                                                                                                                                        
+					
+                                                                                                                                                                                                                                                        
+					--------------------------------------------- Text -------------------------------------
+                                                                                                                                                                
+					else if (@ResultType = @TextType)
+                                                                                                                                                                                                                       
+					Begin
+                                                                                                                                                                                                                                                   
+						Insert into TransactionsTemp.dbo.TempPatientLabResult (TempPatientHeaderID, LabTestID, LabTestDescription, MedicalClassID, MedicalClass, DisplayOrder, PreInvoiceDetailSequence, ResultType, [Group], IsCollection, CreatedBy, GUID)
+                   
+						values (@PatientLabResultsHeaderID, @LabTestID, @LabTestDescription, @MedicalClassID, @MedicalClassDescription, @DisplayOrder, @SequenceNumber, @ResultType, @Group, @IsCollection, @Session, @GUID)
+                                                   
+					End
+                                                                                                                                                                                                                                                     
+					-------------------------------------------------------------------------------------------
+                                                                                                                                                             
+					
+                                                                                                                                                                                                                                                        
+					
+                                                                                                                                                                                                                                                        
+					
+                                                                                                                                                                                                                                                        
+					------------------------------------------ Numeric -------------------------------------
+                                                                                                                                                                
+					else if (@IsCollection <> 1)
+                                                                                                                                                                                                                            
+					Begin
+                                                                                                                                                                                                                                                   
+						------------------- Get Last Result ---------------------
+                                                                                                                                                                                              
+						Declare @Last nvarchar(150) = null, @LastDate datetime = null
+                                                                                                                                                                                          
+						
+                                                                                                                                                                                                                                                       
+						Select PatientLabResult.Result + ' ' + PatientLabResult.UOMDescription as Result, PatientLabResultsHeader.CompletedDate as ResultDate into #Temp1 
+                                                                                                     
+						from PatientLabResult Inner Join PatientLabResultsHeader on PatientLabResult.PatientHeaderID = PatientLabResultsHeader.ID
+                                                                                                                              
+						where PatientID = @PatientID and PatientLabResultsHeader.CaseNumber <> @CaseNumber and PatientLabResult.LabTestID = @LabTestID and IsApproved = 1 
+                                                                                                     
+						and PatientLabResult.Result is not null and PatientLabResultsHeader.IsDeleted = 0 and PatientLabResult.IsDeleted = 0
+                                                                                                                                   
+						
+                                                                                                                                                                                                                                                       
+						Select top (1) @Last = Result, @LastDate = ResultDate  from #Temp1 order by ResultDate desc
+                                                                                                                                                            
+						drop table #Temp1
+                                                                                                                                                                                                                                      
+						
+                                                                                                                                                                                                                                                       
+						--Select top (1) @Last = PatientLabResult.Result + ' ' + PatientLabResult.UOMDescription, @LastDate = PatientLabResultsHeader.CompletedDate 
+                                                                                                           
+						--from PatientLabResult Inner Join PatientLabResultsHeader on PatientLabResult.PatientHeaderID = PatientLabResultsHeader.ID
+                                                                                                                            
+						--where PatientID = @PatientID and PatientLabResultsHeader.CaseNumber <> @CaseNumber and PatientLabResult.LabTestID = @LabTestID and IsApproved = 1 and PatientLabResult.Result is not null
+                                                            
+						--order by PatientLabResultsHeader.ApprovedDate desc
+                                                                                                                                                                                                   
+						---------------------------------------------------------
+                                                                                                                                                                                              
+							
+                                                                                                                                                                                                                                                      
+							
+                                                                                                                                                                                                                                                      
+						------------------- Get Test Settings --------------------	
+                                                                                                                                                                                            
+						Declare @RefToAge bit = null, @RefToGenico bit = null
+                                                                                                                                                                                                  
+						Declare @Min nvarchar(25) = null, @Max nvarchar(25) = null
+                                                                                                                                                                                             
+						Declare @PanicMin decimal(18, 2) = null, @PanicMax decimal(18, 2) = null
+                                                                                                                                                                               
+						Declare @LabDefMin nvarchar(25) = null, @LabDefMax nvarchar(25) = null
+                                                                                                                                                                                 
+						Declare @LabMaleMin nvarchar(25) = null, @LabMaleMax nvarchar(25) = null
+                                                                                                                                                                               
+						Declare @LabFemaleMin nvarchar(25) = null, @LabFemaleMax nvarchar(25) = null
+                                                                                                                                                                           
+						Declare @ErrorMin nvarchar(25) = null, @ErrorMax nvarchar(25) = null
+                                                                                                                                                                                   
+						Declare @Prefix nvarchar(10) = null, @Suffix nvarchar(10) = null
+                                                                                                                                                                                       
+						Declare @UOM int = null, @UOMDescription nvarchar(50) = null, @RefRange nvarchar(max) = null,@DisplayRefRange nvarchar(max)
+                                                                                                                            
+						
+                                                                                                                                                                                                                                                       
+						Select @UOM = ISNULL(UnitOfMeasure.ID, '') , @UOMDescription = ISNULL(UnitOfMeasure.CODE, ''),
+                                                                                                                                                         
+						@RefToAge = ReferenceRelatesToAge, 
+                                                                                                                                                                                                                    
+						@RefToGenico =ReferencerelatesToGyneco, 
+                                                                                                                                                                                                               
+						@LabDefMin = DefaultNoramlMin, 
+                                                                                                                                                                                                                        
+						@LabDefMax = DefaultNormalMax, 
+                                                                                                                                                                                                                        
+						@LabMaleMin = MaleNormalMin, 
+                                                                                                                                                                                                                          
+						@LabMaleMax =  MaleNormalMax, 
+                                                                                                                                                                                                                         
+						@LabFemaleMin = FemaleNormalMin, 
+                                                                                                                                                                                                                      
+						@LabFemaleMax = FemaleNormalMax, 
+                                                                                                                                                                                                                      
+						@ErrorMin = ErrorRangeMin,
+                                                                                                                                                                                                                             
+						@ErrorMax = ErrorRangeMax,
+                                                                                                                                                                                                                             
+						@PanicMin = LowPanicIndex,
+                                                                                                                                                                                                                             
+						@PanicMax = HighPanicIndex,
+                                                                                                                                                                                                                            
+						@Prefix = Prefix,
+                                                                                                                                                                                                                                      
+						@Suffix = Suffix,
+                                                                                                                                                                                                                                      
+						@DisplayRefRange=DisplayNormalRange
+                                                                                                                                                                                                                    
+						from LabTest left join EMR.dbo.UnitOfMeasure on UnitOfMeasure.ID = LabTest.UOM
+                                                                                                                                                                         
+						where LabTest.ID = @LabTestID and UnitOfMeasure.IsDeleted = 0 
+                                                                                                                                                                                         
+						------------------------------------------------------------
+                                                                                                                                                                                           
+						
+                                                                                                                                                                                                                                                       
+						
+                                                                                                                                                                                                                                                       
+						----------------- Min and Max ---------------------
+                                                                                                                                                                                                    
+						if (@RefToAge <> 1 and @RefToGenico <> 1)
+                                                                                                                                                                                                              
+						Begin
+                                                                                                                                                                                                                                                  
+							if (@Gender = @Male and ((isnull(@LabMaleMin, '') <> '') or (isnull(@LabMaleMax , '') <> '')))
+                                                                                                                                                        
+								Begin
+                                                                                                                                                                                                                                                
+									set @Min = @LabMaleMin
+                                                                                                                                                                                                                              
+									set @Max = @LabMaleMax
+                                                                                                                                                                                                                              
+								End
+                                                                                                                                                                                                                                                  
+							else if (@Gender = @Female and ((isnull(@LabFemaleMin, '') <> '') or (isnull(@LabFemaleMax, '') <> '')))
+                                                                                                                                              
+								Begin
+                                                                                                                                                                                                                                                
+									set @Min = @LabFemaleMin
+                                                                                                                                                                                                                            
+									set @Max = @LabFemaleMax
+                                                                                                                                                                                                                            
+								End
+                                                                                                                                                                                                                                                  
+							else
+                                                                                                                                                                                                                                                  
+								Begin
+                                                                                                                                                                                                                                                
+									set @Min = @LabDefMin
+                                                                                                                                                                                                                               
+									set @Max = @LabDefMax
+                                                                                                                                                                                                                               
+								End
+                                                                                                                                                                                                                                                  
+								
+                                                                                                                                                                                                                                                     
+							if (ISNULL(@Min, '') <> '') Set @Min = cast(Cast(@Min as float) as nvarchar(25))
+                                                                                                                                                                      
+							if (ISNULL(@Max, '') <> '') Set @Max = cast(Cast(@Max as float) as nvarchar(25))
+                                                                                                                                                                      
+							
+                                                                                                                                                                                                                                                      
+							if ((ISNULL(@Min, '') <> '') and (ISNULL(@Max, '') <> ''))
+                                                                                                                                                                                            
+								Set @RefRange = @Min + ' - ' + @Max
+                                                                                                                                                                                                                  
+							else if (ISNULL(@Min, '') <> '')
+                                                                                                                                                                                                                      
+								Set @RefRange = '> ' + @Min
+                                                                                                                                                                                                                          
+							else if (ISNULL(@Max, '') <> '')
+                                                                                                                                                                                                                      
+								Set @RefRange = '< ' + @Max
+                                                                                                                                                                                                                          
+							
+                                                                                                                                                                                                                                                      
+							if(@DisplayRefRange is not null)	
+                                                                                                                                                                                                                     
+								Set @RefRange = @DisplayRefRange
+                                                                                                                                                                                                                     
+						End
+                                                                                                                                                                                                                                                    
+
+                                                                                                                                                                                                                                                             
+						else if (@RefToAge = 1)
+                                                                                                                                                                                                                                
+						Begin 
+                                                                                                                                                                                                                                                 
+							select top (1) @Min = DefaultMin, @Max = DefaultMax, @ErrorMin = ErrorRangeMin, @ErrorMax = ErrorRangeMax, @PanicMin = LowPanicIndex, @PanicMax = HighPanicIndex from LabTestAge where [Lower] is not null and [Lower] >= @Age and LabTestAge.LabTest = 
+@LabTestID and LabTestAge.IsDeleted=0 order by [Lower] asc
+                                                                                                                                                                                                   
+							select top (1) @Min = DefaultMin, @Max = DefaultMax, @ErrorMin = ErrorRangeMin, @ErrorMax = ErrorRangeMax, @PanicMin = LowPanicIndex, @PanicMax = HighPanicIndex from LabTestAge where [Higher] is not null and [Higher] <= @Age and LabTestAge.LabTest 
+= @LabTestID and LabTestAge.IsDeleted=0 order by [Higher] desc
+                                                                                                                                                                                               
+							select top (1) @Min = DefaultMin, @Max = DefaultMax, @ErrorMin = ErrorRangeMin, @ErrorMax = ErrorRangeMax, @PanicMin = LowPanicIndex, @PanicMax = HighPanicIndex from LabTestAge where [Higher] is not null and [Higher] >= @Age and [Lower] is not null
+ and [Lower] <= @Age and LabTestAge.LabTest = @LabTestID and LabTestAge.IsDeleted=0 order by [Lower] asc			
+                                                                                                                                                  
+							
+                                                                                                                                                                                                                                                      
+							if (ISNULL(@Min, '') <> '') Set @Min = cast(Cast(@Min as float) as nvarchar(25))
+                                                                                                                                                                      
+							if (ISNULL(@Max, '') <> '') Set @Max = cast(Cast(@Max as float) as nvarchar(25))
+                                                                                                                                                                      
+							
+                                                                                                                                                                                                                                                      
+							if ((ISNULL(@Min, '') = '') and (ISNULL(@Max, '') = ''))
+                                                                                                                                                                                              
+							Begin
+                                                                                                                                                                                                                                                 
+								Select @RefRange = 
+                                                                                                                                                                                                                                  
+								(
+                                                                                                                                                                                                                                                    
+									select distinct  STUFF((select N'<BR/>' + Description + ': ' +
+                                                                                                                                                                                      
+									case when ISNULL(DefaultMin, '') <> '' and ISNULL(DefaultMax, '') <> '' then  cast(Cast(DefaultMin as float) as nvarchar(25)) + ' - ' + cast(Cast(DefaultMax as float) as nvarchar(25))
+                                                             
+									when ISNULL(DefaultMin, '') <> '' and ISNULL(DefaultMax, '') = '' then N'> ' + cast(Cast(DefaultMin as float) as nvarchar(25))
+                                                                                                                      
+									when ISNULL(DefaultMin, '') = '' and ISNULL(DefaultMax, '') <> '' then N'< ' + cast(Cast(DefaultMax as float) as nvarchar(25)) end
+                                                                                                                  
+									from LabTestAge L1 where L1.LabTest = L2.LabTest and L1.IsDeleted=0  order by L1.Lower asc
+                                                                                                                                                          
+									FOR XML PATH(N''), TYPE).value(N'.[1]', N'nvarchar(max)'), 1, 5, N'')
+                                                                                                                                                                               
+									from LabTestAge L2  where L2.LabTest = @LabTestID  and L2.IsDeleted=0
+                                                                                                                                                                               
+								)
+                                                                                                                                                                                                                                                    
+							End
+                                                                                                                                                                                                                                                   
+							else if ((ISNULL(@Min, '') <> '') and (ISNULL(@Max, '') <> ''))
+                                                                                                                                                                                       
+								Set @RefRange = @Min + ' - ' + @Max
+                                                                                                                                                                                                                  
+							else if (ISNULL(@Min, '') <> '')
+                                                                                                                                                                                                                      
+								Set @RefRange = '> ' + @Min
+                                                                                                                                                                                                                          
+							else if (ISNULL(@Max, '') <> '')
+                                                                                                                                                                                                                      
+								Set @RefRange = '< ' + @Max
+                                                                                                                                                                                                                          
+						End
+                                                                                                                                                                                                                                                    
+						
+                                                                                                                                                                                                                                                       
+						else if (@RefToGenico = 1)
+                                                                                                                                                                                                                             
+						Begin
+                                                                                                                                                                                                                                                  
+							if (@Gender = @Male)
+                                                                                                                                                                                                                                  
+							Begin
+                                                                                                                                                                                                                                                 
+								set @Min = @LabMaleMin
+                                                                                                                                                                                                                               
+								set @Max = @LabMaleMax
+                                                                                                                                                                                                                               
+								
+                                                                                                                                                                                                                                                     
+								if (ISNULL(@Min, '') <> '') Set @Min = cast(Cast(@Min as float) as nvarchar(25))
+                                                                                                                                                                     
+								if (ISNULL(@Max, '') <> '') Set @Max = cast(Cast(@Max as float) as nvarchar(25))
+                                                                                                                                                                     
+								
+                                                                                                                                                                                                                                                     
+								if ((ISNULL(@Min, '') <> '') and (ISNULL(@Max, '') <> ''))
+                                                                                                                                                                                           
+									Set @RefRange = @Min + ' - ' + @Max
+                                                                                                                                                                                                                 
+								else if (ISNULL(@Min, '') <> '')
+                                                                                                                                                                                                                     
+									Set @RefRange = '> ' + @Min
+                                                                                                                                                                                                                         
+								else if (ISNULL(@Max, '') <> '')
+                                                                                                                                                                                                                     
+									Set @RefRange = '< ' + @Max
+                                                                                                                                                                                                                         
+							End
+                                                                                                                                                                                                                                                   
+							else
+                                                                                                                                                                                                                                                  
+							Begin
+                                                                                                                                                                                                                                                 
+								Select @RefRange = 
+                                                                                                                                                                                                                                  
+								(
+                                                                                                                                                                                                                                                    
+									select distinct  STUFF((select N'<BR/>' + Description + ': ' +
+                                                                                                                                                                                      
+									case when FemaleNormalMin is not null and FemaleNormalMax is not null then  cast(Cast(FemaleNormalMin as float) as nvarchar(25)) + ' - ' + cast(Cast(FemaleNormalMax as float) as nvarchar(25))
+                                                     
+									when FemaleNormalMin is not null and FemaleNormalMax is null then N'> ' + cast(Cast(FemaleNormalMin as float) as nvarchar(25))
+                                                                                                                      
+									when FemaleNormalMin is null and FemaleNormalMax Is not null then N'< ' + cast(Cast(FemaleNormalMax as float) as nvarchar(25)) end
+                                                                                                                  
+									from LabTestGyneco L1 where L1.LabTest = L2.LabTest and L1.IsDeleted=0  order by L1.DisplayOrder asc
+                                                                                                                                                
+									FOR XML PATH(N''), TYPE).value(N'.[1]', N'nvarchar(max)'), 1, 5, N'')
+                                                                                                                                                                               
+									from LabTestGyneco L2  where L2.LabTest = @LabTestID and L2.IsDeleted=0
+                                                                                                                                                                             
+								)
+                                                                                                                                                                                                                                                    
+								select  @PanicMin = LowPanicIndex, @PanicMax = HighPanicIndex from LabTestGyneco where LabTest = @LabTestID
+                                                                                                                                          
+							End
+                                                                                                                                                                                                                                                   
+						End
+                                                                                                                                                                                                                                                    
+						
+                                                                                                                                                                                                                                                       
+						if (@RefRange is not null) set @RefRange = '<center><span style="font-size:12px">' + @RefRange + '</span></center>'
+                                                                                                                                    
+						---------------------------------------------------------
+                                                                                                                                                                                              
+			
+                                                                                                                                                                                                                                                          
+							
+                                                                                                                                                                                                                                                      
+						Insert into TransactionsTemp.dbo.TempPatientLabResult (TempPatientHeaderID, LabTestID, LabTestDescription, MedicalClassID, MedicalClass, Min, Max, UOM, UOMDescription,  Last, LastResultDate, DisplayOrder, PreInvoiceDetailSequence, ResultType, [Group
+], IsCollection, ErrorMin, ErrorMax, GUID, Ref_Range, Prefix, Suffix, LowPanicIndex, HighPanicIndex, CreatedBy)
+                                                                                                                                              
+						values	(@PatientLabResultsHeaderID, @LabTestID, @LabTestDescription, @MedicalClassID, @MedicalClassDescription, @Min, @Max, @UOM, @UOMDescription,  @Last, @LastDate,  @DisplayOrder, @SequenceNumber, @ResultType, @Group, @IsCollection, @ErrorMin, @Er
+rorMax, @GUID, @RefRange, @Prefix, @Suffix, @PanicMin, @PanicMax, @Session)
+                                                                                                                                                                                  
+					End
+                                                                                                                                                                                                                                                     
+					
+                                                                                                                                                                                                                                                        
+					else if (@IsCollection = 1)
+                                                                                                                                                                                                                             
+					Begin
+                                                                                                                                                                                                                                                   
+						Insert into TransactionsTemp.dbo.TempPatientLabResult (TempPatientHeaderID, LabTestID, LabTestDescription, MedicalClassID, MedicalClass, DisplayOrder, PreInvoiceDetailSequence, ResultType, [Group], IsCollection, CreatedBy, GUID)
+                   
+						values (@PatientLabResultsHeaderID, @LabTestID, @LabTestDescription, @MedicalClassID, @MedicalClassDescription, @DisplayOrder, @SequenceNumber, @ResultType, @Group, @IsCollection, @Session, @GUID)
+                                                   
+						
+                                                                                                                                                                                                                                                       
+						Declare @PatientLabResultsID int = SCOPE_IDENTITY()					
+                                                                                                                                                                                               
+						Declare @LabTestSubID int = null, @LabTestSubDescription nvarchar(max) = null
+                                                                                                                                                                          
+						
+                                                                                                                                                                                                                                                       
+						declare @YeareAge as int,@MonthAge as int,@DayAge as int,@DOB as date
+                                                                                                                                                                                  
+								
+                                                                                                                                                                                                                                                     
+								select @DOB=PatientDOB from Admission.dbo.ResidentPatient where Admission=@AdmissionID
+                                                                                                                                                               
+
+                                                                                                                                                                                                                                                             
+								set @YeareAge= (select  datediff(Year,@dob,getdate()))
+                                                                                                                                                                                               
+								set @MonthAge= (select datediff(MONTH,@dob,getdate()))
+                                                                                                                                                                                               
+								set @DayAge=   (select datediff(DAY,@dob,getdate()))
+                                                                                                                                                                                                 
+
+                                                                                                                                                                                                                                                             
+								if @MonthAge <12 and @YeareAge=1
+                                                                                                                                                                                                                     
+									set @YeareAge=0
+                                                                                                                                                                                                                                     
+
+                                                                                                                                                                                                                                                             
+								if @DayAge <30 and @MonthAge>0
+                                                                                                                                                                                                                       
+									set @MonthAge=0
+                                                                                                                                                                                                                                     
+
+                                                                                                                                                                                                                                                             
+
+                                                                                                                                                                                                                                                             
+						DECLARE myCursor2 CURSOR LOCAL FAST_FORWARD FOR 
+                                                                                                                                                                                                       
+						select ID, LabTestSub.Description from LabTestSub where LabTest = @LabTestID and IsDeleted = 0
+                                                                                                                                                         
+					                 and 
+                                                                                                                                                                                                                                   
+									((ISNULL(LabTestSub.AgeType,3)=1 AND 
+                                                                                                                                                                                                               
+									 (@DayAge>=ISNULL(LabTestSub.AgeNormalMin,0) AND @DayAge<=ISNULL(LabTestSub.AgeNormalMax,1500000))) or 
+                                                                                                                                             
+									(ISNULL(LabTestSub.AgeType,3)=2 AND 
+                                                                                                                                                                                                                
+									 (@MonthAge>=ISNULL(LabTestSub.AgeNormalMin,0) AND @MonthAge<=ISNULL(LabTestSub.AgeNormalMax,1500000))) or 
+                                                                                                                                         
+									(ISNULL(LabTestSub.AgeType,3)=3 AND 
+                                                                                                                                                                                                                
+									 (@YeareAge>=ISNULL(LabTestSub.AgeNormalMin,0) AND @YeareAge<=ISNULL(LabTestSub.AgeNormalMax,200))))
+                                                                                                                                                
+
+                                                                                                                                                                                                                                                             
+						OPEN myCursor2 FETCH NEXT FROM myCursor2 INTO  @LabTestSubID, @LabTestSubDescription
+                                                                                                                                                                   
+						WHILE @@FETCH_STATUS = 0 
+                                                                                                                                                                                                                              
+							Begin
+                                                                                                                                                                                                                                                 
+								------------------- Get Last Result ---------------------
+                                                                                                                                                                                            
+								Declare @LastSub nvarchar(150) = null, @LastSubDate datetime = null
+                                                                                                                                                                                  
+								
+                                                                                                                                                                                                                                                     
+								Select PatientLabSub.Result /*+ ' ' + PatientLabSub.UOMDescription*/ as Result, PatientLabResultsHeader.CompletedDate as ResultDate into #Temp2 
+                                                                                                     
+								from  PatientLabSub  inner join PatientLabResult on PatientLabSub.PatientLabTestID = PatientLabResult.ID
+                                                                                                                                             
+								inner join PatientLabResultsHeader on PatientLabResult.PatientHeaderID = PatientLabResultsHeader.ID
+                                                                                                                                                  
+								where PatientID = @PatientID and PatientLabResultsHeader.CaseNumber <> @CaseNumber and PatientLabSub.LabTestSubID = @LabTestSubID and IsApproved = 1 
+                                                                                                
+								and PatientLabSub.Result is not null and PatientLabResultsHeader.IsDeleted = 0 and PatientLabResult.IsDeleted = 0 and PatientLabSub.IsDeleted = 0
+                                                                                                    
+								
+                                                                                                                                                                                                                                                     
+								Select top (1) @LastSub = Result, @LastSubDate = ResultDate  from #Temp2 order by ResultDate desc
+                                                                                                                                                    
+								drop table #Temp2
+                                                                                                                                                                                                                                    
+								
+                                                                                                                                                                                                                                                     
+								--Select top (1) @LastSub = PatientLabSub.Result + ' ' + PatientLabSub.UOMDescription, @LastSubDate = PatientLabResultsHeader.CompletedDate 
+                                                                                                         
+								--from  PatientLabSub  inner join PatientLabResult on PatientLabSub.PatientLabTestID = PatientLabResult.ID
+                                                                                                                                           
+								--inner join PatientLabResultsHeader on PatientLabResult.PatientHeaderID = PatientLabResultsHeader.ID
+                                                                                                                                                
+								--where PatientID = @PatientID and PatientLabResultsHeader.CaseNumber <> @CaseNumber and PatientLabSub.LabTestSubID = @LabTestSubID and IsApproved = 1 and PatientLabSub.Result is not null
+                                                          
+								--order by PatientLabResultsHeader.ApprovedDate desc
+                                                                                                                                                                                                 
+								---------------------------------------------------------
+                                                                                                                                                                                            
+							
+                                                                                                                                                                                                                                                      
+							
+                                                                                                                                                                                                                                                      
+							
+                                                                                                                                                                                                                                                      
+							
+                                                                                                                                                                                                                                                      
+								------------------- Get Test Settings --------------------	
+                                                                                                                                                                                          
+								Declare @SubMin nvarchar(25) = null, @SubMax nvarchar(25) = null
+                                                                                                                                                                                     
+								Declare @LabSubMin nvarchar(25) = null, @LabSubMax nvarchar(25) = null
+                                                                                                                                                                               
+								Declare @LabSubPanicMin decimal(18, 2) = null, @LabSubPanicMax decimal(18, 2) = null
+                                                                                                                                                                 
+								Declare @LabSubMaleMin nvarchar(25) = null, @LabSubMaleMax nvarchar(25) = null
+                                                                                                                                                                       
+								Declare @LabSubFemaleMin nvarchar(25) = null, @LabSubFemaleMax nvarchar(25) = null
+                                                                                                                                                                   
+								Declare @LabSubErrorMin nvarchar(25) = null, @LabSubErrorMax nvarchar(25) = null
+                                                                                                                                                                     
+								Declare @LabSubPrefix nvarchar(10) = null, @LabSubSuffix nvarchar(25) = null
+                                                                                                                                                                         
+								Declare @SubUOM int = null,  @SubUOMDescription nvarchar(50) = null, @Paragraph nvarchar(255) = null, @IsPercentage bit = null, @SubDisplayOrder nvarchar(225) = null, @SubRefRange nvarchar(max) = null
+                                             
+								Declare @defaultResult as nvarchar(20) = '';
+                                                                                                                                                                                                         
+								
+                                                                                                                                                                                                                                                     
+								
+                                                                                                                                                                                                                                                     
+								Select @SubUOM = LabtestSub.UOM, @SubUOMDescription = ISNULL(UnitOfMeasure.CODE, ''), @Paragraph = ParagraphHeader,
+                                                                                                                                  
+								@SubDisplayOrder =  IsNULL (MedicalClass.DisplayOrder, '') +  IsNULL (Labtest.DisplayOrder, '') +  IsNULL (labTestSub.DisplayOrder, ''),
+                                                                                                             
+								
+                                                                                                                                                                                                                                                     
+								@LabSubMin = LabTestSub.DefaultNoramlMin, 
+                                                                                                                                                                                                           
+								@LabSubMax = LabTestSub.DefaultNormalMax, 
+                                                                                                                                                                                                           
+								@LabSubMaleMin = LabTestSub.MaleNormalMin, 
+                                                                                                                                                                                                          
+								@LabSubMaleMax =  LabTestSub.MaleNormalMax, 
+                                                                                                                                                                                                         
+								@LabSubFemaleMin = LabTestSub.FemaleNormalMin, 
+                                                                                                                                                                                                      
+								@LabSubFemaleMax = LabTestSub.FemaleNormalMax,
+                                                                                                                                                                                                       
+								@LabSubErrorMin = LabTestSub.ErrorRangeMin,
+                                                                                                                                                                                                          
+								@LabSubErrorMax = LabTestSub.ErrorRangeMax,
+                                                                                                                                                                                                          
+								@IsPercentage = IsPercentage,
+                                                                                                                                                                                                                        
+								@LabSubPanicMin = LabTestSub.LowPanicIndex,
+                                                                                                                                                                                                          
+								@LabSubPanicMax = LabTestSub.HighPanicIndex,
+                                                                                                                                                                                                         
+								@LabSubPrefix = LabTestSub.Prefix,
+                                                                                                                                                                                                                   
+								@LabSubSuffix = LabTestSub.Suffix
+                                                                                                                                                                                                                    
+								from LabTestSub 
+                                                                                                                                                                                                                                     
+								INNER JOIN LabTest on LabTest.ID = LabTestSub.LabTest 
+                                                                                                                                                                                               
+								INNER JOIN HospitalDefinition.dbo.MedicalClass on MedicalClass.ID = LabTest.MedicalClass
+                                                                                                                                                             
+								LEFT JOIN EMR.dbo.UnitOfMeasure on UnitOfMeasure.ID = LabTestSub.UOM
+                                                                                                                                                                                 
+								where LabTestSub.ID = @LabTestSubID and UnitOfMeasure.IsDeleted = 0  
+                                                                                                                                                                                
+								------------------------------------------------------------
+                                                                                                                                                                                         
+						
+                                                                                                                                                                                                                                                       
+								
+                                                                                                                                                                                                                                                     
+								----------------- Min and Max ---------------------
+                                                                                                                                                                                                  
+								if (@Gender = @Male and ((isnull(@LabSubMaleMin, '') <> '') or (isnull(@LabSubMaleMax , '') <> '')))
+                                                                                                                                                 
+									Begin
+                                                                                                                                                                                                                                               
+										set @SubMin = @LabSubMaleMin
+                                                                                                                                                                                                                       
+										set @SubMax = @LabSubMaleMax
+                                                                                                                                                                                                                       
+									End
+                                                                                                                                                                                                                                                 
+								else if (@Gender = @Female and ((isnull(@LabSubFemaleMin, '') <> '') or (isnull(@LabSubFemaleMax, '') <> '')))
+                                                                                                                                       
+									Begin
+                                                                                                                                                                                                                                               
+										set @SubMin = @LabSubFemaleMin
+                                                                                                                                                                                                                     
+										set @SubMax = @LabSubFemaleMax
+                                                                                                                                                                                                                     
+									End
+                                                                                                                                                                                                                                                 
+								else
+                                                                                                                                                                                                                                                 
+									Begin
+                                                                                                                                                                                                                                               
+										set @SubMin = @LabSubMin
+                                                                                                                                                                                                                           
+										set @SubMax = @LabSubMax
+                                                                                                                                                                                                                           
+									End
+                                                                                                                                                                                                                                                 
+									
+                                                                                                                                                                                                                                                    
+								if (ISNULL(@SubMin, '') <> '') Set @SubMin = cast(Cast(@SubMin as float) as nvarchar(25))
+                                                                                                                                                            
+								if (ISNULL(@SubMax, '') <> '') Set @SubMax = cast(Cast(@SubMax as float) as nvarchar(25))
+                                                                                                                                                            
+								
+                                                                                                                                                                                                                                                     
+								if ((ISNULL(@SubMin, '') <> '') and (ISNULL(@SubMax, '') <> ''))
+                                                                                                                                                                                     
+									Set @SubRefRange = @SubMin + ' - ' + @SubMax
+                                                                                                                                                                                                        
+								else if (ISNULL(@SubMin, '') <> '')
+                                                                                                                                                                                                                  
+									Set @SubRefRange = '> ' + @SubMin
+                                                                                                                                                                                                                   
+								else if (ISNULL(@SubMax, '') <> '')
+                                                                                                                                                                                                                  
+									Set @SubRefRange = '< ' + @SubMax
+                                                                                                                                                                                                                   
+									
+                                                                                                                                                                                                                                                    
+								if (@SubRefRange is not null) set @SubRefRange = '<center><span style="font-size:12px">' + @SubRefRange + '</span></center>'
+                                                                                                                         
+								---------------------------------------------------------
+                                                                                                                                                                                            
+								--set default result Neg for urin analyse
+                                                                                                                                                                                                            
+								if @LabTestSubID = 339 OR @LabTestSubID = 340 OR @LabTestSubID = 341 OR @LabTestSubID =342 OR @LabTestSubID =343 OR @LabTestSubID =344 OR @LabTestSubID = 345
+                                                                                        
+								begin
+                                                                                                                                                                                                                                                
+								set @defaultResult = 'NEG';
+                                                                                                                                                                                                                          
+								end
+                                                                                                                                                                                                                                                  
+								if @LabTestSubID = 336 
+                                                                                                                                                                                                                              
+								begin
+                                                                                                                                                                                                                                                
+								set @defaultResult = 'Jaune claire';
+                                                                                                                                                                                                                 
+								end
+                                                                                                                                                                                                                                                  
+								if @LabTestSubID = 349 OR @LabTestSubID = 350 OR @LabTestSubID = 351 OR @LabTestSubID =352 OR @LabTestSubID =353
+                                                                                                                                     
+								begin
+                                                                                                                                                                                                                                                
+								set @defaultResult = '-';
+                                                                                                                                                                                                                            
+								end
+                                                                                                                                                                                                                                                  
+								
+                                                                                                                                                                                                                                                     
+							---------------------------------------------------------		
+                                                                                                                                                                                           
+										
+                                                                                                                                                                                                                                                   
+								Insert into TransactionsTemp.dbo.TempPatientLabSub (TempPatientLabTestID, LabTestSubID, Paragraph, IsPercentage, Result,Ref_Range, LabTestSubDescription, LabTestDescription, Min, Max, UOM, UOMDescription, DisplayOrder,  LastResult, LastResultDate 
+, ErrorMin, ErrorMax, Prefix, Suffix, LowPanicIndex, HighPanicIndex, CreatedBy)
+                                                                                                                                                                              
+								values (@PatientLabResultsID, @LabTestSubID, @Paragraph, isnull(@IsPercentage,0),@defaultResult, @SubRefRange, @LabTestSubDescription, @LabTestDescription, @SubMin, @SubMax, @SubUOM, @SubUOMDescription, @SubDisplayOrder,  @LastSub, @LastSubDate, @
+LabSubErrorMin, @LabSubErrorMax, @LabSubPrefix, @LabSubSuffix, @LabSubPanicMin, @LabSubPanicMax, @Session)
+                                                                                                                                                   
+
+                                                                                                                                                                                                                                                             
+								FETCH NEXT FROM myCursor2 INTO  @LabTestSubID, @LabTestSubDescription
+                                                                                                                                                                                
+							END
+                                                                                                                                                                                                                                                   
+						CLOSE myCursor2
+                                                                                                                                                                                                                                        
+						DEALLOCATE myCursor2
+                                                                                                                                                                                                                                   
+					End
+                                                                                                                                                                                                                                                     
+					-------------------------------------------------------------------------------------------
+                                                                                                                                                             
+
+                                                                                                                                                                                                                                                             
+				FETCH NEXT FROM myCursor1 INTO @LabTestID, @LabTestDescription, @GUID, @MedicalClassID, @MedicalClassDescription, @SequenceNumber, @IsCollection, @ResultType, @Group, @DisplayOrder			
+                                                                  
+				END
+                                                                                                                                                                                                                                                      
+			CLOSE myCursor1
+                                                                                                                                                                                                                                           
+			DEALLOCATE myCursor1
+                                                                                                                                                                                                                                      
+			
+                                                                                                                                                                                                                                                          
+		End
+                                                                                                                                                                                                                                                        
+		Else
+                                                                                                                                                                                                                                                       
+		Begin
+                                                                                                                                                                                                                                                      
+			insert into TransactionsTemp.dbo.TempPatientLabResultsHeader (CaseNumber, ResidentPatientID, PatientID, MRN, AdmissionID, AdmissionNumber, Gender, ResultNB, RequestDate, IsApproved, ApprovedDate, IsCompleted, CompletedDate, Reason, Age, Room, Floor, Be
+d, Department, CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, Counter, Comment) 
+                                                                                                                                                                          
+			Select PLRH.CaseNumber, RP.ID, PLRH.PatientID, PLRH.MRN, AdmissionNB, PLRH.AdmissionNumber, Gender, ResultNB, PLRH.RequestDate, IsApproved, ApprovedDate, IsCompleted, CompletedDate, Reason, PLRH.Age, room, Floor, Bed, Department, PLRH.CreatedBy, PLRH.C
+reatedDate, PLRH.ModifiedBy, PLRH.ModifiedDate, PH.Counter, PLRH.Comment
+                                                                                                                                                                                     
+			from PatientLabResultsHeader  PLRH
+                                                                                                                                                                                                                        
+			inner join Admission.dbo.ResidentPatient RP on RP.Admission = PLRH.AdmissionNB
+                                                                                                                                                                            
+			left join EMR.dbo.OrderRequest PH on PH.CaseNumber = PLRH.CaseNumber and PH.RequestType = @LaboratoryRequestType
+                                                                                                                                          
+			where PLRH.ID = @PatientLabResultsHeaderID and RP.IsDeleted = 0 and isnull(PH.IsDeleted, 0) = 0
+                                                                                                                                                           
+			
+                                                                                                                                                                                                                                                          
+			set  @PatientLabResultsHeaderID = Scope_Identity()
+                                                                                                                                                                                                        
+			
+                                                                                                                                                                                                                                                          
+			insert into TransactionsTemp.dbo.TempPatientLabResult (TempPatientHeaderID, LabTestID, LabTestDescription, MedicalClassID, MedicalClass, Paragraph, Prefix, Min, Max, Suffix, UOM, UOMDescription, Result, Last, LastResultDate, DefaultTextResult, Comments
+, DisplayOrder, StatusID, PreInvoiceDetailSequence, IsResultok, GUID, ResultDate, Ref_Range, CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, IsDeleted, ResultType, IsCollection, ErrorMin, ErrorMax, LowPanicIndex, HighPanicIndex, IsPanic, IsNotified, Pan
+icDate, PanicComment, [Group], TempHelperID)
+                                                                                                                                                                                                                 
+			select TempPatientLabResultsHeader.ID, LabTestID, LabTestDescription, PLR.MedicalClass, MedicalClassDesc, Paragraph, PLR.Prefix, Min, Max, PLR.Suffix, PLR.UOM, UOMDescription, Result, Last, LastResultDate, PLR.DefaultTextResult, PLR.Comments, PLR.Displ
+ayOrder, StatusID, PreInvoiceDetailSequence, IsResultok, GUID, ResultDate, Ref_Range, PLR.CreatedBy, PLR.CreatedDate, PLR.ModifiedBy, PLR.ModifiedDate, PLR.IsDeleted, ResultType, IsACollection, ErrorMin, ErrorMax, PLR.LowPanicIndex, PLR.HighPanicIndex, Is
+Panic, IsNotified, PanicDate, PanicComment, [Group], PLR.ID
+                                                                                                                                                                                                  
+			from PatientLabResult PLR
+                                                                                                                                                                                                                                 
+			inner join LIS.dbo.LabTest on LabTest.ID = PLR.LabTestID
+                                                                                                                                                                                                  
+			inner join PatientLabResultsHeader on PatientLabResultsHeader.ID = PLR.PatientHeaderID
+                                                                                                                                                                    
+			inner join TransactionsTemp.dbo.TempPatientLabResultsHeader on TempPatientLabResultsHeader.CaseNumber = PatientLabResultsHeader.CaseNumber
+                                                                                                                
+			where TempPatientLabResultsHeader.ID = @PatientLabResultsHeaderID and TempPatientLabResultsHeader.ID = @PatientLabResultsHeaderID and PatientLabResultsHeader.IsDeleted = 0
+                                                                               
+			
+                                                                                                                                                                                                                                                          
+			insert into TransactionsTemp.dbo.TempPatientLabSub (TempPatientLabTestID, LabTestSubID, Paragraph, LabTestSubDescription, LabTestDescription, Prefix, Min, Max, Suffix, UOM, UOMDescription, Result, Comments, DisplayOrder, Percentage, Ref_Range, LastResu
+lt, LastResultDate, StatusID, CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, IsDeleted, ErrorMin, ErrorMax, LowPanicIndex, HighPanicIndex, IsPanic, IsNotified, PanicDate, PanicComment, IsPercentage)
+                                                    
+			select TempPatientLabResult.ID, LabTestSubID, PLS.Paragraph, LabTestSubDescription, PLS.LabTestDescription, PLS.Prefix, PLS.Min, PLS.Max, PLS.Suffix, PLS.UOM, PLS.UOMDescription, PLS.Result, PLS.Comments, PLS.DisplayOrder, Percentage, PLS.Ref_Range, La
+stResult, PLS.LastResultDate, PLS.StatusID, PLS.CreatedBy, PLS.CreatedDate, PLS.ModifiedBy, PLS.ModifiedDate, PLS.IsDeleted, PLS.ErrorMin, PLS.ErrorMax, PLS.LowPanicIndex, PLS.HighPanicIndex, PLS.IsPanic, PLS.IsNotified, PLS.PanicDate, PLS.PanicComment, I
+sPercentage
+                                                                                                                                                                                                                                                  
+			from PatientLabSub PLS
+                                                                                                                                                                                                                                    
+			inner join LabTestSub on LabTestSub.ID = PLS.LabTestSubID
+                                                                                                                                                                                                 
+			inner join PatientLabResult on PatientLabResult.ID = PLS.PatientLabTestID
+                                                                                                                                                                                 
+			inner join PatientLabResultsHeader on PatientLabResultsHeader.ID = PatientLabResult.PatientHeaderID
+                                                                                                                                                       
+			inner join TransactionsTemp.dbo.TempPatientLabResultsHeader on TempPatientLabResultsHeader.CaseNumber = PatientLabResultsHeader.CaseNumber
+                                                                                                                
+			inner join TransactionsTemp.dbo.TempPatientLabResult on TempPatientLabResult.TempPatientHeaderID = TempPatientLabResultsHeader.ID
+                                                                                                                         
+			where TempPatientLabResultsHeader.ID = @PatientLabResultsHeaderID and TempPatientLabResultsHeader.ID = @PatientLabResultsHeaderID and TempPatientLabResult.TempHelperID = PatientLabResult.ID and PatientLabResultsHeader.IsDeleted = 0
+                   
+			
+                                                                                                                                                                                                                                                          
+			insert into TransactionsTemp.dbo.TempPatientLabBacteriologyHeader (TempPatientLabResultID, GermsID, GermDescription, Comments, DateTime, BacterieID, BacterieDescription, PrelevementID, Prelevement, Number, CreatedBy, CreatedDate, ModifiedBy, ModifiedDa
+te, IsDeleted)
+                                                                                                                                                                                                                                               
+			select TempPatientLabResult.ID, GermsID, PLBH.Germ, PLBH.Comments, DateTime, BacterieID, PLBH.Bacteria, PrelevementID, Prelevement, Number, PLBH.CreatedBy, PLBH.CreatedDate, PLBH.ModifiedBy, PLBH.ModifiedDate, PLBH.IsDeleted
+                          
+			from PatientLabBacteriologyHeader PLBH
+                                                                                                                                                                                                                    
+			inner join PatientLabResult on PatientLabResult.ID = PLBH.PatientLabResultID
+                                                                                                                                                                              
+			inner join PatientLabResultsHeader on PatientLabResultsHeader.ID = PatientLabResult.PatientHeaderID
+                                                                                                                                                       
+			inner join TransactionsTemp.dbo.TempPatientLabResultsHeader on TempPatientLabResultsHeader.CaseNumber = PatientLabResultsHeader.CaseNumber
+                                                                                                                
+			inner join TransactionsTemp.dbo.TempPatientLabResult on TempPatientLabResult.TempPatientHeaderID = TempPatientLabResultsHeader.ID
+                                                                                                                         
+			where TempPatientLabResultsHeader.ID = @PatientLabResultsHeaderID and TempPatientLabResultsHeader.ID = @PatientLabResultsHeaderID and TempPatientLabResult.TempHelperID = PatientLabResult.ID and PatientLabResultsHeader.IsDeleted = 0
+                   
+			
+                                                                                                                                                                                                                                                          
+			insert into TransactionsTemp.dbo.TempPatientLabBacteriology (TempPatientHeader, AntibioticID, AntibioticDescription, Resistant, Intermediat, Sensible, CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, IsDeleted, DisplayOrder, Charge, Diameter, Code, Da
+teTime)
+                                                                                                                                                                                                                                                      
+			select TempPatientLabBacteriologyHeader.ID, AntibioticID, AntibioticDescription, Resistant, Intermediat, Sensible, PLB.CreatedBy, PLB.CreatedDate, PLB.ModifiedBy, PLB.ModifiedDate, PLB.IsDeleted, PLB.DisplayOrder, Charge, Diameter, PLB.Code, PLB.DateTi
+me
+                                                                                                                                                                                                                                                           
+			from PatientLabBacteriology PLB
+                                                                                                                                                                                                                           
+			inner join PatientLabBacteriologyHeader on PatientLabBacteriologyHeader.ID = PLB.PatientHeader
+                                                                                                                                                            
+			inner join PatientLabResult on PatientLabResult.ID = PatientLabBacteriologyHeader.PatientLabResultID
+                                                                                                                                                      
+			inner join PatientLabResultsHeader on PatientLabResultsHeader.ID = PatientLabResult.PatientHeaderID
+                                                                                                                                                       
+			inner join TransactionsTemp.dbo.TempPatientLabResultsHeader on TempPatientLabResultsHeader.CaseNumber = PatientLabResultsHeader.CaseNumber
+                                                                                                                
+			inner join TransactionsTemp.dbo.TempPatientLabResult on TempPatientLabResult.TempPatientHeaderID = TempPatientLabResultsHeader.ID
+                                                                                                                         
+			inner join TransactionsTemp.dbo.TempPatientLabBacteriologyHeader on TempPatientLabBacteriologyHeader.TempPatientLabResultID = TempPatientLabResult.ID
+                                                                                                     
+			where TempPatientLabResultsHeader.ID = @PatientLabResultsHeaderID and TempPatientLabResultsHeader.ID = @PatientLabResultsHeaderID and TempPatientLabResult.TempHelperID = PatientLabResult.ID and PatientLabResultsHeader.IsDeleted = 0
+                   
+	
+                                                                                                                                                                                                                                                            
+		End
+                                                                                                                                                                                                                                                        
+		
+                                                                                                                                                                                                                                                           
+		
+                                                                                                                                                                                                                                                           
+		
+                                                                                                                                                                                                                                                           
+		------------------------------------------------------------------------------------------------------
+                                                                                                                                                     
+		
+                                                                                                                                                                                                                                                           
+		
+                                                                                                                                                                                                                                                           
+		
+                                                                                                                                                                                                                                                           
+		
+                                                                                                                                                                                                                                                           
+
+                                                                                                                                                                                                                                                             
+
+                                                                                                                                                                                                                                                             
+	END TRY
+                                                                                                                                                                                                                                                     
+				
+                                                                                                                                                                                                                                                         
+	BEGIN CATCH
+                                                                                                                                                                                                                                                 
+	
+                                                                                                                                                                                                                                                            
+		IF @@TRANCOUNT > 0
+                                                                                                                                                                                                                                         
+		BEGIN
+                                                                                                                                                                                                                                                      
+			SET @ErrorMessage=ERROR_MESSAGE()
+                                                                                                                                                                                                                         
+			print @ErrorMessage
+                                                                                                                                                                                                                                       
+			ROLLBACK TRANSACTION
+                                                                                                                                                                                                                                      
+		END
+                                                                                                                                                                                                                                                        
+	END CATCH
+                                                                                                                                                                                                                                                   
+	
+                                                                                                                                                                                                                                                            
+	IF @@TRANCOUNT > 0
+                                                                                                                                                                                                                                          
+		COMMIT TRANSACTION
+                                                                                                                                                                                                                                         
+END
+                                                                                                                                                                                                                                                          
+ProcedureName                                                                                                                    ParameterName                                                                                                                    DataType                                                                                                                         MaxLength IsOutput
+-------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- --------- --------
+GenerateTempPatientLabTestHeader                                                                                                 @CaseNumber                                                                                                                      int                                                                                                                                      4        0
+GenerateTempPatientLabTestHeader                                                                                                 @Session                                                                                                                         int                                                                                                                                      4        0
+GenerateTempPatientLabTestHeader                                                                                                 @Reset                                                                                                                           bit                                                                                                                                      1        0
+GenerateTempPatientLabTestHeader                                                                                                 @PatientLabResultsHeaderID                                                                                                       int                                                                                                                                      4        1
+GenerateTempPatientLabTestHeader                                                                                                 @ErrorMessage                                                                                                                    nvarchar                                                                                                                               510        1
+
+(5 rows affected)

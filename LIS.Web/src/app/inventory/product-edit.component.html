@@ -1,0 +1,150 @@
+<div class="product-edit-shell">
+  <header class="product-edit-header">
+    <h1>{{ isNew ? 'Create Product' : 'Edit Product' }}</h1>
+    <p class="subtitle">
+      {{ isNew ? 'Define a new inventory product.' : 'Update inventory product details.' }}
+    </p>
+  </header>
+
+  <section class="product-edit-content">
+    <div *ngIf="loadError" class="alert alert-danger mb-3">
+      {{ loadError }}
+    </div>
+
+    <form (ngSubmit)="save()">
+      <div class="row g-3">
+        <!-- Classification -->
+        <div class="col-12 col-xl-6">
+          <div class="card section-card">
+            <div class="card-header">Classification</div>
+            <div class="card-body row g-2">
+              <div class="col-12">
+                <label class="form-label">Stock Type</label>
+                <input type="number" class="form-control" [(ngModel)]="model.stockType" name="stockType">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Product Line</label>
+                <input type="number" class="form-control" [(ngModel)]="model.productLine" name="productLine">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Category</label>
+                <input type="number" class="form-control" [(ngModel)]="model.category" name="category">
+              </div>
+            </div>
+          </div>
+
+          <div class="card section-card mt-3">
+            <div class="card-header">Identifiers</div>
+            <div class="card-body row g-2">
+              <div class="col-12">
+                <label class="form-label">SKU / Code</label>
+                <input class="form-control" [(ngModel)]="model.code" name="code" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Short Description (Trade Name)</label>
+                <input class="form-control" [(ngModel)]="model.smallDescription" name="smallDescription" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Long Description</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="model.longDescription" name="longDescription"></textarea>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Manufacturer</label>
+                <input type="number" class="form-control" [(ngModel)]="model.manufacturer" name="manufacturer">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Denied / Sales / Purchase / Storage -->
+        <div class="col-12 col-xl-6">
+          <div class="card section-card">
+            <div class="card-header">Denied / Service Flags</div>
+            <div class="card-body row g-2">
+              <div class="col-6 col-md-4">
+                <div class="form-check">
+                  <input id="hasExpiry" class="form-check-input" type="checkbox" [(ngModel)]="model.hasExpiry" name="hasExpiry">
+                  <label class="form-check-label" for="hasExpiry">Has Expiry</label>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="form-check">
+                  <input id="canBeSold" class="form-check-input" type="checkbox" [(ngModel)]="model.canBeSold" name="canBeSold">
+                  <label class="form-check-label" for="canBeSold">Can Be Sold</label>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="form-check">
+                  <input id="canBePurchased" class="form-check-input" type="checkbox" [(ngModel)]="model.canBePurchased" name="canBePurchased">
+                  <label class="form-check-label" for="canBePurchased">Can Be Purchased</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card section-card mt-3">
+            <div class="card-header">Sales / Purchase</div>
+            <div class="card-body row g-2">
+              <div class="col-12 col-md-6">
+                <label class="form-label">Sale Price (Local)</label>
+                <input type="number" step="0.001" class="form-control" [(ngModel)]="model.salePriceLocal" name="salePriceLocal">
+              </div>
+              <!-- Placeholders for future fields to match legacy layout -->
+              <div class="col-12 col-md-6">
+                <label class="form-label">Sale Price (Other)</label>
+                <input class="form-control" disabled placeholder="To be implemented">
+              </div>
+            </div>
+          </div>
+
+          <div class="card section-card mt-3">
+            <div class="card-header">Storage</div>
+            <div class="card-body row g-2">
+              <div class="col-6">
+                <label class="form-label">Minimum Qty</label>
+                <input class="form-control" disabled placeholder="To be implemented">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Maximum Qty</label>
+                <input class="form-control" disabled placeholder="To be implemented">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card section-card mt-3">
+        <div class="card-header tabs-header">
+          <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item">
+              <span class="nav-link active">Product Package</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link disabled">Product Storage</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link disabled">Alternate Products</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-link disabled">Reorder Point</span>
+            </li>
+          </ul>
+        </div>
+        <div class="card-body">
+          <div class="text-muted small">
+            Product packages and related tabs will be implemented later. For now the main definition fields above are editable.
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2 mt-3">
+        <button type="button" class="btn btn-secondary" (click)="cancel()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          {{ isNew ? 'Create' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>
+
+

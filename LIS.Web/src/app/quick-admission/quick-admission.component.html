@@ -1,0 +1,832 @@
+<div class="container-fluid quick-admission-container p-0">
+  <!-- Header -->
+  <div class="page-header p-3 bg-primary text-white d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">
+      <i class="bi bi-person-plus-fill me-2"></i>
+      {{ isEditMode() ? 'Edit Admission' : 'New Quick Admission' }}
+      <span *ngIf="admissionId()" class="badge bg-light text-primary ms-2">#{{ admissionId() }}</span>
+    </h4>
+    <div>
+      <button class="btn btn-success me-2" (click)="savePatient()" type="button" [disabled]="isSaving()">
+        <i class="bi" [ngClass]="isSaving() ? 'bi-hourglass-split' : 'bi-save'" class="me-2"></i>
+        {{ isSaving() ? 'Saving...' : (isExistingPatient() ? 'Create Admission' : 'Save') }}
+      </button>
+      <button class="btn btn-secondary" (click)="goBack()" type="button" [disabled]="isSaving()">
+        <i class="bi bi-x-circle me-2"></i>
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Layout: Left Panel (25%) + Right Panel (75%) -->
+  <div class="main-layout">
+
+    <!-- Left Panel (25%) - Patient Information -->
+    <div class="left-panel">
+
+    <!-- Patient Information Card -->
+    <div class="card mb-3" [ngClass]="gender() === 'M' ? 'male-patient-card' : 'female-patient-card'">
+      <div class="card-header text-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+          <i class="bi bi-person me-2"></i>
+          Patient Information
+          <span *ngIf="isExistingPatient()" class="badge bg-warning text-dark ms-2">
+            <i class="bi bi-check-circle me-1"></i>
+            Existing Patient
+          </span>
+        </h6>
+        <div class="gender-icon-display">
+          <i class="bi"
+             [ngClass]="gender() === 'M' ? 'bi-gender-male' : 'bi-gender-female'"
+             style="font-size: 1.8rem;"
+             [title]="gender() === 'M' ? 'Male Patient' : 'Female Patient'"></i>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- MRN -->
+        <div class="mb-3">
+          <label class="form-label">
+            MRN <span class="text-danger">*</span>
+            <span *ngIf="isLoadingMRN()" class="spinner-border spinner-border-sm ms-2"></span>
+          </label>
+          <input type="text" class="form-control"
+                 [value]="mrn()"
+                 readonly
+                 style="background-color: #e9ecef; font-weight: bold;">
+        </div>
+
+        <!-- First Name with Autocomplete -->
+        <div class="mb-3 position-relative">
+          <label class="form-label">First Name <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="text" class="form-control"
+                   [value]="firstName()"
+                   (input)="firstName.set($any($event.target).value); searchFirstName($any($event.target).value)"
+                   (keydown)="onFirstNameKeyDown($event)"
+                   (blur)="hideFirstNameDropdown()"
+                   placeholder="Type to search...">
+            <button class="btn btn-outline-secondary" type="button" (click)="onFirstNameIconClick(); $event.stopPropagation()" (mousedown)="$event.preventDefault()" title="Show options">
+              <i class="bi bi-chevron-down"></i>
+            </button>
+          </div>
+          <div *ngIf="showFirstNameDropdown() && firstNameOptions().length > 0" class="autocomplete-dropdown">
+            <div *ngFor="let opt of firstNameOptions(); let i = index"
+                 class="autocomplete-item"
+                 [class.active]="selectedFirstNameIndex() === i"
+                 (mousedown)="selectFirstName(opt, $event)"
+                 (mouseenter)="selectedFirstNameIndex.set(i)">
+              <strong>{{ opt.name }}</strong>
+              <span *ngIf="opt.arabicName" class="text-muted ms-2">({{ opt.arabicName }})</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Last Name with Autocomplete -->
+        <div class="mb-3 position-relative">
+          <label class="form-label">Last Name <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="text" class="form-control"
+                   [value]="lastName()"
+                   (input)="lastName.set($any($event.target).value); searchLastName($any($event.target).value)"
+                   (keydown)="onLastNameKeyDown($event)"
+                   (blur)="hideLastNameDropdown()"
+                   placeholder="Type to search...">
+            <button class="btn btn-outline-secondary" type="button" (click)="onLastNameIconClick(); $event.stopPropagation()" (mousedown)="$event.preventDefault()" title="Show options">
+              <i class="bi bi-chevron-down"></i>
+            </button>
+          </div>
+          <div *ngIf="showLastNameDropdown() && lastNameOptions().length > 0" class="autocomplete-dropdown">
+            <div *ngFor="let opt of lastNameOptions(); let i = index"
+                 class="autocomplete-item"
+                 [class.active]="selectedLastNameIndex() === i"
+                 (mousedown)="selectLastName(opt, $event)"
+                 (mouseenter)="selectedLastNameIndex.set(i)">
+              <strong>{{ opt.name }}</strong>
+              <span *ngIf="opt.arabicName" class="text-muted ms-2">({{ opt.arabicName }})</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle Name with Autocomplete -->
+        <div class="mb-3 position-relative">
+          <label class="form-label">Middle Name</label>
+          <div class="input-group">
+            <input type="text" class="form-control"
+                   [value]="middleName()"
+                   (input)="middleName.set($any($event.target).value); searchMiddleName($any($event.target).value)"
+                   (keydown)="onMiddleNameKeyDown($event)"
+                   (blur)="hideMiddleNameDropdown()"
+                   placeholder="Type to search...">
+            <button class="btn btn-outline-secondary" type="button" (click)="onMiddleNameIconClick(); $event.stopPropagation()" (mousedown)="$event.preventDefault()" title="Show options">
+              <i class="bi bi-chevron-down"></i>
+            </button>
+          </div>
+          <div *ngIf="showMiddleNameDropdown() && middleNameOptions().length > 0" class="autocomplete-dropdown">
+            <div *ngFor="let opt of middleNameOptions(); let i = index"
+                 class="autocomplete-item"
+                 [class.active]="selectedMiddleNameIndex() === i"
+                 (mousedown)="selectMiddleName(opt, $event)"
+                 (mouseenter)="selectedMiddleNameIndex.set(i)">
+              <strong>{{ opt.name }}</strong>
+              <span *ngIf="opt.arabicName" class="text-muted ms-2">({{ opt.arabicName }})</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arabic Full Name (Auto-computed) -->
+        <div class="mb-3">
+          <label class="form-label">
+            Arabic Full Name
+            <small class="text-muted">(auto)</small>
+          </label>
+          <input type="text" class="form-control"
+                 [value]="arabicFullName()"
+                 readonly
+                 style="background-color: #f8f9fa; direction: rtl;">
+        </div>
+
+        <!-- Gender -->
+        <div class="mb-3">
+          <label class="form-label">Gender <span class="text-danger">*</span></label>
+          <select class="form-select"
+                  [value]="gender()"
+                  (change)="gender.set($any($event.target).value)">
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+
+        <!-- Date of Birth -->
+        <div class="mb-3">
+          <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+          <input type="date" class="form-control"
+                 [class.is-invalid]="dobValidationError()"
+                 [value]="dob()"
+                 (input)="onDobChange($any($event.target).value)"
+                 max="{{ getTodayDateString() }}">
+          <div *ngIf="dobValidationError()" class="invalid-feedback">
+            {{ dobValidationError() }}
+          </div>
+        </div>
+
+        <!-- Age -->
+        <div class="mb-3">
+          <label class="form-label">Age</label>
+          <div class="input-group">
+            <input type="number" class="form-control"
+                   [value]="age()"
+                   (input)="onAgeChange($any($event.target).value)"
+                   placeholder="Enter age"
+                   min="0" max="150">
+            <span class="input-group-text">years</span>
+          </div>
+          <small class="text-muted">Enter age to auto-calculate DOB, or enter DOB to auto-calculate age</small>
+        </div>
+
+        <!-- Phone -->
+        <div class="mb-3">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-control"
+                 [value]="phone()"
+                 (input)="phone.set($any($event.target).value)"
+                 placeholder="03/123456">
+        </div>
+
+        <!-- Marital Status -->
+        <div class="mb-3">
+          <label class="form-label">Marital Status</label>
+          <select class="form-select"
+                  [value]="maritalStatus() || ''"
+                  (change)="maritalStatus.set($any($event.target).value ? +$any($event.target).value : null)">
+            <option value="">Select...</option>
+            <option value="1">Single</option>
+            <option value="2">Married</option>
+            <option value="3">Divorced</option>
+            <option value="4">Widowed</option>
+          </select>
+        </div>
+        <!-- End of row -->
+      </div>
+      <!-- End of card-body -->
+    </div>
+    <!-- End of Patient Information Card -->
+    </div>
+    <!-- End of Left Panel -->
+
+    <!-- Right Panel (75%) - Admission -->
+    <div class="right-panel">
+
+      <!-- Top Section (25%) - Admission Information -->
+      <div class="top-section">
+        <div class="card h-100 m-0">
+          <div class="card-header bg-success text-white">
+            <h6 class="mb-0">
+              <i class="bi bi-hospital me-2"></i>
+              Admission Information
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+              <!-- Admission Number -->
+              <div class="col-md-2">
+                <label class="form-label">Admission Number</label>
+                <input type="text" class="form-control"
+                       [value]="admissionNumber() || 'Will be generated by system'"
+                       readonly
+                       [class.bg-success]="admissionNumber()"
+                       [class.text-white]="admissionNumber()"
+                       style="background-color: #e9ecef; font-weight: bold;">
+                <small *ngIf="admissionNumber()" class="text-success">
+                  <i class="bi bi-check-circle me-1"></i>
+                  Generated: {{ admissionNumber() }}
+                </small>
+              </div>
+
+              <!-- Referral Physician -->
+              <div class="col-md-3 position-relative" style="z-index: 1000;">
+                <label class="form-label">Referral Physician <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input type="text" class="form-control"
+                         id="referralPhysicianInput"
+                         [value]="referralPhysician()"
+                         (input)="onReferralPhysicianInput($any($event.target).value)"
+                         (keydown)="onReferralPhysicianKeyDown($event)"
+                         (focus)="onReferralPhysicianFocus()"
+                         (blur)="hidePhysicianDropdown()"
+                         placeholder="Type to search...">
+                  <button class="btn btn-outline-secondary" type="button" (click)="onReferralPhysicianIconClick(); $event.stopPropagation()" (mousedown)="$event.preventDefault()" title="Show options">
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+                <div *ngIf="showPhysicianDropdown() && physicianOptions().length > 0"
+                     class="autocomplete-dropdown"
+                     [ngStyle]="getDropdownStyle()">
+                  <div *ngFor="let physician of physicianOptions(); let i = index; trackBy: trackByPhysicianId"
+                       class="autocomplete-item"
+                       [class.active]="selectedPhysicianIndex() === i"
+                       (mousedown)="selectPhysician(physician, $event)"
+                       (click)="selectPhysician(physician, $event)"
+                       (mouseenter)="selectedPhysicianIndex.set(i)">
+                    <strong>{{ physician.name }}</strong>
+                    <span *ngIf="physician.specialty" class="text-muted ms-2">({{ physician.specialty }})</span>
+                  </div>
+                </div>
+                <div *ngIf="showPhysicianDropdown() && physicianOptions().length === 0 && referralPhysician().length >= 2"
+                     class="autocomplete-dropdown"
+                     [ngStyle]="getDropdownStyle()">
+                  <div class="autocomplete-item text-muted">
+                    No physicians found
+                  </div>
+                </div>
+              </div>
+
+              <!-- Check-in Date -->
+              <div class="col-md-2">
+                <label class="form-label">Check-in Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control"
+                       [value]="checkInDate()"
+                       (input)="checkInDate.set($any($event.target).value)"
+                       max="{{ getTodayDateString() }}">
+              </div>
+
+              <!-- Department -->
+              <div class="col-md-2">
+                <label class="form-label">Department <span class="text-danger">*</span></label>
+                <select class="form-select"
+                        [ngModel]="department()"
+                        (ngModelChange)="department.set($event)">
+                  <option [value]="''">Select Department</option>
+                  <ng-container *ngFor="let dept of departmentsWithDisplay(); trackBy: trackByDepartmentId">
+                    <option [value]="dept.value">{{ dept.displayText }}</option>
+                  </ng-container>
+                </select>
+              </div>
+
+              <!-- Insurance -->
+              <!-- Insurance -->
+              <div class="col-md-2 position-relative">
+                <label class="form-label">Insurance</label>
+                <div class="input-group">
+                  <input type="text"
+                         class="form-control"
+                         [value]="insuranceSearchText()"
+                         (input)="onInsuranceSearchInput($any($event.target).value)"
+                         (keydown)="onInsuranceKeyDown($event)"
+                         (blur)="hideInsuranceDropdown()"
+                         placeholder="Type to search insurance...">
+                  <button class="btn btn-outline-secondary"
+                          type="button"
+                          (click)="toggleInsuranceDropdown(); $event.stopPropagation()"
+                          (mousedown)="$event.preventDefault()"
+                          title="Show options">
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+                <div *ngIf="showInsuranceDropdown() && filteredInsurancesForInsurance().length > 0"
+                     class="autocomplete-dropdown">
+                  <div *ngFor="let ins of filteredInsurancesForInsurance(); let i = index"
+                       class="autocomplete-item"
+                       [class.active]="selectedInsuranceIndex() === i"
+                       (mousedown)="selectInsurance(ins, $event)"
+                       (mouseenter)="selectedInsuranceIndex.set(i)">
+                    <strong>{{ ins.description }}</strong>
+                    <span *ngIf="ins.arabicDescription" class="text-muted ms-2">({{ ins.arabicDescription }})</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Account -->
+              <div class="col-md-3 position-relative">
+                <label class="form-label">Account</label>
+                <div class="input-group">
+                  <input type="text"
+                         class="form-control"
+                         [value]="accountSearchText()"
+                         (input)="onAccountSearchInput($any($event.target).value)"
+                         (keydown)="onAccountKeyDown($event)"
+                         (blur)="hideAccountDropdown()"
+                         placeholder="Type to search account...">
+                  <button class="btn btn-outline-secondary"
+                          type="button"
+                          (click)="toggleAccountDropdown(); $event.stopPropagation()"
+                          (mousedown)="$event.preventDefault()"
+                          title="Show options">
+                    <i class="bi bi-chevron-down"></i>
+                  </button>
+                </div>
+                <div *ngIf="showAccountDropdown() && filteredInsurancesForAccount().length > 0"
+                     class="autocomplete-dropdown">
+                  <div *ngFor="let ins of filteredInsurancesForAccount(); let i = index"
+                       class="autocomplete-item"
+                       [class.active]="selectedAccountIndex() === i"
+                       (mousedown)="selectAccount(ins, $event)"
+                       (mouseenter)="selectedAccountIndex.set(i)">
+                    <strong>{{ ins.description }}</strong>
+                    <span *ngIf="ins.arabicDescription" class="text-muted ms-2">({{ ins.arabicDescription }})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section (75%) - Invoice -->
+      <div class="bottom-section">
+        <div class="card h-100 m-0">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+              <i class="bi bi-receipt me-2"></i>
+              Invoice
+            </h6>
+            <div class="d-flex gap-2">
+              <button
+                *ngIf="department().toLowerCase() === 'clinic'"
+                class="btn btn-success btn-sm"
+                (click)="addConsultation()">
+                <i class="bi bi-plus-circle me-1"></i>
+                Add Consultation
+              </button>
+              <button class="btn btn-info btn-sm" (click)="addInvoiceDetailInline()">
+                <i class="bi bi-plus-circle me-1"></i>
+                Add Item
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-0 d-flex flex-column" style="flex: 1; min-height: 0;">
+            <div class="row g-0 flex-grow-1" style="min-height: 0;">
+              <!-- Left Side: Invoice Details Grid (70%) -->
+              <div class="col-md-8 border-end d-flex flex-column">
+                <div class="invoice-details-container flex-grow-1 d-flex flex-column p-3">
+                  <div class="table-responsive flex-grow-1" style="overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0">
+                      <thead class="table-dark sticky-top">
+                        <tr>
+                          <th style="width: 25%;">Description</th>
+                          <th style="width: 15%;">Op. Physician</th>
+                          <th style="width: 6%;">Qty</th>
+                          <th style="width: 10%;">Unit Price</th>
+                          <th style="width: 8%;">Discount</th>
+                          <th style="width: 10%;">Total</th>
+                          <th style="width: 6%;">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <!-- Always editable invoice details rows -->
+                        <ng-container *ngFor="let detail of invoiceDetails(); let i = index">
+                          <tr class="position-relative">
+                            <td>
+                              <div class="position-relative">
+                                <div class="input-group input-group-sm">
+                                  <input
+                                    type="text"
+                                    class="form-control"
+                                    [value]="getEditingDetailForRow(i).denominationSearchQuery"
+                                    (input)="updateEditingDetailFieldForRow('denominationSearchQuery', $any($event.target).value, i); searchDenominationsForDetail($any($event.target).value, i)"
+                                    (focus)="onDenominationInputFocusForDetail(i)"
+                                    (keydown)="onDenominationKeyDownForDetail($event, i)"
+                                    [attr.data-row-index]="i"
+                                    placeholder="Search denomination...">
+                                  <button class="btn btn-outline-secondary" type="button" (click)="onDenominationIconClickForDetail(i); $event.stopPropagation()" (mousedown)="$event.preventDefault()" title="Show options">
+                                    <i class="bi bi-chevron-down"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <div class="position-relative">
+                                <div class="input-group input-group-sm">
+                                  <input
+                                    type="text"
+                                    class="form-control"
+                                    [value]="getEditingDetailForRow(i).operatingPhysicianName || ''"
+                                    (input)="searchOperatingPhysician($any($event.target).value, i)"
+                                    (keydown)="onOperatingPhysicianKeyDown($event, i)"
+                                    (focus)="onOperatingPhysicianFocus(i)"
+                                    placeholder="Search physician..."
+                                    [disabled]="!getEditingDetailForRow(i).hasOperatingPhysician">
+                                  <button class="btn btn-outline-secondary" type="button" (click)="onOperatingPhysicianIconClick(i); $event.stopPropagation()" (mousedown)="$event.preventDefault()" title="Show options" [disabled]="!getEditingDetailForRow(i).hasOperatingPhysician">
+                                    <i class="bi bi-chevron-down"></i>
+                                  </button>
+                                </div>
+                                <!-- Operating Physician Dropdown -->
+                                <div
+                                  *ngIf="getEditingDetailForRow(i).showOperatingPhysicianDropdown && getEditingDetailForRow(i).operatingPhysicianOptions.length > 0"
+                                  class="dropdown-menu show position-absolute w-100"
+                                  style="max-height: 200px; overflow-y: auto; z-index: 1000; top: 100%;">
+                                  <div
+                                    *ngFor="let physician of getEditingDetailForRow(i).operatingPhysicianOptions; let j = index"
+                                    class="dropdown-item"
+                                    [class.active]="getEditingDetailForRow(i).selectedOperatingPhysicianIndex === j"
+                                    (click)="selectOperatingPhysician(physician, i)"
+                                    (mouseenter)="updateEditingDetailFieldForRow('selectedOperatingPhysicianIndex', j, i)"
+                                    style="cursor: pointer;">
+                                    {{ physician.name }}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <input
+                                type="number"
+                                class="form-control form-control-sm"
+                                [value]="getEditingDetailForRow(i).quantity"
+                                (input)="updateEditingDetailFieldForRow('quantity', +$any($event.target).value, i)"
+                                (keydown.tab)="onQuantityTab($any($event), i)"
+                                min="1"
+                                (change)="updateDetailTotalForRow(i)">
+                            </td>
+                            <td>
+                              <input type="number" class="form-control form-control-sm"
+                                     [value]="getEditingDetailForRow(i).unitPrice"
+                                     (input)="updateEditingDetailFieldForRow('unitPrice', +$any($event.target).value, i)"
+                                     min="0"
+                                     step="0.01"
+                                     (change)="updateDetailTotalForRow(i)">
+                            </td>
+                            <td>
+                              <input type="number" class="form-control form-control-sm"
+                                     [value]="getEditingDetailForRow(i).discount"
+                                     (input)="updateEditingDetailFieldForRow('discount', +$any($event.target).value, i)"
+                                     min="0"
+                                     step="0.01"
+                                     (change)="updateDetailTotalForRow(i)">
+                            </td>
+                            <td class="fw-bold">{{ formatCurrency(calculateDetailTotalForRow(i)) }}</td>
+                            <td>
+                              <button class="btn btn-sm btn-outline-danger" (click)="deleteInvoiceDetail(i)" title="Delete">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          <!-- Full-width dropdown positioned below the row -->
+                          <tr *ngIf="getEditingDetailForRow(i).showDropdown && getEditingDetailForRow(i).searchResults.length > 0" class="dropdown-row">
+                            <td colspan="7" class="p-0">
+                              <div class="denomination-dropdown-fullwidth" style="max-height: 300px; overflow-y: auto;">
+                                <div
+                                  *ngFor="let result of getEditingDetailForRow(i).searchResults; let j = index"
+                                  class="dropdown-item"
+                                  [class.active]="getEditingDetailForRow(i).selectedDropdownIndex === j"
+                                  (click)="selectDenominationForDetail(result, i, true)"
+                                  (mouseenter)="updateEditingDetailFieldForRow('selectedDropdownIndex', j, i)"
+                                  style="cursor: pointer;">
+                                  <div class="d-flex justify-content-between">
+                                    <div class="flex-grow-1">
+                                      <div class="fw-bold" [title]="getDenominationDisplayForResult(result) || 'N/A'">
+                                        {{ truncateText(getDenominationDisplayForResult(result), 60) || 'N/A' }}
+                                      </div>
+                                      <div class="text-muted small" *ngIf="result.labTest" [title]="result.labTest">{{ truncateText(result.labTest, 60) }}</div>
+                                    </div>
+                                    <div class="fw-bold text-success ms-3">$${{ (result.priceUsd || 0) | number:'1.2-2' }}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        </ng-container>
+                        <!-- Empty state -->
+                        <tr *ngIf="invoiceDetails().length === 0">
+                          <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox me-2"></i>
+                            No invoice items. Click "Add Item" to start.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Side: Invoice Header & Receipt (30%) -->
+              <div class="col-md-4">
+                <div class="invoice-header-container p-3">
+                  <!-- Invoice Header Section -->
+                  <div class="mb-4">
+                    <h6 class="border-bottom pb-2 mb-3">Invoice Header</h6>
+                    <div class="row g-2 mb-2">
+                      <div class="col-6">
+                        <label class="form-label small">Net:</label>
+                        <input type="number" class="form-control form-control-sm"
+                               [value]="invoiceTotals().net"
+                               readonly
+                               style="background-color: #f8f9fa;">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label small">Gross:</label>
+                        <input type="number" class="form-control form-control-sm"
+                               [value]="invoiceTotals().gross"
+                               readonly
+                               style="background-color: #f8f9fa;">
+                      </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                      <div class="col-6">
+                        <label class="form-label small">Discount:</label>
+                        <input type="number" class="form-control form-control-sm"
+                               [value]="invoiceTotals().totalDiscount"
+                               readonly
+                               style="background-color: #f8f9fa;">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label small">Total:</label>
+                        <input type="number" class="form-control form-control-sm fw-bold"
+                               [value]="invoiceTotals().totalAmount"
+                               readonly
+                               style="background-color: #e7f3ff; font-weight: bold;">
+                      </div>
+                    </div>
+                    <div class="row g-2">
+                      <div class="col-12">
+                        <label class="form-label small">Currency:</label>
+                        <select class="form-select form-select-sm"
+                                [value]="invoiceCurrency()"
+                                (change)="invoiceCurrency.set($any($event.target).value)">
+                          <option value="USD">USD</option>
+                          <option value="LBP">LBP</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Receipt Section -->
+                  <div>
+                    <h6 class="border-bottom pb-2 mb-3">Receipt</h6>
+                    <div class="row g-2">
+                      <div class="col-6">
+                        <label class="form-label small">Receipt Amount:</label>
+                        <input type="number" class="form-control form-control-sm"
+                               [value]="receiptAmount()"
+                               (input)="receiptAmount.set(+$any($event.target).value)"
+                               min="0"
+                               step="0.01">
+                      </div>
+                      <div class="col-6">
+                        <label class="form-label small">Receipt Local:</label>
+                        <input type="number" class="form-control form-control-sm"
+                               [value]="receiptLocal()"
+                               (input)="receiptLocal.set(+$any($event.target).value)"
+                               min="0"
+                               step="0.01">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- End of Right Panel -->
+
+  </div>
+  <!-- End of Main Layout -->
+
+  <!-- Duplicate Patient Modal -->
+  <div *ngIf="showDuplicateModal()" class="modal-backdrop" (keydown.escape)="$event.preventDefault()">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Possible Duplicate Patient Found
+            <small class="text-muted ms-2">
+              <i class="bi bi-info-circle me-1"></i>
+              Please select an action below
+            </small>
+          </h5>
+          <!-- Close button removed - modal can only be closed by action buttons -->
+        </div>
+        <div class="modal-body">
+          <p class="alert alert-warning">
+            <i class="bi bi-info-circle me-2"></i>
+            We found {{ duplicatePatients().length }} existing patient(s) with the same name:
+          </p>
+
+          <div class="table-responsive">
+            <table class="table table-hover table-sm">
+              <thead class="table-light">
+                <tr>
+                  <th>MRN</th>
+                  <th>Full Name</th>
+                  <th>DOB</th>
+                  <th>Gender</th>
+                  <th>Phone</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let patient of duplicatePatients()">
+                  <td><strong>{{ patient.mrn }}</strong></td>
+                  <td>{{ patient.firstName }} {{ patient.middleName }} {{ patient.lastName }}</td>
+                  <td>{{ formatDate(patient.dob) }}</td>
+                  <td>
+                    <i class="bi" [ngClass]="patient.gender === 'M' ? 'bi-gender-male text-primary' : 'bi-gender-female text-danger'"></i>
+                    {{ patient.gender === 'M' ? 'Male' : 'Female' }}
+                  </td>
+                  <td>{{ patient.phone || '-' }}</td>
+                  <td>
+                    <button class="btn btn-sm btn-primary" (click)="loadExistingPatient(patient)">
+                      <i class="bi bi-arrow-down-circle me-1"></i>
+                      Load This Patient
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" (click)="continueAsNew()">
+            <i class="bi bi-person-plus-fill me-2"></i>
+            Continue as New Patient
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancelDuplicateCheck()">
+            <i class="bi bi-x-circle me-2"></i>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Save Options Modal -->
+  <div *ngIf="showSaveOptionsModal()" class="modal-backdrop" (keydown.escape)="$event.preventDefault()">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-save me-2"></i>
+            Save Options
+            <small class="text-light ms-2">
+              <i class="bi bi-info-circle me-1"></i>
+              Select what you want to save
+            </small>
+          </h5>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            Choose which components you want to save. Only components that are ready will be saved.
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card h-100" [ngClass]="canSaveMedicalFile() ? 'border-success' : 'border-danger'">
+                <div class="card-header">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="saveMedicalFile"
+                           [checked]="saveMedicalFile() && canSaveMedicalFile()"
+                           (change)="saveMedicalFile.set($event.target.checked)"
+                           [disabled]="!canSaveMedicalFile()">
+                    <label class="form-check-label fw-bold" for="saveMedicalFile">
+                      <i class="bi bi-person me-2"></i>
+                      Save Medical File
+                    </label>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <p class="card-text small">
+                    Save patient information including personal details, demographics, and medical history.
+                  </p>
+                  <div class="mt-2">
+                    <span class="badge" [ngClass]="canSaveMedicalFile() ? 'bg-success' : 'bg-danger'">
+                      <i class="bi" [ngClass]="canSaveMedicalFile() ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                      {{ canSaveMedicalFile() ? 'Ready' : 'Not Ready' }}
+                    </span>
+                  </div>
+                  <div *ngIf="!canSaveMedicalFile()" class="mt-2 text-danger small">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Missing required fields: First Name, Last Name, Gender, DOB
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card h-100" [ngClass]="canSaveAdmission() ? 'border-success' : 'border-danger'">
+                <div class="card-header">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="saveAdmission"
+                           [checked]="saveAdmission() && canSaveAdmission()"
+                           (change)="saveAdmission.set($event.target.checked)"
+                           [disabled]="!canSaveAdmission()">
+                    <label class="form-check-label fw-bold" for="saveAdmission">
+                      <i class="bi bi-hospital me-2"></i>
+                      Save Admission
+                    </label>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <p class="card-text small">
+                    Create admission record with physician assignments and admission details.
+                  </p>
+                  <div class="mt-2">
+                    <span class="badge" [ngClass]="canSaveAdmission() ? 'bg-success' : 'bg-danger'">
+                      <i class="bi" [ngClass]="canSaveAdmission() ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                      {{ canSaveAdmission() ? 'Ready' : 'Not Ready' }}
+                    </span>
+                  </div>
+                  <div *ngIf="!canSaveAdmission()" class="mt-2 text-danger small">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Missing required fields: Referral Physician, Check-in Date, Department
+                    <span *ngIf="hasDenominationRequiringOperatingPhysician() && !(attendingPhysicianId() || referralPhysicianId())">
+                      , Physician (required for selected denominations)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card h-100" [ngClass]="canSaveInvoice() ? 'border-success' : 'border-danger'">
+                <div class="card-header">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="saveInvoice"
+                           [checked]="saveInvoice() && canSaveInvoice()"
+                           (change)="saveInvoice.set($event.target.checked)"
+                           [disabled]="!canSaveInvoice()">
+                    <label class="form-check-label fw-bold" for="saveInvoice">
+                      <i class="bi bi-receipt me-2"></i>
+                      Save Invoice
+                    </label>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <p class="card-text small">
+                    Create billing invoice with selected denominations and pricing.
+                  </p>
+                  <div class="mt-2">
+                    <span class="badge" [ngClass]="canSaveInvoice() ? 'bg-success' : 'bg-danger'">
+                      <i class="bi" [ngClass]="canSaveInvoice() ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                      {{ canSaveInvoice() ? 'Ready' : 'Not Ready' }}
+                    </span>
+                  </div>
+                  <div *ngIf="!canSaveInvoice()" class="mt-2 text-danger small">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    No invoice items added
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success" (click)="performSelectiveSave()" [disabled]="isSaving() || !hasValidSelection()">
+            <i class="bi" [ngClass]="isSaving() ? 'bi-hourglass-split' : 'bi-save'" class="me-2"></i>
+            {{ isSaving() ? 'Saving...' : 'Save Selected' }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancelSaveOptions()" [disabled]="isSaving()">
+            <i class="bi bi-x-circle me-2"></i>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+

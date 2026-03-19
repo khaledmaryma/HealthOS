@@ -1,0 +1,362 @@
+<div class="print-container">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading()">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3">Loading lab results...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="errorMessage() && !isLoading()">
+    <div class="alert alert-danger">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      {{ errorMessage() }}
+    </div>
+  </div>
+
+  <!-- Print Content -->
+  <div class="print-content" *ngIf="!isLoading() && !errorMessage() && patient()">
+    <!-- Print Actions (hidden in print) -->
+    <div class="print-actions no-print">
+      <button class="btn btn-primary" (click)="print()">
+        <i class="bi bi-printer me-2"></i>
+        Print
+      </button>
+      <button class="btn btn-secondary ms-2" (click)="close()">
+        <i class="bi bi-x-circle me-2"></i>
+        Close
+      </button>
+    </div>
+
+    <!-- Hospital Header -->
+    <div class="hospital-header">
+      <div class="d-flex align-items-center justify-content-between" style="min-height: 100px;">
+        <div class="hospital-name-left">
+          <strong>{{ hospitalConfig()?.hospitalName || '' }}</strong>
+        </div>
+        <div class="hospital-logo-center">
+          <img *ngIf="hospitalConfig()?.logoBase64"
+               [src]="'data:image/png;base64,' + hospitalConfig()!.logoBase64"
+               alt="Hospital Logo"
+               class="logo"
+               style="display: block; margin: 0 auto;">
+        </div>
+        <div class="hospital-name-right">
+          <strong>{{ hospitalConfig()?.hospitalNameArabic || '' }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Repeating Patient Header (appears on every page when printed) -->
+    <div class="patient-header-repeating">
+      <div class="info-two-column-grid">
+        <!-- Row 1 -->
+        <div class="info-row">
+          <div class="left-column">
+            <span class="info-label">Patient Name :</span>
+            <span class="info-value fw-bold">{{ patient()!.patientName }}</span>
+          </div>
+          <div class="right-column">
+            <span class="info-label">Request Date :</span>
+            <span class="info-value">{{ header()?.requestDate ? formatDate(header()!.requestDate!) : 'N/A' }}</span>
+          </div>
+        </div>
+        <!-- Row 2 -->
+        <div class="info-row">
+          <div class="left-column">
+            <span class="info-label">Birth Date :</span>
+            <span class="info-value">{{ formatDate(patient()!.patientDOB) }}</span>
+            <span class="info-label ms-4">Gender :</span>
+            <span class="info-value">{{ getGenderText(patient()!.patientGender) }}</span>
+          </div>
+          <div class="right-column">
+            <span class="info-label">Result Date :</span>
+            <span class="info-value">{{ header()?.completedDate ? formatDate(header()!.completedDate!) : 'N/A' }}</span>
+            <span class="info-label ms-4">Department :</span>
+            <span class="info-value">{{ patient()!.checkInClassDescription }}</span>
+          </div>
+        </div>
+        <!-- Row 3 -->
+        <div class="info-row">
+          <div class="left-column">
+            <span class="info-label">Physician :</span>
+            <span class="info-value">{{ patient()!.referralPhysicianName }}</span>
+          </div>
+          <div class="right-column">
+          </div>
+        </div>
+        <!-- Row 4 -->
+        <div class="info-row">
+          <div class="left-column">
+            <span class="info-label">Admission # :</span>
+            <span class="info-value">{{ patient()!.admissionNumber }}</span>
+            <span class="info-label ms-4">MRN :</span>
+            <span class="info-value">{{ patient()!.medicalRecordNumber }}</span>
+          </div>
+          <div class="right-column">
+          </div>
+        </div>
+        <!-- Row 5 -->
+        <div class="info-row">
+          <div class="left-column">
+            <span class="info-label">Insurance :</span>
+            <span class="info-value">{{ patient()!.mainInsuranceDescription }}</span>
+          </div>
+          <div class="right-column">
+          </div>
+        </div>
+      </div>
+      <hr class="patient-header-divider">
+    </div>
+
+    <!-- Lab Results Section -->
+    <div class="lab-results-section">
+      <!-- No Results Message -->
+      <div class="no-results" *ngIf="labResults().length === 0">
+        <p class="text-muted">No laboratory results available for this patient.</p>
+      </div>
+
+      <!-- Results Table -->
+      <table class="results-table" *ngIf="numericResults().length > 0">
+        <caption class="numeric-results-title">Laboratory Results</caption>
+        <thead>
+          <tr>
+            <th class="col-test">Test Name</th>
+            <th class="col-result">Result</th>
+            <th class="col-status"></th>
+            <th class="col-unit">Unit</th>
+            <th class="col-range">Reference Range</th>
+            <th class="col-last">Last Result</th>
+            <th class="col-last-date">Last Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let result of numericResults(); let i = index">
+            <!-- Main Result Row -->
+            <tr class="main-result-row" [ngClass]="{
+              'result-normal': result.isResultok && !result.isPanic,
+              'result-panic': result.isPanic,
+              'result-collection': hasSubTests(result.id)
+            }">
+              <td class="test-name">
+                <div class="test-category" *ngIf="isFirstInMedicalClassGroup(i)">{{ result.medicalClassDesc }}</div>
+                <div class="test-description">{{ result.labTestDescription }}</div>
+              </td>
+              <td class="test-result">
+                <span *ngIf="!hasSubTests(result.id)">{{ result.result || '-' }}</span>
+                <span *ngIf="hasSubTests(result.id)" class="see-below">See below</span>
+              </td>
+              <td class="test-status">
+                <span *ngIf="!hasSubTests(result.id) && result.result">
+                  <span *ngIf="result.isPanic" class="status-marker panic-marker">**</span>
+                  <span *ngIf="!result.isPanic && isResultAbnormal(result)" class="status-marker abnormal-marker">*</span>
+                </span>
+              </td>
+              <td class="test-unit">
+                <span *ngIf="!hasSubTests(result.id)">{{ result.uomDescription || '-' }}</span>
+              </td>
+              <td class="test-range">
+                <span *ngIf="!hasSubTests(result.id)">
+                  <span *ngIf="result.ageBasedReferenceRange" class="age-based-range">{{ result.ageBasedReferenceRange }}</span>
+                  <span *ngIf="!result.ageBasedReferenceRange && result.min && result.max">
+                    {{ result.min }} - {{ result.max }}
+                  </span>
+                  <span *ngIf="!result.ageBasedReferenceRange && !result.min && result.max">
+                    &le; {{ result.max }}
+                  </span>
+                  <span *ngIf="!result.ageBasedReferenceRange && result.min && !result.max">
+                    &ge; {{ result.min }}
+                  </span>
+                  <span *ngIf="!result.ageBasedReferenceRange && !result.min && !result.max">-</span>
+                </span>
+              </td>
+              <td class="test-last">
+                <span *ngIf="!hasSubTests(result.id)">{{ result.last || '-' }}</span>
+              </td>
+              <td class="test-last-date">
+                <span *ngIf="!hasSubTests(result.id) && result.lastResultDate">{{ formatDate(result.lastResultDate) }}</span>
+                <span *ngIf="!hasSubTests(result.id) && !result.lastResultDate">-</span>
+              </td>
+            </tr>
+
+            <!-- Sub-Test Rows -->
+            <ng-container *ngIf="hasSubTests(result.id)">
+              <tr class="sub-test-row" *ngFor="let subTest of getSubTests(result.id)">
+                <td class="test-name sub-test-name">
+                  <i class="bi bi-arrow-return-right me-2"></i>
+                  {{ subTest.labTestSubDescription }}
+                </td>
+                <td class="test-result">{{ subTest.result || '-' }}</td>
+                <td class="test-status">
+                  <span *ngIf="subTest.result">
+                    <span *ngIf="subTest.isPanic" class="status-marker panic-marker">**</span>
+                    <span *ngIf="!subTest.isPanic && isSubTestAbnormal(subTest)" class="status-marker abnormal-marker">*</span>
+                  </span>
+                </td>
+                <td class="test-unit">{{ subTest.uomDescription || '-' }}</td>
+                <td class="test-range">
+                  <span *ngIf="subTest.min && subTest.max">
+                    {{ subTest.min }} - {{ subTest.max }}
+                  </span>
+                  <span *ngIf="!subTest.min && subTest.max">
+                    &le; {{ subTest.max }}
+                  </span>
+                  <span *ngIf="subTest.min && !subTest.max">
+                    &ge; {{ subTest.min }}
+                  </span>
+                  <span *ngIf="!subTest.min && !subTest.max">-</span>
+                </td>
+                <td class="test-last">{{ subTest.lastResult || '-' }}</td>
+                <td class="test-last-date">
+                  <span *ngIf="subTest.lastResultDate">{{ formatDate(subTest.lastResultDate) }}</span>
+                  <span *ngIf="!subTest.lastResultDate">-</span>
+                </td>
+              </tr>
+            </ng-container>
+
+            <!-- Comments Row (if any) -->
+            <tr class="comments-row" *ngIf="result.comments">
+              <td colspan="7" class="comments-cell">
+                <strong>Comments:</strong> {{ result.comments }}
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+
+      <!-- Text Results Section -->
+      <div class="text-results-print-section" *ngIf="textResults().length > 0">
+        <h3 class="text-results-title">Text Results</h3>
+        <div class="text-result-item" *ngFor="let result of textResults(); let i = index">
+          <div class="text-result-header">
+            <strong>{{ result.labTestDescription }}</strong>
+            <span class="text-muted ms-2">({{ result.medicalClassDesc }})</span>
+          </div>
+          <div class="text-result-content" [innerHTML]="result.result || result.defaultTextResult || 'No result entered'"></div>
+          <hr *ngIf="i < textResults().length - 1" class="text-result-divider">
+        </div>
+      </div>
+
+      <!-- Antibiogram Results Section -->
+      <div class="antibiogram-print-section" *ngIf="antibiogramResults().length > 0">
+        <h3 class="antibiogram-title">Antibiogram / Bacteriology Results</h3>
+        <div class="antibiogram-item" *ngFor="let result of antibiogramResults(); let i = index">
+          <div class="antibiogram-header">
+            <strong>{{ result.labTestDescription }}</strong>
+            <span class="text-muted ms-2">({{ result.medicalClassDesc }})</span>
+          </div>
+
+          <!-- Specimen and Organism Information -->
+          <div class="specimen-info" *ngIf="hasBacteriologyData(result.id)">
+            <table class="info-table">
+              <tr>
+                <td class="label">Specimen Type:</td>
+                <td class="value">{{ getBacteriologyData(result.id).header?.prelevement || result.result || 'Not specified' }}</td>
+              </tr>
+              <tr *ngIf="getBacteriologyData(result.id).header?.germ">
+                <td class="label">Organism (Germ):</td>
+                <td class="value">{{ getBacteriologyData(result.id).header?.germ }}</td>
+              </tr>
+              <tr *ngIf="getBacteriologyData(result.id).header?.bacteria">
+                <td class="label">Bacteria:</td>
+                <td class="value">{{ getBacteriologyData(result.id).header?.bacteria }}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Antibiogram Note -->
+          <div class="antibiogram-note">
+            <p><strong>Antibiotic Sensitivity Testing</strong></p>
+            <p class="sensitivity-legend">
+              <strong>S</strong> = Sensitive |
+              <strong>R</strong> = Resistant |
+              <strong>I</strong> = Intermediate
+            </p>
+          </div>
+
+          <!-- Antibiotic Sensitivity Table -->
+          <div class="sensitivity-table" *ngIf="hasBacteriologyData(result.id)">
+            <table class="results-table antibiotic-table">
+              <thead>
+                <tr>
+                  <th class="col-antibiotic">Antibiotic</th>
+                  <th class="col-sensitive">Sensitive</th>
+                  <th class="col-resistant">Resistant</th>
+                  <th class="col-intermediate">Intermediate</th>
+                  <th class="col-charge">Charge</th>
+                  <th class="col-diameter">Diameter (mm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let record of getBacteriologyData(result.id).details">
+                  <td class="antibiotic-name">{{ record.antibioticDescription || 'Unknown' }}</td>
+                  <td class="sensitivity-check sensitive-col">
+                    <span *ngIf="record.sensible" class="check-mark">✓</span>
+                    <span *ngIf="!record.sensible" class="empty-mark">-</span>
+                  </td>
+                  <td class="sensitivity-check resistant-col">
+                    <span *ngIf="record.resistant" class="check-mark">✓</span>
+                    <span *ngIf="!record.resistant" class="empty-mark">-</span>
+                  </td>
+                  <td class="sensitivity-check intermediate-col">
+                    <span *ngIf="record.intermediat" class="check-mark">✓</span>
+                    <span *ngIf="!record.intermediat" class="empty-mark">-</span>
+                  </td>
+                  <td class="charge-cell">{{ record.charge || '-' }}</td>
+                  <td class="diameter-cell">{{ record.diameter || '-' }}</td>
+                </tr>
+                <tr *ngIf="getBacteriologyData(result.id).details.length === 0">
+                  <td colspan="6" class="text-center text-muted py-2">
+                    <em>No antibiotic sensitivity data available</em>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Placeholder if no bacteriology data -->
+          <div class="sensitivity-table-placeholder" *ngIf="!hasBacteriologyData(result.id)">
+            <p class="text-muted"><em>No antibiotic sensitivity results available for this test</em></p>
+          </div>
+
+          <!-- Comments -->
+          <div class="antibiogram-comments" *ngIf="result.comments">
+            <strong>Comments:</strong> {{ result.comments }}
+          </div>
+
+          <hr *ngIf="i < antibiogramResults().length - 1" class="antibiogram-divider">
+        </div>
+      </div>
+    </div>
+
+    <!-- Report Footer -->
+    <div class="report-footer">
+      <div class="footer-section">
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-label">Laboratory Technician</div>
+        </div>
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-label">Pathologist / Medical Director</div>
+        </div>
+      </div>
+
+      <div class="footer-notes">
+        <p class="note">
+          <strong>Note:</strong> This report is confidential and intended for the use of the patient and authorized healthcare providers only.
+        </p>
+        <p class="disclaimer">
+          Results marked as "PANIC" require immediate medical attention. Please contact the referring physician immediately.
+        </p>
+      </div>
+
+      <div class="footer-info">
+        <p class="page-number">Page 1 of 1</p>
+        <p class="report-id">Report ID: {{ patient()!.admissionNumber }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+

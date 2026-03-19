@@ -1,0 +1,212 @@
+<div class="voucher-editor">
+  <div class="editor-header">
+    <div>
+      <h3>{{ isEditMode() ? 'Edit Voucher' : 'New Voucher' }}</h3>
+      <p class="text-muted small">Create or update a journal voucher.</p>
+    </div>
+    <div class="editor-actions">
+      <button class="btn btn-sm btn-primary" (click)="saveVoucher()" [disabled]="isSaving()">
+        {{ isSaving() ? 'Saving...' : 'Save' }}
+      </button>
+      <button class="btn btn-sm btn-outline-danger" *ngIf="isEditMode()" (click)="deleteVoucher()">
+        Delete
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" (click)="cancel()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="editor-top-grid">
+    <div class="editor-section">
+      <h5>Voucher Header</h5>
+      <div class="form-grid">
+      <div>
+        <label class="form-label">Voucher #</label>
+        <input class="form-control form-control-sm" [value]="voucherNumber()" readonly />
+      </div>
+      <div>
+        <label class="form-label">Voucher Date</label>
+        <input type="date" class="form-control form-control-sm" [value]="voucherDate()" (change)="voucherDate.set($any($event.target).value)" />
+      </div>
+      <div>
+        <label class="form-label">Due Date</label>
+        <input type="date" class="form-control form-control-sm" [value]="voucherDueDate()" (change)="voucherDueDate.set($any($event.target).value)" />
+      </div>
+      <div class="position-relative">
+        <label class="form-label">Voucher Type</label>
+        <div class="input-group input-group-sm">
+          <input
+            class="form-control"
+            [value]="voucherTypeInput()"
+            (input)="onVoucherTypeInput($any($event.target).value)"
+            (focus)="showVoucherTypeDropdown.set(true)"
+            (blur)="showVoucherTypeDropdown.set(false)"
+            placeholder="Search voucher type..."
+          />
+          <button class="btn btn-outline-secondary" type="button" (mousedown)="$event.preventDefault()">
+            <i class="bi bi-chevron-down"></i>
+          </button>
+        </div>
+        <div *ngIf="showVoucherTypeDropdown() && filteredVoucherTypes().length" class="autocomplete-dropdown">
+          <div
+            *ngFor="let row of filteredVoucherTypes()"
+            class="autocomplete-item"
+            (mousedown)="selectVoucherType(row, $event)"
+          >
+            {{ formatVoucherType(row) }}
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <h5>Voucher Detail Entry</h5>
+      <div class="detail-entry-layout">
+        <div class="detail-entry-left">
+          <div class="position-relative">
+            <label class="form-label">Account</label>
+            <div class="input-group input-group-sm">
+              <input
+                #accountInputEl
+                class="form-control"
+                [value]="accountInput()"
+                (input)="onAccountInput($any($event.target).value)"
+                (focus)="showAccountDropdown.set(true)"
+                (blur)="showAccountDropdown.set(false)"
+                placeholder="Search account..."
+              />
+              <button class="btn btn-outline-secondary" type="button" (mousedown)="$event.preventDefault()">
+                <i class="bi bi-chevron-down"></i>
+              </button>
+            </div>
+            <div *ngIf="showAccountDropdown() && filteredAccounts().length" class="autocomplete-dropdown">
+              <div
+                *ngFor="let row of filteredAccounts()"
+                class="autocomplete-item"
+                (mousedown)="selectAccount(row, $event)"
+              >
+                <div class="autocomplete-title">{{ formatAccount(row) }}</div>
+                <div class="autocomplete-meta">
+                  <span>{{ getAccountDescription(row) || '-' }}</span>
+                  <span class="currency-badge">{{ getAccountCurrencyLabel(row) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="comment-block">
+            <label class="form-label">Comment</label>
+            <textarea
+              class="form-control form-control-sm"
+              rows="4"
+              [value]="detailComment()"
+              (input)="detailComment.set($any($event.target).value)"
+            ></textarea>
+          </div>
+        </div>
+        <div class="detail-entry-right">
+          <div>
+            <label class="form-label">Rate</label>
+            <input
+              class="form-control form-control-sm text-end"
+              [value]="rate()"
+              (input)="onRateInput($any($event.target).value)"
+            />
+          </div>
+          <div class="amount-grid">
+            <div>
+              <label class="form-label">Debit L.L</label>
+              <input
+                class="form-control form-control-sm text-end"
+                [disabled]="disableDebit()"
+                [value]="debitLocal()"
+                (input)="onDebitLocalInput($any($event.target).value)"
+              />
+            </div>
+            <div>
+              <label class="form-label">Debit $$</label>
+              <input
+                class="form-control form-control-sm text-end"
+                [disabled]="disableDebit()"
+                [value]="debitMain()"
+                (input)="onDebitMainInput($any($event.target).value)"
+              />
+            </div>
+            <div>
+              <label class="form-label">Credit L.L</label>
+              <input
+                class="form-control form-control-sm text-end"
+                [disabled]="disableCredit()"
+                [value]="creditLocal()"
+                (input)="onCreditLocalInput($any($event.target).value)"
+              />
+            </div>
+            <div>
+              <label class="form-label">Credit $$</label>
+              <input
+                class="form-control form-control-sm text-end"
+                [disabled]="disableCredit()"
+                [value]="creditMain()"
+                (input)="onCreditMainInput($any($event.target).value)"
+              />
+            </div>
+          </div>
+          <div class="mt-2">
+            <button class="btn btn-sm btn-success" (click)="addDetail()">Add Detail</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="editor-section">
+    <h5>Voucher Details</h5>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle details-table">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Currency</th>
+            <th class="text-end">Debit L.L</th>
+            <th class="text-end">Debit $$</th>
+            <th class="text-end">Credit L.L</th>
+            <th class="text-end">Credit $$</th>
+            <th>Comment</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of details(); let i = index" (click)="selectDetail(i)" [class.table-active]="selectedDetailIndex() === i">
+            <td>{{ row.accountCode }}</td>
+            <td>{{ row.accountCurrencyLabel }}</td>
+            <td class="text-end">{{ row.debitLocal | number:'1.0-2' }}</td>
+            <td class="text-end">{{ row.debitMain | number:'1.0-2' }}</td>
+            <td class="text-end">{{ row.creditLocal | number:'1.0-2' }}</td>
+            <td class="text-end">{{ row.creditMain | number:'1.0-2' }}</td>
+            <td>{{ row.comment || '-' }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-danger" (click)="removeDetail(i)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="fw-semibold">
+            <td>Totals</td>
+            <td></td>
+            <td class="text-end">{{ totals().debitLocal | number:'1.0-2' }}</td>
+            <td class="text-end">{{ totals().debitMain | number:'1.0-2' }}</td>
+            <td class="text-end">{{ totals().creditLocal | number:'1.0-2' }}</td>
+            <td class="text-end">{{ totals().creditMain | number:'1.0-2' }}</td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <div class="balance-row">
+      <div>Balance L.L: {{ balanceLocal() | number:'1.0-2' }}</div>
+      <div>Balance $$: {{ balanceMain() | number:'1.0-2' }}</div>
+    </div>
+  </div>
+</div>

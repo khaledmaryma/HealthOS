@@ -1,0 +1,31 @@
+<div class="container">
+  <h2>Chart of Accounts</h2>
+  
+  <div *ngIf="loading" class="loading">
+    Loading chart of accounts...
+  </div>
+  
+  <div *ngIf="!loading" class="accounts-grid">
+    <div class="grid-header">
+      <div class="col-code">Account Code</div>
+      <div class="col-currency">Currency</div>
+      <div class="col-description">Description</div>
+      <div class="col-job">Job</div>
+      <div class="col-group">Group</div>
+      <div class="col-debit-local">Debit Local</div>
+      <div class="col-debit-main">Debit Main</div>
+      <div class="col-credit-local">Credit Local</div>
+      <div class="col-credit-main">Credit Main</div>
+    </div>
+    
+    <div class="grid-body">
+      <ng-container *ngFor="let account of accounts">
+        <app-account-node 
+          [node]="account" 
+          [expandedNodes]="expandedNodes"
+          (toggle)="toggleNode($event)">
+        </app-account-node>
+      </ng-container>
+    </div>
+  </div>
+</div>

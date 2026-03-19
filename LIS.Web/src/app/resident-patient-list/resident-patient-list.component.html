@@ -1,0 +1,269 @@
+<div class="container-fluid resident-patient-container">
+  <!-- Header -->
+  <div class="page-header p-3 bg-primary text-white">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h4 class="mb-0">
+        <i class="bi bi-people-fill me-2"></i>
+        Resident Patient List
+        <span class="badge bg-light text-primary ms-2">{{ totalCount() }}</span>
+      </h4>
+      <div class="d-flex gap-2 flex-wrap align-items-center">
+        <!-- Department Report Button -->
+        <button class="btn btn-warning text-dark fw-bold" (click)="openDepartmentReport()" type="button" title="Department Report" style="min-width: 150px;">
+          <i class="bi bi-file-earmark-text me-2"></i>
+          Department Report
+        </button>
+        <div class="btn-group">
+          <button class="btn btn-success" (click)="newAdmission()" type="button" title="New Admission" [disabled]="!selectedPatient()">
+            <i class="bi bi-plus-circle me-2"></i>
+            New Admission
+          </button>
+          <button class="btn btn-primary" (click)="editAdmission()" type="button" title="Edit Admission" [disabled]="!selectedPatient()">
+            <i class="bi bi-pencil-square me-2"></i>
+            Edit Admission
+          </button>
+          <button class="btn btn-success" (click)="newPatient()" type="button" title="New Patient">
+            <i class="bi bi-person-plus me-2"></i>
+            New Patient
+          </button>
+        </div>
+        <!-- V2 Screen Buttons -->
+        <div class="btn-group">
+          <button class="btn btn-success btn-outline-success" (click)="newAdmissionV2()" type="button" title="New Admission (V2 Screen)" [disabled]="!selectedPatient()">
+            <i class="bi bi-plus-circle me-2"></i>
+            New Admission V2
+          </button>
+          <button class="btn btn-primary btn-outline-primary" (click)="editAdmissionV2()" type="button" title="Edit Admission (V2 Screen)" [disabled]="!selectedPatient()">
+            <i class="bi bi-pencil-square me-2"></i>
+            Edit V2
+          </button>
+          <button class="btn btn-success btn-outline-success" (click)="newPatientV2()" type="button" title="New Patient (V2 Screen)">
+            <i class="bi bi-person-plus me-2"></i>
+            New Patient V2
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="filters-section p-2 bg-light border-bottom">
+    <div class="d-flex flex-wrap gap-2 align-items-end">
+      <!-- Search -->
+      <div class="flex-grow-1" style="min-width: 250px;">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text">
+            <i class="bi bi-search"></i>
+          </span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search by name, admission number, or MRN..."
+            [value]="searchTerm()"
+            (input)="searchTerm.set($any($event.target).value)"
+            (keyup.enter)="onSearch()">
+          <button class="btn btn-primary" type="button" (click)="onSearch()">
+            Search
+          </button>
+        </div>
+      </div>
+
+      <!-- Discharge Filter -->
+      <div style="min-width: 150px;">
+        <label class="form-label small text-muted mb-1 d-block">Filter:</label>
+        <select class="form-select form-select-sm" (change)="onDischargeFilterChange($any($event.target).value)" [value]="currentDateOnly() ? 'current' : (showDateRange() ? 'checkin' : (dischargeFilter() === true ? 'discharged' : (dischargeFilter() === false ? 'active' : 'all')))">
+          <option value="all">All Patients</option>
+          <option value="active">Active Only</option>
+          <option value="current">Current Date Only</option>
+          <option value="checkin" selected>Check-In Period</option>
+          <option value="discharged">Discharged Only</option>
+        </select>
+      </div>
+
+      <!-- Date Range Filters (visible when Check-In Period is selected) -->
+      <div *ngIf="showDateRange()" style="min-width: 140px;">
+        <label class="form-label small text-muted mb-1 d-block">From:</label>
+        <input
+          type="date"
+          class="form-control form-control-sm"
+          [value]="checkInDateFrom()"
+          (input)="checkInDateFrom.set($any($event.target).value)"
+          (change)="onSearch()">
+      </div>
+      <div *ngIf="showDateRange()" style="min-width: 140px;">
+        <label class="form-label small text-muted mb-1 d-block">To:</label>
+        <input
+          type="date"
+          class="form-control form-control-sm"
+          [value]="checkInDateTo()"
+          (input)="checkInDateTo.set($any($event.target).value)"
+          (change)="onSearch()">
+      </div>
+      <div *ngIf="showDateRange()" style="min-width: 100px;">
+        <button class="btn btn-secondary btn-sm w-100" type="button" (click)="onSearch()">
+          <i class="bi bi-filter"></i> Apply
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="text-center p-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Loading patients...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage() && !isLoading()" class="alert alert-danger m-3">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorMessage() }}
+  </div>
+
+  <!-- Patients Table -->
+  <div *ngIf="!isLoading() && !errorMessage()" class="table-responsive">
+    <table class="table table-hover table-striped">
+      <thead class="table-dark sticky-top">
+        <tr>
+          <th>#</th>
+          <th>MRN</th>
+          <th>Admission Number</th>
+          <th>Patient Name</th>
+          <th>Gender</th>
+          <th>Age</th>
+          <th>Check-In Date</th>
+          <th>Class</th>
+          <th>Insurance</th>
+          <th>Department</th>
+          <th>Physician</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let patient of patients(); let i = index"
+            [class.table-active]="selectedPatient()?.id === patient.id"
+            (click)="selectPatient(patient)"
+            style="cursor: pointer;">
+          <td>{{ (currentPage() - 1) * pageSize() + i + 1 }}</td>
+          <td>
+            <strong class="text-danger fw-bold">{{ patient.medicalRecordNumber }}</strong>
+          </td>
+          <td>
+            <strong class="text-primary">{{ patient.admissionNumber }}</strong>
+          </td>
+          <td>
+            <div>
+              <strong>{{ patient.patientName }}</strong>
+              <div *ngIf="patient.arabicFullName" class="text-muted small">{{ patient.arabicFullName }}</div>
+            </div>
+          </td>
+          <td>
+            <i class="bi"
+               [ngClass]="patient.patientGender === 'M' ? 'bi-gender-male text-primary' : 'bi-gender-female text-danger'"
+               [title]="patient.patientGender === 'M' ? 'Male' : 'Female'"></i>
+            {{ patient.patientGender === 'M' ? 'Male' : 'Female' }}
+          </td>
+          <td>{{ calculateAge(patient.patientDOB) }} years</td>
+          <td>
+            <span [title]="formatDateTime(patient.checkInDate)">
+              {{ formatDate(patient.checkInDate) }}
+            </span>
+          </td>
+          <td>
+            <span class="badge bg-info">{{ patient.classDescription }}</span>
+          </td>
+          <td>
+            <div class="small">
+              <div><strong>{{ patient.mainInsuranceDescription }}</strong></div>
+              <div class="text-muted">{{ patient.mainInsuranceClassDescription }}</div>
+            </div>
+          </td>
+          <td>
+            <div class="small">
+              <i class="bi bi-building me-1"></i>{{ patient.medicationUnitDescription }}
+            </div>
+          </td>
+          <td>
+            <div class="small">
+              <div *ngIf="patient.attendingPhysicianName"><strong>{{ patient.attendingPhysicianName }}</strong></div>
+              <div *ngIf="!patient.attendingPhysicianName && patient.referralPhysicianName" class="text-muted">
+                {{ patient.referralPhysicianName }}
+              </div>
+            </div>
+          </td>
+          <td>
+            <span *ngIf="patient.isDischarged" class="badge bg-secondary">
+              <i class="bi bi-check-circle me-1"></i>
+              Discharged
+              <div *ngIf="patient.dischargeDate" class="small mt-1">
+                {{ formatDate(patient.dischargeDate) }}
+              </div>
+            </span>
+            <span *ngIf="!patient.isDischarged" class="badge bg-success">
+              <i class="bi bi-hospital me-1"></i>
+              Active
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="patients().length === 0">
+          <td colspan="12" class="text-center text-muted py-4">
+            <i class="bi bi-inbox display-6 d-block mb-2"></i>
+            No patients found
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading() && patients().length > 0" class="pagination-section p-3 bg-light border-top">
+    <div class="row align-items-center">
+      <div class="col-md-3">
+        <div class="d-flex align-items-center">
+          <label class="me-2 mb-0 text-muted small">Rows per page:</label>
+          <select class="form-select form-select-sm" style="width: auto;" [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value); onSearch()">
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="text-muted small">
+          Showing {{ (currentPage() - 1) * pageSize() + 1 }} to
+          {{ currentPage() * pageSize() > totalCount() ? totalCount() : currentPage() * pageSize() }} of
+          {{ totalCount() }} patients
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <nav aria-label="Page navigation">
+          <ul class="pagination pagination-sm mb-0 justify-content-end">
+            <li class="page-item" [class.disabled]="!hasPrevPage()">
+              <button class="page-link" (click)="prevPage()" [disabled]="!hasPrevPage()">
+                <i class="bi bi-chevron-left"></i> Previous
+              </button>
+            </li>
+
+            <li class="page-item"
+                *ngFor="let page of getPageNumbers()"
+                [class.active]="page === currentPage()">
+              <button class="page-link" (click)="goToPage(page)">
+                {{ page }}
+              </button>
+            </li>
+
+            <li class="page-item" [class.disabled]="!hasNextPage()">
+              <button class="page-link" (click)="nextPage()" [disabled]="!hasNextPage()">
+                Next <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+

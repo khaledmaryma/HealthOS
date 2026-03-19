@@ -1,0 +1,783 @@
+<div class="container-fluid medical-file-container">
+  <!-- Header -->
+  <div class="page-header p-3 bg-primary text-white d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="mb-0">
+        <i class="bi bi-file-medical me-2"></i>
+        Patient Medical File
+      </h4>
+      <div class="small mt-1" *ngIf="patientName() || admissionNumber()">
+        <span *ngIf="patientName()"><strong>Patient:</strong> {{ patientName() }}</span>
+        <span *ngIf="admissionNumber()" class="ms-3"><strong>Admission:</strong> {{ admissionNumber() }}</span>
+      </div>
+    </div>
+    <button class="btn btn-light" (click)="goBack()" type="button">
+      <i class="bi bi-arrow-left me-2"></i>
+      Back to List
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="text-center p-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Loading medical file...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage() && !isLoading()" class="alert alert-danger m-3">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorMessage() }}
+  </div>
+
+  <!-- Medical File Content -->
+  <div *ngIf="!isLoading() && !errorMessage() && medicalFile()" class="medical-file-content">
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs bg-light p-2" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'vital-signs'"
+          (click)="setActiveTab('vital-signs')"
+          type="button">
+          <i class="bi bi-heart-pulse me-2"></i>
+          Vital Signs
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.vitalSigns.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'medications'"
+          (click)="setActiveTab('medications')"
+          type="button">
+          <i class="bi bi-capsule me-2"></i>
+          Current Medications
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.medications.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'orders'"
+          (click)="setActiveTab('orders')"
+          type="button">
+          <i class="bi bi-clipboard-check me-2"></i>
+          Medical Orders
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.orders.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'progress-notes'"
+          (click)="setActiveTab('progress-notes')"
+          type="button">
+          <i class="bi bi-journal-text me-2"></i>
+          Progress Notes
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.progressNotes.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'examinations'"
+          (click)="setActiveTab('examinations')"
+          type="button">
+          <i class="bi bi-stethoscope me-2"></i>
+          Clinical Examinations
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.clinicalExaminations.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'history'"
+          (click)="setActiveTab('history')"
+          type="button">
+          <i class="bi bi-clock-history me-2"></i>
+          Patient History
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.patientHistory.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'risk-factors'"
+          (click)="setActiveTab('risk-factors')"
+          type="button">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Risk Factors
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.riskFactors.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'current-illness'"
+          (click)="setActiveTab('current-illness')"
+          type="button">
+          <i class="bi bi-activity me-2"></i>
+          Current Illness
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.currentIllness.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'cardiac-history'"
+          (click)="setActiveTab('cardiac-history')"
+          type="button">
+          <i class="bi bi-heart me-2"></i>
+          Cardiac History
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.cardiacHistory.length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button 
+          class="nav-link" 
+          [class.active]="activeTab() === 'medication-history'"
+          (click)="setActiveTab('medication-history')"
+          type="button">
+          <i class="bi bi-capsule-pill me-2"></i>
+          Medication History
+          <span class="badge bg-secondary ms-2">{{ medicalFile()!.medicationHistory.length }}</span>
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content p-4">
+      <!-- Vital Signs Tab -->
+      <div *ngIf="activeTab() === 'vital-signs'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-heart-pulse me-2"></i>Vital Signs</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddVitalSignModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add Vital Sign
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.vitalSigns.length === 0" class="alert alert-info">
+          No vital signs recorded.
+        </div>
+        <div *ngIf="medicalFile()!.vitalSigns.length > 0" class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>Date & Time</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let vs of medicalFile()!.vitalSigns">
+                <td>{{ formatDate(vs.date) }}</td>
+                <td><strong>{{ vs.vitalSignTypeDescription || 'N/A' }}</strong></td>
+                <td><span class="badge bg-primary">{{ vs.value || '-' }}</span></td>
+                <td class="text-muted">{{ vs.comment || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Medications Tab -->
+      <div *ngIf="activeTab() === 'medications'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-capsule me-2"></i>Current Medications</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddMedicationModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add Medication
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.medications.length === 0" class="alert alert-info">
+          No current medications recorded.
+        </div>
+        <div *ngIf="medicalFile()!.medications.length > 0" class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>Medication</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let med of medicalFile()!.medications">
+                <td><strong>{{ med.medicationName || '-' }}</strong></td>
+                <td>{{ med.dosage || '-' }}</td>
+                <td>{{ med.frequency || '-' }}</td>
+                <td>{{ formatDateOnly(med.startDate) }}</td>
+                <td>{{ formatDateOnly(med.endDate) }}</td>
+                <td><span class="badge bg-info">{{ med.status || '-' }}</span></td>
+                <td class="text-muted">{{ med.comment || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Orders Tab -->
+      <div *ngIf="activeTab() === 'orders'" class="tab-pane active">
+        <h5 class="mb-3"><i class="bi bi-clipboard-check me-2"></i>Medical Orders</h5>
+        <div *ngIf="medicalFile()!.orders.length === 0" class="alert alert-info">
+          No medical orders recorded.
+        </div>
+        <div *ngIf="medicalFile()!.orders.length > 0" class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>Date</th>
+                <th>Order Type</th>
+                <th>Admission Number</th>
+                <th>Status</th>
+                <th>Comments</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let order of medicalFile()!.orders">
+                <td>{{ formatDate(order.requestDate) }}</td>
+                <td><strong>{{ order.requestTypeDescription || 'N/A' }}</strong></td>
+                <td>{{ order.admissionNumber || '-' }}</td>
+                <td><span class="badge bg-secondary">{{ order.status }}</span></td>
+                <td class="text-muted">{{ order.comments || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Progress Notes Tab -->
+      <div *ngIf="activeTab() === 'progress-notes'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Progress Notes</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddProgressNoteModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add Progress Note
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.progressNotes.length === 0" class="alert alert-info">
+          No progress notes recorded.
+        </div>
+        <div *ngIf="medicalFile()!.progressNotes.length > 0">
+          <div *ngFor="let note of medicalFile()!.progressNotes" class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>Note Date: {{ formatDate(note.noteDate) }}</strong>
+              <small class="text-muted">Created: {{ formatDate(note.createdDate) }}</small>
+            </div>
+            <div class="card-body">
+              <p class="card-text" [innerHTML]="note.noteText || '-'"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clinical Examinations Tab -->
+      <div *ngIf="activeTab() === 'examinations'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-stethoscope me-2"></i>Clinical Examinations</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddClinicalExamModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add Clinical Examination
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.clinicalExaminations.length === 0" class="alert alert-info">
+          No clinical examinations recorded.
+        </div>
+        <div *ngIf="medicalFile()!.clinicalExaminations.length > 0">
+          <div *ngFor="let exam of medicalFile()!.clinicalExaminations" class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>Examination Date: {{ formatDate(exam.examinationDate) }}</strong>
+              <small class="text-muted">Created: {{ formatDate(exam.createdDate) }}</small>
+            </div>
+            <div class="card-body">
+              <p class="card-text" [innerHTML]="exam.examinationText || '-'"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patient History Tab -->
+      <div *ngIf="activeTab() === 'history'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Patient History</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddPatientHistoryModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add/Update History
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.patientHistory.length === 0" class="alert alert-info">
+          No patient history recorded.
+        </div>
+        <div *ngIf="medicalFile()!.patientHistory.length > 0">
+          <div *ngFor="let history of medicalFile()!.patientHistory" class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>History Date: {{ formatDate(history.historyDate) }}</strong>
+              <small class="text-muted">Created: {{ formatDate(history.createdDate) }}</small>
+            </div>
+            <div class="card-body">
+              <p class="card-text" [innerHTML]="history.historyText || '-'"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Factors Tab -->
+      <div *ngIf="activeTab() === 'risk-factors'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Risk Factors</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddRiskFactorModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add Risk Factor
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.riskFactors.length === 0" class="alert alert-info">
+          No risk factors recorded.
+        </div>
+        <div *ngIf="medicalFile()!.riskFactors.length > 0" class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>Risk Factor</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let rf of medicalFile()!.riskFactors">
+                <td><strong>{{ rf.riskFactorDescription || 'N/A' }}</strong></td>
+                <td class="text-muted">{{ rf.comment || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Current Illness Tab -->
+      <div *ngIf="activeTab() === 'current-illness'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-activity me-2"></i>Current Illness</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddCurrentIllnessModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add Current Illness
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.currentIllness.length === 0" class="alert alert-info">
+          No current illness recorded.
+        </div>
+        <div *ngIf="medicalFile()!.currentIllness.length > 0" class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>Illness Description</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let illness of medicalFile()!.currentIllness">
+                <td><strong>{{ illness.illnessDescription || '-' }}</strong></td>
+                <td>{{ formatDateOnly(illness.startDate) }}</td>
+                <td>{{ formatDateOnly(illness.endDate) }}</td>
+                <td class="text-muted">{{ illness.comment || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cardiac History Tab -->
+      <div *ngIf="activeTab() === 'cardiac-history'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-heart me-2"></i>Cardiac History</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddCardiacHistoryModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add Cardiac History
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.cardiacHistory.length === 0" class="alert alert-info">
+          No cardiac history recorded.
+        </div>
+        <div *ngIf="medicalFile()!.cardiacHistory.length > 0" class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>History Type</th>
+                <th>Date</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ch of medicalFile()!.cardiacHistory">
+                <td><strong>{{ ch.cardiacHistoryDescription || 'N/A' }}</strong></td>
+                <td>{{ formatDateOnly(ch.historyDate) }}</td>
+                <td class="text-muted">{{ ch.comment || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Medication History Tab -->
+      <div *ngIf="activeTab() === 'medication-history'" class="tab-pane active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-capsule-pill me-2"></i>Medication History</h5>
+          <button class="btn btn-success btn-sm" (click)="openAddMedicationHistoryModal()" type="button">
+            <i class="bi bi-plus-circle me-2"></i>Add Medication History
+          </button>
+        </div>
+        <div *ngIf="medicalFile()!.medicationHistory.length === 0" class="alert alert-info">
+          No medication history recorded.
+        </div>
+        <div *ngIf="medicalFile()!.medicationHistory.length > 0" class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>Medication</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let med of medicalFile()!.medicationHistory">
+                <td><strong>{{ med.medicationName || '-' }}</strong></td>
+                <td>{{ med.dosage || '-' }}</td>
+                <td>{{ med.frequency || '-' }}</td>
+                <td>{{ formatDateOnly(med.startDate) }}</td>
+                <td>{{ formatDateOnly(med.endDate) }}</td>
+                <td class="text-muted">{{ med.comment || '-' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Vital Sign Modal -->
+  <div *ngIf="showAddVitalSignModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-heart-pulse me-2"></i>Add Vital Sign</h5>
+          <button type="button" class="btn-close" (click)="closeAddVitalSignModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveVitalSign()">
+            <div class="mb-3">
+              <label class="form-label">Vital Sign Type ID</label>
+              <input type="number" class="form-control" [(ngModel)]="newVitalSign.vitalSignTypeID" name="vitalSignTypeID" placeholder="Enter vital sign type ID">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Value</label>
+              <input type="number" step="0.01" class="form-control" [(ngModel)]="newVitalSign.value" name="value" placeholder="Enter value" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Date Taken</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="newVitalSign.dateTaken" name="dateTaken" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" [(ngModel)]="newVitalSign.notes" name="notes" rows="3" placeholder="Enter notes (optional)"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddVitalSignModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Progress Note Modal -->
+  <div *ngIf="showAddProgressNoteModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-journal-text me-2"></i>Add Progress Note</h5>
+          <button type="button" class="btn-close" (click)="closeAddProgressNoteModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveProgressNote()">
+            <div class="mb-3">
+              <label class="form-label">Date</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="newProgressNote.date" name="date" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Comments</label>
+              <textarea class="form-control" [(ngModel)]="newProgressNote.comments" name="comments" rows="8" placeholder="Enter progress note..." required></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddProgressNoteModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Clinical Examination Modal -->
+  <div *ngIf="showAddClinicalExamModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-stethoscope me-2"></i>Add Clinical Examination</h5>
+          <button type="button" class="btn-close" (click)="closeAddClinicalExamModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveClinicalExamination()">
+            <div class="mb-3">
+              <label class="form-label">Examination Notes</label>
+              <textarea class="form-control" [(ngModel)]="newClinicalExam.comments" name="comments" rows="8" placeholder="Enter clinical examination notes..." required></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddClinicalExamModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Medication Modal -->
+  <div *ngIf="showAddMedicationModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-capsule me-2"></i>Add Medication</h5>
+          <button type="button" class="btn-close" (click)="closeAddMedicationModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveMedication()">
+            <div class="mb-3">
+              <label class="form-label">Product Name</label>
+              <input type="text" class="form-control" [(ngModel)]="newMedication.productName" name="productName" placeholder="Enter medication name" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Quantity</label>
+              <input type="number" step="0.01" class="form-control" [(ngModel)]="newMedication.quantity" name="quantity" placeholder="Enter quantity">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Direction</label>
+              <input type="text" class="form-control" [(ngModel)]="newMedication.direction" name="direction" placeholder="Enter direction/instructions">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Scheduled Date</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="newMedication.scheduledDate" name="scheduledDate" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select class="form-select" [(ngModel)]="newMedication.status" name="status">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Comment</label>
+              <textarea class="form-control" [(ngModel)]="newMedication.comment" name="comment" rows="3" placeholder="Enter comment (optional)"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddMedicationModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Risk Factor Modal -->
+  <div *ngIf="showAddRiskFactorModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Add Risk Factor</h5>
+          <button type="button" class="btn-close" (click)="closeAddRiskFactorModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveRiskFactor()">
+            <div class="mb-3">
+              <label class="form-label">Risk Factor ID</label>
+              <input type="number" class="form-control" [(ngModel)]="newRiskFactor.riskFactorID" name="riskFactorID" placeholder="Enter risk factor ID">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" [(ngModel)]="newRiskFactor.notes" name="notes" rows="4" placeholder="Enter notes (optional)"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddRiskFactorModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Current Illness Modal -->
+  <div *ngIf="showAddCurrentIllnessModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-activity me-2"></i>Add Current Illness</h5>
+          <button type="button" class="btn-close" (click)="closeAddCurrentIllnessModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveCurrentIllness()">
+            <div class="mb-3">
+              <label class="form-label">Illness Description</label>
+              <textarea class="form-control" [(ngModel)]="newCurrentIllness.comments" name="comments" rows="6" placeholder="Enter current illness description..." required></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddCurrentIllnessModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Cardiac History Modal -->
+  <div *ngIf="showAddCardiacHistoryModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-heart me-2"></i>Add Cardiac History</h5>
+          <button type="button" class="btn-close" (click)="closeAddCardiacHistoryModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveCardiacHistory()">
+            <div class="mb-3">
+              <label class="form-label">Cardiac History ID</label>
+              <input type="number" class="form-control" [(ngModel)]="newCardiacHistory.cardiacHistoryID" name="cardiacHistoryID" placeholder="Enter cardiac history ID">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Comments</label>
+              <textarea class="form-control" [(ngModel)]="newCardiacHistory.comments" name="comments" rows="4" placeholder="Enter comments (optional)"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddCardiacHistoryModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Medication History Modal -->
+  <div *ngIf="showAddMedicationHistoryModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-capsule-pill me-2"></i>Add Medication History</h5>
+          <button type="button" class="btn-close" (click)="closeAddMedicationHistoryModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="saveMedicationHistory()">
+            <div class="mb-3">
+              <label class="form-label">Strength</label>
+              <input type="text" class="form-control" [(ngModel)]="newMedicationHistory.strength" name="strength" placeholder="Enter medication strength">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Notes</label>
+              <textarea class="form-control" [(ngModel)]="newMedicationHistory.notes" name="notes" rows="4" placeholder="Enter medication history notes"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddMedicationHistoryModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Patient History Modal -->
+  <div *ngIf="showAddPatientHistoryModal()" class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i>Add/Update Patient History</h5>
+          <button type="button" class="btn-close" (click)="closeAddPatientHistoryModal()" [disabled]="isSaving()"></button>
+        </div>
+        <div class="modal-body">
+          <form (ngSubmit)="savePatientHistory()">
+            <div class="mb-3">
+              <label class="form-label">Illness History Notes</label>
+              <textarea class="form-control" [(ngModel)]="newPatientHistory.illnessHistoryNotes" name="illnessHistoryNotes" rows="3" placeholder="Enter illness history notes"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Medication History Notes</label>
+              <textarea class="form-control" [(ngModel)]="newPatientHistory.medicationHistoryNotes" name="medicationHistoryNotes" rows="3" placeholder="Enter medication history notes"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Cardiac History Notes</label>
+              <textarea class="form-control" [(ngModel)]="newPatientHistory.cardiacHistoryNotes" name="cardiacHistoryNotes" rows="3" placeholder="Enter cardiac history notes"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Risk Factor Notes</label>
+              <textarea class="form-control" [(ngModel)]="newPatientHistory.riskFactorNotes" name="riskFactorNotes" rows="3" placeholder="Enter risk factor notes"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Allergy Notes</label>
+              <textarea class="form-control" [(ngModel)]="newPatientHistory.allergyNotes" name="allergyNotes" rows="3" placeholder="Enter allergy notes"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Family History Notes</label>
+              <textarea class="form-control" [(ngModel)]="newPatientHistory.familyHistoryNotes" name="familyHistoryNotes" rows="3" placeholder="Enter family history notes"></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeAddPatientHistoryModal()" [disabled]="isSaving()">Cancel</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                <span *ngIf="isSaving()" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!isSaving()" class="bi bi-save me-2"></i>
+                {{ isSaving() ? 'Saving...' : 'Save' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
