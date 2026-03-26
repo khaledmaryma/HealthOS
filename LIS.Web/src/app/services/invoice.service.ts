@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { InvoiceHeader, CreateInvoiceHeaderRequest, UpdateInvoiceHeaderRequest } from '../models/invoice-header';
 import { InvoiceDetail, CreateInvoiceDetailRequest, UpdateInvoiceDetailRequest, InvoiceTotals } from '../models/invoice-detail';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 // Use the existing Denomination interface from lab-tests service
 export interface Denomination {
@@ -17,8 +18,9 @@ export interface Denomination {
 })
 export class InvoiceService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5050/api/invoice';
-  private readonly denominationUrl = 'http://localhost:5050/api/denomination';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiUrl = this.endpoints.invoice;
+  private readonly denominationUrl = this.endpoints.denomination;
 
   // Signals for state management
   readonly invoiceHeaders = signal<InvoiceHeader[]>([]);

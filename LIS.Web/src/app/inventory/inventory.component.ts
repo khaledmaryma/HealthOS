@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 interface ProductListItem {
   id: number;
@@ -46,7 +47,8 @@ export class InventoryComponent implements OnInit {
   pageSize = 20;
   isLoading = false;
 
-  private readonly apiBaseUrl = 'http://localhost:5050/api/inventory/products';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiBaseUrl = this.endpoints.inventoryProducts;
 
   ngOnInit(): void {
     this.loadProducts();

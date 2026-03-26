@@ -28,6 +28,7 @@
           <th>Profile</th>
           <th>Username</th>
           <th>Full Name</th>
+          <th>Department</th>
           <th>Email</th>
           <th>Status</th>
         </tr>
@@ -41,6 +42,7 @@
           <td>{{ getProfileLabel(item.profileId) }}</td>
           <td>{{ item.username }}</td>
           <td>{{ item.fullName }}</td>
+          <td>{{ getDepartmentLabel(item.departmentId) }}</td>
           <td>{{ item.email || '-' }}</td>
           <td>
             <span class="badge" [class.bg-success]="item.isActive" [class.bg-secondary]="!item.isActive">
@@ -73,6 +75,14 @@
 
         <label class="form-label">Email</label>
         <input class="form-control form-control-sm" [(ngModel)]="editItem()!.email" name="email" />
+
+        <label class="form-label">Department</label>
+        <select class="form-select form-select-sm" [(ngModel)]="editItem()!.departmentId" name="departmentId">
+          <option [ngValue]="null">-- None --</option>
+          <option *ngFor="let dept of departments()" [ngValue]="dept.id">
+            {{ dept.name || dept.code || ('Department ' + dept.id) }}
+          </option>
+        </select>
 
         <label class="form-label">Password</label>
         <input

@@ -5,13 +5,15 @@ import { BillingInvoiceHeader } from '../models/billing-invoice-header';
 import { BillingInvoiceDetail } from '../models/billing-invoice-detail';
 import { HospitalDenomination } from '../models/hospital-denomination';
 import { DenominationSearchResult } from '../models/denomination-search-result';
+import { ApiUrlService } from '../api/api-url.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BillingService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:5050/api';
+  private readonly urls = inject(ApiUrlService);
+  private readonly apiUrl = this.urls.api('/api');
 
   // Invoice Header methods
   getInvoiceHeaders(): Observable<BillingInvoiceHeader[]> {

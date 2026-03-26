@@ -2,7 +2,9 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import * as XLSX from 'xlsx';
 import { ResidentPatient } from '../models/resident-patient';
+import { UnpaidPrivateInvoiceRow } from '../models/unpaid-private-invoice';
 import { ResidentPatientService } from '../services/resident-patient.service';
 
 @Component({
@@ -30,6 +32,31 @@ export class ResidentPatientListComponent implements OnInit {
   showDateRange = signal(true);
   checkInDateFrom = signal<string>('2026-01-01');
   checkInDateTo = signal<string>(this.formatDateForInput(new Date()));
+
+  /** Unpaid private invoices modal */
+  showUnpaidPrivateModal = signal(false);
+  unpaidPrivateRows = signal<UnpaidPrivateInvoiceRow[]>([]);
+  unpaidPrivateLoading = signal(false);
+  unpaidPrivateError = signal<string | null>(null);
+  unpaidPrivateSearch = signal('');
+  savingUnpaidInvoiceId = signal<number | null>(null);
+
+  filteredUnpaidPrivateRows = computed(() => {
+    const q = this.unpaidPrivateSearch().trim().toLowerCase();
+    const rows = this.unpaidPrivateRows();
+    if (!q) return rows;
+    return rows.filter((r) => {
+      const parts = [
+        r.department ?? '',
+        r.mrn ?? '',
+        r.admissionNumber ?? '',
+        r.patientName ?? '',
+        r.patientPhone ?? '',
+        r.checkInDate ? this.formatDate(r.checkInDate) : '',
+      ];
+      return parts.some((p) => p.toLowerCase().includes(q));
+    });
+  });
 
   // Computed
   totalPages = computed(() => Math.ceil(this.totalCount() / this.pageSize()));
@@ -211,6 +238,37 @@ export class ResidentPatientListComponent implements OnInit {
     return `${year}-${month}-${day}`;
   }
 
+  formatCurrency(value: number | null | undefined): string {
+    if (value == null || value === undefined) return '-';
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+
+  formatInvTotal(patient: ResidentPatient): string {
+    if (patient.invTotal == null) return '-';
+    const formatted = this.formatCurrency(patient.invTotal);
+    return patient.currency ? `${patient.currency} ${formatted}` : formatted;
+  }
+
+  getPaidStatus(patient: ResidentPatient): 'paid' | 'partial' | 'unpaid' {
+    if (patient.receiptNumber != null && patient.receiptNumber !== '') return 'paid';
+    if (patient.advReceiptNumber != null && patient.advReceiptNumber !== '') return 'partial';
+    return 'unpaid';
+  }
+
+  getPaidTooltip(patient: ResidentPatient): string {
+    const status = this.getPaidStatus(patient);
+    if (status === 'paid' && patient.invTotal != null) {
+      return `Paid amount: ${this.formatCurrency(patient.invTotal)}${patient.currency ? ' ' + patient.currency : ''}`;
+    }
+    if (status === 'partial' && patient.advanceAmount != null) {
+      return `Advance paid: ${this.formatCurrency(patient.advanceAmount)}`;
+    }
+    return '';
+  }
+
   // Select patient row
   selectPatient(patient: ResidentPatient): void {
     this.selectedPatient.set(patient);
@@ -274,9 +332,97 @@ export class ResidentPatientListComponent implements OnInit {
     }
   }
 
-  // Open Department Report
+  // Open Department Report (pass current date filter from resident patient screen)
   openDepartmentReport(): void {
-    this.router.navigate(['/department-report']);
+    this.router.navigate(['/department-report'], {
+      queryParams: {
+        from: this.checkInDateFrom() || this.formatDateForInput(new Date()),
+        to: this.checkInDateTo() || this.formatDateForInput(new Date()),
+      },
+    });
+  }
+
+  openUnpaidPrivateInvoices(): void {
+    this.showUnpaidPrivateModal.set(true);
+    this.unpaidPrivateSearch.set('');
+    this.unpaidPrivateError.set(null);
+    this.unpaidPrivateLoading.set(true);
+    this.unpaidPrivateRows.set([]);
+    this.residentPatientService.getUnpaidPrivateInvoices().subscribe({
+      next: rows => {
+        this.unpaidPrivateRows.set(rows);
+        this.unpaidPrivateLoading.set(false);
+      },
+      error: err => {
+        console.error(err);
+        this.unpaidPrivateLoading.set(false);
+        this.unpaidPrivateError.set(
+          err?.error?.message || err?.message || 'Failed to load unpaid invoices.'
+        );
+      }
+    });
+  }
+
+  closeUnpaidPrivateModal(): void {
+    this.showUnpaidPrivateModal.set(false);
+  }
+
+  getLoggedInDepartmentName(): string {
+    return localStorage.getItem('loggedInUserDepartmentName') ?? '';
+  }
+
+  trackUnpaidInvoiceRow(_index: number, row: UnpaidPrivateInvoiceRow): number {
+    return row.invoiceHeaderId;
+  }
+
+  saveUnpaidPrivateReceipt(row: UnpaidPrivateInvoiceRow): void {
+    const lbp = Number(row.receivedLbp);
+    const usd = Number(row.receivedUsd);
+    if (Number.isNaN(lbp) || Number.isNaN(usd)) {
+      return;
+    }
+    this.savingUnpaidInvoiceId.set(row.invoiceHeaderId);
+    this.residentPatientService
+      .patchUnpaidPrivateInvoiceReceived(row.invoiceHeaderId, { receivedLbp: lbp, receivedUsd: usd })
+      .subscribe({
+        next: (updated) => {
+          this.unpaidPrivateRows.update((arr) =>
+            arr.map((r) => (r.invoiceHeaderId === updated.invoiceHeaderId ? { ...r, ...updated } : r))
+          );
+          this.savingUnpaidInvoiceId.set(null);
+        },
+        error: (err) => {
+          console.error(err);
+          this.savingUnpaidInvoiceId.set(null);
+          alert(err?.error?.message || err?.message || 'Failed to save receipt amounts.');
+        },
+      });
+  }
+
+  exportUnpaidPrivateToExcel(): void {
+    const rows = this.filteredUnpaidPrivateRows();
+    if (rows.length === 0) {
+      return;
+    }
+    const data = rows.map((r) => ({
+      Department: r.department ?? '',
+      'Check-in': r.checkInDate ? this.formatDate(r.checkInDate) : '',
+      MRN: r.mrn ?? '',
+      'Admission #': r.admissionNumber ?? '',
+      'Patient name': r.patientName ?? '',
+      Phone: r.patientPhone ?? '',
+      'Invoice net': r.invoiceNet,
+      'Paid advance': r.paidAdvance,
+      'Rest to pay': r.restToPay,
+      Currency: r.currency ?? '',
+      'Receipt LBP': r.receivedLbp,
+      'Receipt USD': r.receivedUsd,
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Unpaid');
+    const stamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `unpaid-private-invoices-${stamp}.xlsx`);
   }
 
   openMedicalFile(patient: ResidentPatient): void {

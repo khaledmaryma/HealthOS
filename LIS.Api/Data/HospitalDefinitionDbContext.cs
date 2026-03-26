@@ -81,8 +81,7 @@ namespace LIS.Api.Data
                 entity.ToTable("Departments", "dbo");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("ID");
-                entity.Property(e => e.Name).HasColumnName("Name").IsRequired(false);
-                entity.Property(e => e.Description).HasColumnName("Description").IsRequired(false);
+                entity.Property(e => e.DepartmentName).HasColumnName("DepartmentName").IsRequired(false);
                 entity.Property(e => e.Code).HasColumnName("Code").IsRequired(false);
                 entity.Property(e => e.IsActive).HasColumnName("IsActive").IsRequired(false);
                 entity.Property(e => e.IsDeleted).HasColumnName("IsDeleted").IsRequired(false);

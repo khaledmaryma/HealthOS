@@ -18,6 +18,41 @@ namespace LIS.Api.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILogger<QuickAdmissionController> _logger;
 
+        public static string GetDebugSql(SqlCommand cmd)
+        {
+            var sql = cmd.CommandText;
+
+            foreach (SqlParameter param in cmd.Parameters)
+            {
+                string value;
+
+                if (param.Value == null || param.Value == DBNull.Value)
+                {
+                    value = "NULL";
+                }
+                else if (param.SqlDbType == SqlDbType.VarChar
+                      || param.SqlDbType == SqlDbType.NVarChar
+                      || param.SqlDbType == SqlDbType.Char
+                      || param.SqlDbType == SqlDbType.NChar
+                      || param.SqlDbType == SqlDbType.Text)
+                {
+                    value = $"'{param.Value.ToString().Replace("'", "''")}'";
+                }
+                else if (param.SqlDbType == SqlDbType.DateTime || param.Value is DateTime)
+                {
+                    value = $"'{((DateTime)param.Value):yyyy-MM-dd HH:mm:ss}'";
+                }
+                else
+                {
+                    value = param.Value.ToString();
+                }
+
+                sql = sql.Replace(param.ParameterName, value);
+            }
+
+            return sql;
+        }
+
         public QuickAdmissionController(IConfiguration configuration, ILogger<QuickAdmissionController> logger)
         {
             _configuration = configuration;
@@ -98,13 +133,30 @@ namespace LIS.Api.Controllers
             int? invoiceHeaderId = null;
             string mrn = "";
             string admissionNumber = "";
-
+            decimal exchangeRate = 90000;
             try
             {
                 _logger.LogInformation("=== Save_V1 START ===");
                 _logger.LogInformation("Request received - ExistingPatientId: {ExistingPatientId}, HasSaveData: {HasSaveData}, HasSaveOptions: {HasSaveOptions}",
                     request.ExistingPatientId, !string.IsNullOrEmpty(request.SaveData), !string.IsNullOrEmpty(request.SaveOptions));
+                //get exchange rate 
 
+                var configConnStr1 = _configuration.GetConnectionString("ConfigurationConnection");
+                if (!string.IsNullOrEmpty(configConnStr1))
+                {
+                    using var configConn1 = new SqlConnection(configConnStr1);
+                    await configConn1.OpenAsync();
+                    var getRateQuery = "select top 1 DefaultRate from  [Financial DB].dbo.ConfigurationTable";
+                    try
+                    {
+                        using var cmd = new SqlCommand(getRateQuery, configConn1);
+                        exchangeRate = Convert.ToDecimal(await cmd.ExecuteScalarAsync() ?? 1);
+                    }
+                    catch
+                    {
+
+                    }
+                }
                 // Parse JSON data
                 if (string.IsNullOrEmpty(request.SaveData))
                 {
@@ -202,6 +254,52 @@ namespace LIS.Api.Controllers
                     }
                 }
 
+                // Parse invoiceReceipt (for Create Advance - receipt amounts and currency)
+                if (jsonDoc.RootElement.TryGetProperty("invoiceReceipt", out var irElement))
+                {
+                    saveData.InvoiceReceipt = new QuickAdmissionInvoiceReceipt
+                    {
+                        Currency = irElement.TryGetProperty("currency", out var curr) ? curr.GetString() : null,
+                        ReceiptAmount = irElement.TryGetProperty("receiptAmount", out var ra) && ra.ValueKind != JsonValueKind.Null ? ra.GetDecimal() : null,
+                        ReceiptLocal = irElement.TryGetProperty("receiptLocal", out var rl) && rl.ValueKind != JsonValueKind.Null ? rl.GetDecimal() : null,
+                        InvoiceNet = irElement.TryGetProperty("invoiceNet", out var net) && net.ValueKind != JsonValueKind.Null ? net.GetDecimal() : null,
+                        TotalPaidInInvoiceCurrency = irElement.TryGetProperty("totalPaidInInvoiceCurrency", out var tp) && tp.ValueKind != JsonValueKind.Null ? tp.GetDecimal() : null
+                    };
+                }
+
+                // Parse deliverHeader and deliverItems (for medicament -> Inventory.dbo.DeliverItem)
+                if (jsonDoc.RootElement.TryGetProperty("deliverHeader", out var dhElement) && dhElement.ValueKind != JsonValueKind.Null)
+                {
+                    saveData.DeliverHeader = new QuickAdmissionDeliverHeader
+                    {
+                        Type = dhElement.TryGetProperty("Type", out var t) && t.ValueKind != JsonValueKind.Null ? t.GetInt32() : null,
+                        TypeCounter = dhElement.TryGetProperty("TypeCounter", out var tc) && tc.ValueKind != JsonValueKind.Null ? tc.GetInt32() : null,
+                        PatientType = dhElement.TryGetProperty("PatientType", out var pt) && pt.ValueKind != JsonValueKind.Null ? pt.GetInt32() : null,
+                        Date = dhElement.TryGetProperty("Date", out var dt) ? dt.GetString() : null,
+                        Currency = dhElement.TryGetProperty("Currency", out var curr) && curr.ValueKind != JsonValueKind.Null ? curr.GetInt32() : null,
+                        Warehouse = dhElement.TryGetProperty("Warehouse", out var wh) && wh.ValueKind != JsonValueKind.Null ? wh.GetInt32() : null,
+                        CreatedBy = dhElement.TryGetProperty("CreatedBy", out var dcb) && dcb.ValueKind != JsonValueKind.Null ? dcb.GetInt32() : null
+                    };
+                }
+                if (jsonDoc.RootElement.TryGetProperty("deliverItems", out var diElement) && diElement.ValueKind == JsonValueKind.Array)
+                {
+                    saveData.DeliverItems = new List<QuickAdmissionDeliverItem>();
+                    foreach (var item in diElement.EnumerateArray())
+                    {
+                        saveData.DeliverItems.Add(new QuickAdmissionDeliverItem
+                        {
+                            Product = item.TryGetProperty("Product", out var p) && p.ValueKind != JsonValueKind.Null ? p.GetInt32() : null,
+                            Package = item.TryGetProperty("Package", out var pkg) && pkg.ValueKind != JsonValueKind.Null ? pkg.GetInt32() : null,
+                            Code = item.TryGetProperty("Code", out var c) ? c.GetString() : null,
+                            AlternateDescription = item.TryGetProperty("AlternateDescription", out var ad) ? ad.GetString() : null,
+                            Qty = item.TryGetProperty("Qty", out var q) && q.ValueKind != JsonValueKind.Null ? q.GetDecimal() : null,
+                            UnitPrice = item.TryGetProperty("UnitPrice", out var up) && up.ValueKind != JsonValueKind.Null ? up.GetDecimal() : null,
+                            Net = item.TryGetProperty("Net", out var n) && n.ValueKind != JsonValueKind.Null ? n.GetDecimal() : null,
+                            PLDescription = item.TryGetProperty("PLDescription", out var pl) ? pl.GetString() : null
+                        });
+                    }
+                }
+
                 if (saveData.Patient == null && saveData.Admission == null)
                 {
                     return BadRequest(new { message = "Invalid SaveData format - must contain patient or admission data" });
@@ -234,11 +332,10 @@ namespace LIS.Api.Controllers
                     }
                 }
 
-                // Start transaction on Admission database
+                // NOTE: Admission transaction is scoped ONLY to Step 2 (Admission + ResidentPatient)
+                // to minimize lock hold time on AdmissionCounter/Admission/ResidentPatient.
+                // Steps 1, 3, 4 run outside that transaction to avoid blocking other requests.
                 var admissionConnectionString = _configuration.GetConnectionString("AdmissionConnection");
-                using var admissionConnection = new SqlConnection(admissionConnectionString);
-                await admissionConnection.OpenAsync();
-                using var admissionTransaction = admissionConnection.BeginTransaction();
 
                 try
                 {
@@ -402,7 +499,7 @@ namespace LIS.Api.Controllers
                     }
 
                     // =====================================================
-                    // 2. SAVE ADMISSION (if requested)
+                    // 2. SAVE ADMISSION (if requested) - scoped transaction to minimize lock hold
                     // =====================================================
                     if (saveOptions.SaveAdmission && saveData.Admission != null)
                     {
@@ -410,95 +507,110 @@ namespace LIS.Api.Controllers
                         _logger.LogInformation("Admission data - Type: {Type}, CheckInDate: {CheckInDate}, ReferralPhysician: {ReferralPhysician}",
                             saveData.Admission.Type, saveData.Admission.CheckInDate, saveData.Admission.ReferralPhysician);
 
-                        // Calculate admission number using the provided logic
-                        var checkInDate = saveData.Admission.CheckInDate != null ? DateTime.Now : DateTime.Parse(saveData.Admission.CheckInDate);
-                        var admissionType = saveData.Admission.Type ?? 3; // Default to CashOutPatient (3)
-
-                        // Update AdmissionCounter
-                        _logger.LogInformation("Updating AdmissionCounter for Year: {Year}, Month: {Month}, Type: {Type}",
-                            checkInDate.Year, checkInDate.Month, admissionType);
-
-                        var updateCounterSql = @"
-                            UPDATE AdmissionCounter  
-                            SET CashOutPatient = CashOutPatient + 1 
-                            WHERE [YEAR] = YEAR(@checkInDate) AND [Month] = MONTH(@checkInDate)";
-
-                        using var updateCounterCmd = new SqlCommand(updateCounterSql, admissionConnection, admissionTransaction);
-                        updateCounterCmd.Parameters.AddWithValue("@checkInDate", checkInDate);
-                        await updateCounterCmd.ExecuteNonQueryAsync();
-                        _logger.LogInformation("AdmissionCounter updated successfully");
-
-                        // Get the counter
-                        var getCounterSql = @"
-                            SELECT CashOutPatient 
-                            FROM AdmissionCounter 
-                            WHERE [YEAR] = YEAR(@checkInDate) AND [Month] = MONTH(@checkInDate)";
-
-                        int admissionCounter = 0;
-                        using var getCounterCmd = new SqlCommand(getCounterSql, admissionConnection, admissionTransaction);
-                        getCounterCmd.Parameters.AddWithValue("@checkInDate", checkInDate);
-                        var counterResult = await getCounterCmd.ExecuteScalarAsync();
-                        if (counterResult != null)
+                        using var admissionConnection = new SqlConnection(admissionConnectionString);
+                        await admissionConnection.OpenAsync();
+                        using var admissionTransaction = admissionConnection.BeginTransaction();
+                        try
                         {
-                            admissionCounter = Convert.ToInt32(counterResult);
+                            // Calculate admission number using the provided logic
+                            var checkInDate = saveData.Admission.CheckInDate != null ? DateTime.Now : DateTime.Parse(saveData.Admission.CheckInDate);
+                            var admissionType = saveData.Admission.Type ?? 3; // Default to CashOutPatient (3)
+
+                            // Update AdmissionCounter
+                            _logger.LogInformation("Updating AdmissionCounter for Year: {Year}, Month: {Month}, Type: {Type}",
+                                checkInDate.Year, checkInDate.Month, admissionType);
+
+                            var updateCounterSql = @"
+                                UPDATE AdmissionCounter  
+                                SET CashOutPatient = CashOutPatient + 1 
+                                WHERE [YEAR] = YEAR(@checkInDate) AND [Month] = MONTH(@checkInDate)";
+
+                            using var updateCounterCmd = new SqlCommand(updateCounterSql, admissionConnection, admissionTransaction);
+                            updateCounterCmd.Parameters.AddWithValue("@checkInDate", checkInDate);
+                            await updateCounterCmd.ExecuteNonQueryAsync();
+                            _logger.LogInformation("AdmissionCounter updated successfully");
+
+                            // Get the counter
+                            var getCounterSql = @"
+                                SELECT CashOutPatient 
+                                FROM AdmissionCounter 
+                                WHERE [YEAR] = YEAR(@checkInDate) AND [Month] = MONTH(@checkInDate)";
+
+                            int admissionCounter = 0;
+                            using var getCounterCmd = new SqlCommand(getCounterSql, admissionConnection, admissionTransaction);
+                            getCounterCmd.Parameters.AddWithValue("@checkInDate", checkInDate);
+                            var counterResult = await getCounterCmd.ExecuteScalarAsync();
+                            if (counterResult != null)
+                            {
+                                admissionCounter = Convert.ToInt32(counterResult);
+                            }
+
+                            // Build admission number: '0' + Type + '.' + Counter (5 digits) + '.' + Month (2 digits) + '.' + Year (2 digits)
+                            var typeStr = admissionType.ToString();
+                            var counterStr = admissionCounter.ToString().PadLeft(5, '0');
+                            var monthStr = checkInDate.Month.ToString().PadLeft(2, '0');
+                            var yearStr = checkInDate.Year.ToString().Substring(2, 2);
+                            admissionNumber = $"0{typeStr}.{counterStr}.{monthStr}.{yearStr}";
+
+                            _logger.LogInformation("Admission number generated: {AdmissionNumber} (Counter: {Counter})", admissionNumber, admissionCounter);
+
+                            // Insert admission
+                            var insertAdmissionSql = @"
+                                INSERT INTO dbo.Admission 
+                                (Number, AdmissionSite, ReferralPhysician, AttendingPhysician,
+                                 MainInsurance, MainInsuranceClass, Insured,
+                                 AuxiliaryInsurance, AuxiliaryInsuranceClass, CheckInClass,
+                                 Department, CheckInDate, CheckOutDate, Patient, Type,
+                                 IsWorkAccident, IsExtended, CreatedBy, CreatedDate, IsDeleted)
+                                VALUES 
+                                (@Number, @AdmissionSite, @ReferralPhysician, @AttendingPhysician,
+                                 @MainInsurance, @MainInsuranceClass, @Insured,
+                                 @AuxiliaryInsurance, @AuxiliaryInsuranceClass, @CheckInClass,
+                                 @Department, @CheckInDate, @CheckOutDate, @Patient, @Type,
+                                 @IsWorkAccident, @IsExtended, @CreatedBy, GETDATE(), 0);
+                                SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+                            using var admissionCommand = new SqlCommand(insertAdmissionSql, admissionConnection, admissionTransaction);
+                            admissionCommand.Parameters.AddWithValue("@Number", admissionNumber);
+                            admissionCommand.Parameters.AddWithValue("@AdmissionSite", saveData.Admission.AdmissionSite ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@ReferralPhysician", saveData.Admission.ReferralPhysician ?? 0);
+                            admissionCommand.Parameters.AddWithValue("@AttendingPhysician", saveData.Admission.AttendingPhysician ?? saveData.Admission.ReferralPhysician ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@MainInsurance", saveData.Admission.MainInsurance ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@MainInsuranceClass", saveData.Admission.MainInsuranceClass ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@Insured", saveData.Admission.Insured ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@AuxiliaryInsurance", saveData.Admission.AuxiliaryInsurance ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@AuxiliaryInsuranceClass", saveData.Admission.AuxiliaryInsuranceClass ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@CheckInClass", saveData.Admission.CheckInClass ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@Department", saveData.Admission.Department ?? (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@CheckInDate", checkInDate);
+                            admissionCommand.Parameters.AddWithValue("@CheckOutDate", !string.IsNullOrEmpty(saveData.Admission.CheckOutDate) ? DateTime.Parse(saveData.Admission.CheckOutDate) : (object)DBNull.Value);
+                            admissionCommand.Parameters.AddWithValue("@Patient", patientId.Value);
+                            admissionCommand.Parameters.AddWithValue("@Type", admissionType);
+                            admissionCommand.Parameters.AddWithValue("@IsWorkAccident", saveData.Admission.IsWorkAccident ?? false);
+                            admissionCommand.Parameters.AddWithValue("@IsExtended", saveData.Admission.IsExtended ?? false);
+                            // Group is a calculated field - don't set it
+                            admissionCommand.Parameters.AddWithValue("@CreatedBy", saveData.Admission.CreatedBy ?? 338);
+
+                            var admissionIdResult = await admissionCommand.ExecuteScalarAsync();
+                            admissionId = admissionIdResult != null && admissionIdResult != DBNull.Value ? (int)admissionIdResult : null;
+                            _logger.LogInformation("=== STEP 2 COMPLETE: Admission created with ID: {AdmissionId}, Number: {AdmissionNumber} ===", admissionId, admissionNumber);
+
+                            // Sync ResidentPatient (simplified - you may want to add full logic from AdmissionController)
+                            _logger.LogInformation("Syncing ResidentPatient table...");
+                            await SyncResidentPatient_V1(admissionConnection, admissionTransaction, admissionId!.Value, patientId!.Value, (saveData.Admission.ReferralPhysician ?? 0), "",
+                                admissionNumber, (saveData.Admission.Department ?? ""),
+                                saveData.Admission, saveData.Patient ?? new QuickAdmissionPatient(), saveData.Admission.CreatedBy ?? 338);
+                            _logger.LogInformation("ResidentPatient sync completed");
+
+                            admissionTransaction.Commit();
+                            _logger.LogInformation("=== STEP 2 transaction committed - Admission locks released ===");
                         }
-
-                        // Build admission number: '0' + Type + '.' + Counter (5 digits) + '.' + Month (2 digits) + '.' + Year (2 digits)
-                        var typeStr = admissionType.ToString();
-                        var counterStr = admissionCounter.ToString().PadLeft(5, '0');
-                        var monthStr = checkInDate.Month.ToString().PadLeft(2, '0');
-                        var yearStr = checkInDate.Year.ToString().Substring(2, 2);
-                        admissionNumber = $"0{typeStr}.{counterStr}.{monthStr}.{yearStr}";
-
-                        _logger.LogInformation("Admission number generated: {AdmissionNumber} (Counter: {Counter})", admissionNumber, admissionCounter);
-
-                        // Insert admission
-                        var insertAdmissionSql = @"
-                            INSERT INTO dbo.Admission 
-                            (Number, AdmissionSite, ReferralPhysician, AttendingPhysician,
-                             MainInsurance, MainInsuranceClass, Insured,
-                             AuxiliaryInsurance, AuxiliaryInsuranceClass, CheckInClass,
-                             Department, CheckInDate, CheckOutDate, Patient, Type,
-                             IsWorkAccident, IsExtended, CreatedBy, CreatedDate, IsDeleted)
-                            VALUES 
-                            (@Number, @AdmissionSite, @ReferralPhysician, @AttendingPhysician,
-                             @MainInsurance, @MainInsuranceClass, @Insured,
-                             @AuxiliaryInsurance, @AuxiliaryInsuranceClass, @CheckInClass,
-                             @Department, @CheckInDate, @CheckOutDate, @Patient, @Type,
-                             @IsWorkAccident, @IsExtended, @CreatedBy, GETDATE(), 0);
-                            SELECT CAST(SCOPE_IDENTITY() AS INT);";
-
-                        using var admissionCommand = new SqlCommand(insertAdmissionSql, admissionConnection, admissionTransaction);
-                        admissionCommand.Parameters.AddWithValue("@Number", admissionNumber);
-                        admissionCommand.Parameters.AddWithValue("@AdmissionSite", saveData.Admission.AdmissionSite ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@ReferralPhysician", saveData.Admission.ReferralPhysician ?? 0);
-                        admissionCommand.Parameters.AddWithValue("@AttendingPhysician", saveData.Admission.AttendingPhysician ?? saveData.Admission.ReferralPhysician ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@MainInsurance", saveData.Admission.MainInsurance ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@MainInsuranceClass", saveData.Admission.MainInsuranceClass ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@Insured", saveData.Admission.Insured ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@AuxiliaryInsurance", saveData.Admission.AuxiliaryInsurance ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@AuxiliaryInsuranceClass", saveData.Admission.AuxiliaryInsuranceClass ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@CheckInClass", saveData.Admission.CheckInClass ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@Department", saveData.Admission.Department ?? (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@CheckInDate", checkInDate);
-                        admissionCommand.Parameters.AddWithValue("@CheckOutDate", !string.IsNullOrEmpty(saveData.Admission.CheckOutDate) ? DateTime.Parse(saveData.Admission.CheckOutDate) : (object)DBNull.Value);
-                        admissionCommand.Parameters.AddWithValue("@Patient", patientId.Value);
-                        admissionCommand.Parameters.AddWithValue("@Type", admissionType);
-                        admissionCommand.Parameters.AddWithValue("@IsWorkAccident", saveData.Admission.IsWorkAccident ?? false);
-                        admissionCommand.Parameters.AddWithValue("@IsExtended", saveData.Admission.IsExtended ?? false);
-                        // Group is a calculated field - don't set it
-                        admissionCommand.Parameters.AddWithValue("@CreatedBy", saveData.Admission.CreatedBy ?? 338);
-
-                        var admissionIdResult = await admissionCommand.ExecuteScalarAsync();
-                        admissionId = admissionIdResult != null && admissionIdResult != DBNull.Value ? (int)admissionIdResult : null;
-                        _logger.LogInformation("=== STEP 2 COMPLETE: Admission created with ID: {AdmissionId}, Number: {AdmissionNumber} ===", admissionId, admissionNumber);
-
-                        // Sync ResidentPatient (simplified - you may want to add full logic from AdmissionController)
-                        _logger.LogInformation("Syncing ResidentPatient table...");
-                        await SyncResidentPatient_V1(admissionConnection, admissionTransaction, admissionId.Value, patientId.Value, (saveData.Admission.ReferralPhysician ?? 0),"" , 
-                            admissionNumber, (saveData.Admission.Department ??""), 
-                            saveData.Admission, saveData.Patient ?? new QuickAdmissionPatient(), saveData.Admission.CreatedBy ?? 338);
-                        _logger.LogInformation("ResidentPatient sync completed");
+                        catch (Exception step2Ex)
+                        {
+                            admissionTransaction.Rollback();
+                            _logger.LogError(step2Ex, "Step 2 (Admission) failed - transaction rolled back");
+                            throw;
+                        }
                     }
 
                     // =====================================================
@@ -539,7 +651,7 @@ namespace LIS.Api.Controllers
                             VALUES 
                             ('QuickAdmission',1, 1, 'QA', GETDATE(), @Admission,
                              @HospitalAmount, 0, 0,
-                             @AccountID, ISNULL((select [Description] from HospitalDefinition.dbo.Insurance where Id = @AccountID), 'Quick Admission Invoice'), 1, 'USD', 1.0,
+                             @AccountID, ISNULL((select [Description] from HospitalDefinition.dbo.Insurance where Id = @AccountID), 'Quick Admission Invoice'), 2, 'USD', 1.0,
                              @CheckInClass, 'Quick Admission', 1, 'Full Coverage', 100.0,
                              @ReferralPhysician, (select name from HospitalDefinition.dbo.Physician where Id = @ReferralPhysician),@AttendingPhysician, 1, 'Standard',
                              @Net, @Gross, @MRN, @PatientName, @AdmissionNumber, @AdmissionDate,
@@ -571,14 +683,14 @@ namespace LIS.Api.Controllers
                         _logger.LogInformation("Inserting {ItemCount} invoice detail items...", saveData.Invoice.Count(i => i.Denomination > 0));
                         foreach (var item in saveData.Invoice.Where(i => i.Denomination > 0))
                         {
-                        /*              
-                        DenominationCoeffValue
-                        DenominationCoeffPrice
-                        DeniedAmount
-                        ReferralPhysician
-                        CopyFlag
-                        IsDoubtfull
-                        IsCanceled*/
+                            /*              
+                            DenominationCoeffValue
+                            DenominationCoeffPrice
+                            DeniedAmount
+                            ReferralPhysician
+                            CopyFlag
+                            IsDoubtfull
+                            IsCanceled*/
                             var insertDetailSql = @"
                                 INSERT INTO Billing.dbo.InvoiceDetail 
                                 (InvoiceHeader, PrescriptionDate, MedicationUnit, MedicationUnitDescription,
@@ -623,12 +735,233 @@ namespace LIS.Api.Controllers
 
                         _logger.LogInformation("=== STEP 3 COMPLETE: Invoice created with Header ID: {InvoiceHeaderId}, {DetailCount} details inserted ===",
                             invoiceHeaderId, saveData.Invoice.Count(i => i.Denomination > 0));
+
+                        // Update InvoiceHeader with receipt amounts (ReceivedLBP, ReceivedUSD)
+                        var invReceipt = saveData.InvoiceReceipt;
+                        if (invReceipt != null && (invReceipt.ReceiptAmount.HasValue && invReceipt.ReceiptAmount > 0 || invReceipt.ReceiptLocal.HasValue && invReceipt.ReceiptLocal > 0))
+                        {
+                            var updateReceiptSql = @"UPDATE Billing.dbo.InvoiceHeader SET ReceivedUSD = @ReceivedUSD, ReceivedLBP = @ReceivedLBP, ReceiptAmount = @ReceiptAmount WHERE ID = @InvoiceHeaderId";
+                            using var updateReceiptCmd = new SqlCommand(updateReceiptSql, billingConnection);
+                            updateReceiptCmd.Parameters.AddWithValue("@ReceivedUSD", invReceipt.ReceiptAmount ?? 0);
+                            updateReceiptCmd.Parameters.AddWithValue("@ReceivedLBP", invReceipt.ReceiptLocal ?? 0);
+                            updateReceiptCmd.Parameters.AddWithValue("@ReceiptAmount", invReceipt.TotalPaidInInvoiceCurrency ?? invReceipt.ReceiptAmount ?? 0);
+                            updateReceiptCmd.Parameters.AddWithValue("@InvoiceHeaderId", invoiceHeaderId.Value);
+                            await updateReceiptCmd.ExecuteNonQueryAsync();
+                            _logger.LogInformation("Updated InvoiceHeader {Id} with ReceivedUSD={Usd}, ReceivedLBP={Lbp}", invoiceHeaderId, invReceipt.ReceiptAmount, invReceipt.ReceiptLocal);
+                        }
+
+                        // Create Advance if requested (receipt < invoice net)
+                        if (saveOptions.CreateAdvance && invReceipt != null && admissionId.HasValue && invoiceHeaderId.HasValue)
+                        {
+                            try
+                            {
+                                var currency = (invReceipt.Currency ?? "USD").ToUpperInvariant();
+                                var advanceAmount = invReceipt.TotalPaidInInvoiceCurrency ?? 0;
+                                var receivedUsd = invReceipt.ReceiptAmount ?? 0;
+                                var receivedLbp = invReceipt.ReceiptLocal ?? 0;
+
+                                int advanceNumber;
+                                var configConnStr = _configuration.GetConnectionString("ConfigurationConnection");
+                                if (!string.IsNullOrEmpty(configConnStr))
+                                {
+                                    using var configConn = new SqlConnection(configConnStr);
+                                    await configConn.OpenAsync();
+                                    var getNextSql = "SELECT ISNULL(LastAdvanceNumber, 0) + 1 FROM Configuration.dbo.TransactionSequenceControl WHERE IsDeleted = 0";
+                                    try
+                                    {
+                                        using var cmd = new SqlCommand(getNextSql, configConn);
+                                        advanceNumber = Convert.ToInt32(await cmd.ExecuteScalarAsync() ?? 1);
+                                    }
+                                    catch
+                                    {
+                                        getNextSql = "SELECT ISNULL(LastAdvanceNumber, 0) + 1 FROM Configuration.dbo.TransactionSequenceControl WHERE (IsDeleted = 0 OR IsDeleted IS NULL)";
+                                        using var cmd = new SqlCommand(getNextSql, configConn);
+                                        advanceNumber = Convert.ToInt32(await cmd.ExecuteScalarAsync() ?? 1);
+                                    }
+                                    var updateSeqSql = "UPDATE Configuration.dbo.TransactionSequence SET LastAdvanceNumber = @Val WHERE IsDeleted = 0";
+                                    try { using var upCmd = new SqlCommand(updateSeqSql, configConn); upCmd.Parameters.AddWithValue("@Val", advanceNumber); await upCmd.ExecuteNonQueryAsync(); }
+                                    catch { try { updateSeqSql = "UPDATE Configuration.dbo.TransactionSequenceControl SET LastAdvanceNumber = @Val WHERE (IsDeleted = 0 OR IsDeleted IS NULL)"; using var upCmd = new SqlCommand(updateSeqSql, configConn); upCmd.Parameters.AddWithValue("@Val", advanceNumber); await upCmd.ExecuteNonQueryAsync(); } catch { } }
+                                }
+                                else
+                                {
+                                    var admConnStr = _configuration.GetConnectionString("AdmissionConnection");
+                                    using var advConn = new SqlConnection(admConnStr);
+                                    await advConn.OpenAsync();
+                                    var maxSql = "SELECT ISNULL(MAX(AdvanceNumber), 0) + 1 FROM Admission.dbo.Advance";
+                                    try { using var cmd = new SqlCommand(maxSql, advConn); advanceNumber = Convert.ToInt32(await cmd.ExecuteScalarAsync() ?? 1); }
+                                    catch { advanceNumber = 1; }
+                                    advConn.Close();
+                                }
+
+                                string? invoiceNumber = null;
+                                try
+                                {
+                                    var getInvNumSql = "SELECT ISNULL(SequenceNumber, ID) FROM Billing.dbo.InvoiceHeader WHERE ID = @Id";
+                                    using var numCmd = new SqlCommand(getInvNumSql, billingConnection);
+                                    numCmd.Parameters.AddWithValue("@Id", invoiceHeaderId.Value);
+                                    var r = await numCmd.ExecuteScalarAsync();
+                                    invoiceNumber = r?.ToString() ?? invoiceHeaderId.ToString();
+                                }
+                                catch { invoiceNumber = invoiceHeaderId.ToString()!; }
+
+                                var advConnStr2 = _configuration.GetConnectionString("AdmissionConnection");
+                                using var advConn2 = new SqlConnection(advConnStr2);
+                                await advConn2.OpenAsync();
+
+                                int currencyId = (currency == "USD" || currency == "$$" || currency == "$.$") ? 2 : 1;
+                                decimal dbMain = currencyId == 1 ? advanceAmount / exchangeRate : advanceAmount;
+                                decimal dbLocal = currencyId == 2 ? advanceAmount * exchangeRate : advanceAmount;
+                                decimal safeRate = exchangeRate > 0 ? exchangeRate : 1m;
+
+                                // Try full INSERT first; fall back to minimal if schema differs
+                                var insertAdvanceSql = @"
+                                    INSERT INTO Admission.dbo.Advance 
+                                    (Date, Admission, AdvanceNumber, AdvanceAmount, DbMain, DbLocal, ReceiptAmount, 
+                                     ReceiptMain, ReceiptLocal, IsAssigned, Rate, Currency, 
+                                     ReceivedLBP, ReceivedUSD, InvoiceId, InvoiceNumber, IsDeleted, CreatedBy, CreatedDate)
+                                    VALUES (GETDATE(), @Admission, @AdvanceNumber, @AdvanceAmount, @DbMain, @DbLocal, 
+                                            @ReceiptAmount, @ReceiptMain, @ReceiptLocal, 0, @Rate, @Currency, 
+                                            @ReceivedLBP, @ReceivedUSD, @InvoiceId, @InvoiceNumber, 0, 338, GETDATE())";
+                                using var advCmd = new SqlCommand(insertAdvanceSql, advConn2);
+                                advCmd.Parameters.AddWithValue("@Admission", admissionId.Value);
+                                advCmd.Parameters.AddWithValue("@AdvanceNumber", advanceNumber);
+                                advCmd.Parameters.AddWithValue("@AdvanceAmount", advanceAmount);
+                                advCmd.Parameters.AddWithValue("@DbMain", dbMain);
+                                advCmd.Parameters.AddWithValue("@DbLocal", dbLocal);
+                                advCmd.Parameters.AddWithValue("@ReceiptAmount", advanceAmount);
+                                advCmd.Parameters.AddWithValue("@ReceiptMain", receivedUsd);
+                                advCmd.Parameters.AddWithValue("@ReceiptLocal", receivedLbp);
+                                advCmd.Parameters.AddWithValue("@Rate", safeRate);
+                                advCmd.Parameters.AddWithValue("@Currency", currencyId);
+                                advCmd.Parameters.AddWithValue("@ReceivedLBP", receivedLbp);
+                                advCmd.Parameters.AddWithValue("@ReceivedUSD", receivedUsd);
+                                advCmd.Parameters.AddWithValue("@InvoiceId", invoiceHeaderId.Value);
+                                advCmd.Parameters.AddWithValue("@InvoiceNumber", invoiceNumber ?? invoiceHeaderId.ToString()!);
+                                try
+                                {
+                                    string advancequery = GetDebugSql(advCmd);
+                                    await advCmd.ExecuteNonQueryAsync();
+                                    _logger.LogInformation("=== Advance created: AdvanceNumber={AdvNum}, Admission={Adm}, Amount={Amt} ===", advanceNumber, admissionId, advanceAmount);
+                                }
+                                catch (SqlException sqlEx)
+                                {
+                                    _logger.LogWarning(sqlEx, "Advance full INSERT failed (columns may differ). Trying minimal INSERT. Error: {Message}", sqlEx.Message);
+                                    using var advCmd2 = new SqlCommand(@"
+                                        INSERT INTO Admission.dbo.Advance (Admission, ReceiptNumber, ReceiptDate, AdvanceAmount, IsDeleted, CreatedBy, CreatedDate)
+                                        VALUES (@Admission, @ReceiptNumber, GETDATE(), @AdvanceAmount, 0, 338, GETDATE())", advConn2);
+                                    advCmd2.Parameters.AddWithValue("@Admission", admissionId.Value);
+                                    advCmd2.Parameters.AddWithValue("@ReceiptNumber", advanceNumber);
+                                    advCmd2.Parameters.AddWithValue("@AdvanceAmount", advanceAmount);
+                                    await advCmd2.ExecuteNonQueryAsync();
+                                    _logger.LogInformation("=== Advance created (minimal): AdvanceNumber={AdvNum}, Admission={Adm} ===", advanceNumber, admissionId);
+                                }
+                            }
+                            catch (Exception advEx)
+                            {
+                                _logger.LogWarning(advEx, "Failed to create Advance record. Error: {Message}. Inner: {Inner}. SQL State: {State}. Continuing.", 
+                                    advEx.Message, advEx.InnerException?.Message, (advEx as SqlException)?.State);
+                            }
+                        }
                     }
 
-                    // Commit transaction
-                    _logger.LogInformation("=== Committing transaction ===");
-                    admissionTransaction.Commit();
-                    _logger.LogInformation("=== Save_V1 SUCCESS - Transaction committed ===");
+                    // =====================================================
+                    // 4. SAVE DELIVERY HEADER + ITEMS (Inventory.dbo) - if medicament items present
+                    // =====================================================
+                    var deliverItemsList = saveData.DeliverItems;
+                    if (admissionId.HasValue && patientId.HasValue && deliverItemsList != null && deliverItemsList.Count > 0)
+                    {
+                        _logger.LogInformation("=== STEP 4: Creating DeliveryHeader and DeliverItems in Inventory ===");
+
+                        var inventoryConnectionString = _configuration.GetConnectionString("InventoryConnection");
+                        if (!string.IsNullOrEmpty(inventoryConnectionString))
+                        {
+                            using var invConnection = new SqlConnection(inventoryConnectionString);
+                            await invConnection.OpenAsync();
+                            using var invTransaction = invConnection.BeginTransaction();
+
+                            try
+                            {
+                                // Insert DeliverHeader (DeliveryHeader table - matches DeliveryHeaderController)
+                                var getMaxHeaderSql = "SELECT ISNULL(MAX([ID]), 0) + 1 FROM [dbo].[DeliveryHeader]";
+                                int newHeaderId;
+                                using (var cmd = new SqlCommand(getMaxHeaderSql, invConnection, invTransaction))
+                                {
+                                    newHeaderId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+                                }
+
+                                var dh = saveData.DeliverHeader ?? new QuickAdmissionDeliverHeader();
+                                var insertHeaderSql = @"
+                                    INSERT INTO [dbo].[DeliveryHeader] 
+                                    ([ID], [Type], [TypeCounter], [PatientType], [Date], [Patient], [Currency], [Warehouse], [Admission],
+                                     [Gross], [Net], [CreatedBy], [CreatedDate], [IsDeleted])
+                                    VALUES (@Id, @Type, @TypeCounter, @PatientType, @Date, @Patient, @Currency, @Warehouse, @Admission,
+                                     @Gross, @Net, @CreatedBy, GETDATE(), 0)";
+
+                                using (var headerCmd = new SqlCommand(insertHeaderSql, invConnection, invTransaction))
+                                {
+                                    headerCmd.Parameters.AddWithValue("@Id", newHeaderId);
+                                    headerCmd.Parameters.AddWithValue("@Type", dh.Type ?? 1);
+                                    headerCmd.Parameters.AddWithValue("@TypeCounter", dh.TypeCounter ?? 0);
+                                    headerCmd.Parameters.AddWithValue("@PatientType", dh.PatientType ?? 0);
+                                    headerCmd.Parameters.AddWithValue("@Date", !string.IsNullOrEmpty(dh.Date) ? DateTime.Parse(dh.Date) : DateTime.Now);
+                                    headerCmd.Parameters.AddWithValue("@Patient", patientId.Value);
+                                    headerCmd.Parameters.AddWithValue("@Currency", dh.Currency ?? 2);
+                                    headerCmd.Parameters.AddWithValue("@Warehouse", dh.Warehouse ?? 1);
+                                    headerCmd.Parameters.AddWithValue("@Admission", admissionId.Value);
+                                    var gross = deliverItemsList.Sum(d => (d.Net ?? 0));
+                                    headerCmd.Parameters.AddWithValue("@Gross", gross);
+                                    headerCmd.Parameters.AddWithValue("@Net", gross);
+                                    headerCmd.Parameters.AddWithValue("@CreatedBy", dh.CreatedBy ?? 338);
+                                    await headerCmd.ExecuteNonQueryAsync();
+                                }
+
+                                // Insert each DeliverItem (DeliverItem table - matches Inventory.dbo.DeliverItem)
+                                foreach (var di in deliverItemsList)
+                                {
+                                    var getMaxItemSql = "SELECT ISNULL(MAX([id]), 0) + 1 FROM [dbo].[DeliverItem]";
+                                    int newItemId;
+                                    using (var cmd = new SqlCommand(getMaxItemSql, invConnection, invTransaction))
+                                    {
+                                        newItemId = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+                                    }
+
+                                    var insertItemSql = @"
+                                        INSERT INTO [dbo].[DeliverItem] 
+                                        ([id], [DeliverHeader], [Product], [Package], [Code], [AlternateDescription], [Qty], [UnitPrice], [Net], [CreatedBy], [CreatedDate], [IsDeleted])
+                                        VALUES (@Id, @DeliverHeader, @Product, @Package, @Code, @AlternateDescription, @Qty, @UnitPrice, @Net, @CreatedBy, GETDATE(), 0)";
+
+                                    using (var itemCmd = new SqlCommand(insertItemSql, invConnection, invTransaction))
+                                    {
+                                        itemCmd.Parameters.AddWithValue("@Id", newItemId);
+                                        itemCmd.Parameters.AddWithValue("@DeliverHeader", newHeaderId);
+                                        itemCmd.Parameters.AddWithValue("@Product", di.Product ?? 0);
+                                        itemCmd.Parameters.AddWithValue("@Package", di.Package ?? 0);
+                                        itemCmd.Parameters.AddWithValue("@Code", di.Code ?? "");
+                                        itemCmd.Parameters.AddWithValue("@AlternateDescription", di.AlternateDescription ?? "");
+                                        itemCmd.Parameters.AddWithValue("@Qty", di.Qty ?? 0);
+                                        itemCmd.Parameters.AddWithValue("@UnitPrice", di.UnitPrice ?? 0);
+                                        itemCmd.Parameters.AddWithValue("@Net", di.Net ?? 0);
+                                        itemCmd.Parameters.AddWithValue("@CreatedBy", 338);
+                                        await itemCmd.ExecuteNonQueryAsync();
+                                    }
+                                }
+
+                                invTransaction.Commit();
+                                _logger.LogInformation("=== STEP 4 COMPLETE: DeliveryHeader {HeaderId} and {ItemCount} DeliverItems created ===", newHeaderId, deliverItemsList.Count);
+                            }
+                            catch (Exception ex)
+                            {
+                                invTransaction.Rollback();
+                                _logger.LogWarning(ex, "Failed to save DeliverHeader/DeliverItems to Inventory - transaction rolled back");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("InventoryConnection not configured - skipping DeliverHeader/DeliverItems save");
+                        }
+                    }
+
+                    _logger.LogInformation("=== Save_V1 SUCCESS ===");
                     _logger.LogInformation("Final results - MRN: {MRN}, PatientID: {PatientID}, AdmissionID: {AdmissionID}, AdmissionNumber: {AdmissionNumber}, InvoiceHeaderID: {InvoiceHeaderID}",
                         mrn, patientId, admissionId, admissionNumber, invoiceHeaderId);
 
@@ -645,7 +978,6 @@ namespace LIS.Api.Controllers
                 }
                 catch (Exception ex)
                 {
-                    admissionTransaction.Rollback();
                     var stackTrace = new System.Diagnostics.StackTrace(ex, true);
                     var frame = stackTrace.GetFrame(0);
                     var className = frame?.GetMethod()?.DeclaringType?.Name ?? "Unknown";
@@ -966,6 +1298,41 @@ namespace LIS.Api.Controllers
         public QuickAdmissionPatient? Patient { get; set; }
         public QuickAdmissionAdmission? Admission { get; set; }
         public List<QuickAdmissionInvoiceItem>? Invoice { get; set; }
+        public QuickAdmissionInvoiceReceipt? InvoiceReceipt { get; set; }
+        public QuickAdmissionDeliverHeader? DeliverHeader { get; set; }
+        public List<QuickAdmissionDeliverItem>? DeliverItems { get; set; }
+    }
+
+    public class QuickAdmissionInvoiceReceipt
+    {
+        public string? Currency { get; set; }
+        public decimal? ReceiptAmount { get; set; }
+        public decimal? ReceiptLocal { get; set; }
+        public decimal? InvoiceNet { get; set; }
+        public decimal? TotalPaidInInvoiceCurrency { get; set; }
+    }
+
+    public class QuickAdmissionDeliverHeader
+    {
+        public int? Type { get; set; }
+        public int? TypeCounter { get; set; }
+        public int? PatientType { get; set; }
+        public string? Date { get; set; }
+        public int? Currency { get; set; }
+        public int? Warehouse { get; set; }
+        public int? CreatedBy { get; set; }
+    }
+
+    public class QuickAdmissionDeliverItem
+    {
+        public int? Product { get; set; }
+        public int? Package { get; set; }
+        public string? Code { get; set; }
+        public string? AlternateDescription { get; set; }
+        public decimal? Qty { get; set; }
+        public decimal? UnitPrice { get; set; }
+        public decimal? Net { get; set; }
+        public string? PLDescription { get; set; }
     }
 
     public class QuickAdmissionPatient
@@ -1026,5 +1393,6 @@ namespace LIS.Api.Controllers
         public bool SaveMedicalFile { get; set; } = true;
         public bool SaveAdmission { get; set; } = true;
         public bool SaveInvoice { get; set; } = true;
+        public bool CreateAdvance { get; set; } = false;
     }
 }

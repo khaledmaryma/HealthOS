@@ -1,6 +1,7 @@
 export interface Department {
   id: number;
   name?: string | null;
+  departmentName?: string | null;
   description?: string | null;
   code?: string | null;
   isActive?: boolean | null;

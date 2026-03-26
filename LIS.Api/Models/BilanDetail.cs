@@ -64,4 +64,10 @@ public class BilanDetail
     [Column("DenominationDescription")]
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public string? DenominationDescription { get; set; }
+
+    [Column("PriceUsd")]
+    public decimal? PriceUsd { get; set; }
+
+    [Column("PriceLlbp")]
+    public decimal? PriceLlbp { get; set; }
 }

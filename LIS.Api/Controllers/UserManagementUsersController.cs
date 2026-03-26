@@ -10,10 +10,12 @@ namespace LIS.Api.Controllers
     public class UserManagementUsersController : ControllerBase
     {
         private readonly HISUsersDbContext _db;
+        private readonly HospitalDefinitionDbContext _hospitalDb;
 
-        public UserManagementUsersController(HISUsersDbContext db)
+        public UserManagementUsersController(HISUsersDbContext db, HospitalDefinitionDbContext hospitalDb)
         {
             _db = db;
+            _hospitalDb = hospitalDb;
         }
 
         [HttpGet]
@@ -89,6 +91,7 @@ namespace LIS.Api.Controllers
             existing.Email = input.Email;
             existing.IsActive = input.IsActive;
             existing.IsDeleted = input.IsDeleted;
+            existing.DepartmentId = input.DepartmentId;
             if (!string.IsNullOrWhiteSpace(input.Password))
             {
                 existing.Password = input.Password;
@@ -142,6 +145,8 @@ namespace LIS.Api.Controllers
                 .FirstOrDefaultAsync(p => p.Id == user.ProfileId && !p.IsDeleted);
             var isAdminProfile = profile?.IsAdmin == true;
 
+            var userDeptInfo = await GetUserDepartmentInfo(user.DepartmentId);
+
             if (isAdminProfile)
             {
                 var adminApps = await _db.AppDefinitions
@@ -180,7 +185,7 @@ namespace LIS.Api.Controllers
                     )).ToList()
                 );
 
-                return Ok(new LoginResponse(user.Id, user.Username, user.FullName, adminAccess));
+                return Ok(new LoginResponse(user.Id, user.Username, user.FullName, userDeptInfo.DepartmentId, userDeptInfo.DepartmentName, adminAccess, true));
             }
 
             var permissionRows = await _db.ProfilePermissions
@@ -279,7 +284,24 @@ namespace LIS.Api.Controllers
 
             var access = new LoginAccess(accessApps, accessScreens, accessPermissions);
 
-            return Ok(new LoginResponse(user.Id, user.Username, user.FullName, access));
+            return Ok(new LoginResponse(user.Id, user.Username, user.FullName, userDeptInfo.DepartmentId, userDeptInfo.DepartmentName, access, false));
+        }
+
+        private async Task<(int? DepartmentId, string? DepartmentName)> GetUserDepartmentInfo(int? deptId)
+        {
+            if (deptId == null || deptId <= 0)
+                return (null, null);
+            try
+            {
+                var dept = await _hospitalDb.Departments
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(d => d.Id == deptId && (d.IsDeleted == null || d.IsDeleted == false));
+                return (deptId, dept?.DepartmentName ?? dept?.Code ?? null);
+            }
+            catch
+            {
+                return (deptId, null);
+            }
         }
 
         public sealed record LoginRequest(string Username, string Password);
@@ -303,6 +325,6 @@ namespace LIS.Api.Controllers
             IReadOnlyList<LoginAccessScreen> Screens,
             IReadOnlyList<LoginAccessPermission> Permissions
         );
-        public sealed record LoginResponse(int Id, string Username, string FullName, LoginAccess Access);
+        public sealed record LoginResponse(int Id, string Username, string FullName, int? DepartmentId, string? DepartmentName, LoginAccess Access, bool IsAdmin);
     }
 }

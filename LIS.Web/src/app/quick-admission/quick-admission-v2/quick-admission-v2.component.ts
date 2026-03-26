@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { ApiUrlService } from '../../api/api-url.service';
 import { QuickAdmissionV2Service } from './quick-admission-v2.service';
 import { BillingService } from '../../services/billing.service';
 import { DepartmentService } from '../../services/department.service';
@@ -43,7 +44,7 @@ interface EditingDetailState {
   styleUrl: './quick-admission-v2.component.scss'
 })
 export class QuickAdmissionV2Component implements OnInit {
-  private apiUrl = 'http://localhost:5050/api';
+  private readonly apiUrl = inject(ApiUrlService).api('/api');
   private v2Service = inject(QuickAdmissionV2Service);
   private billingService = inject(BillingService);
   private departmentService = inject(DepartmentService);

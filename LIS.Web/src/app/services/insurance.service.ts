@@ -1,13 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Insurance } from '../models/insurance';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class InsuranceService {
-  private apiUrl = 'http://localhost:5050/api/HospitalDefinition/Insurance';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiUrl = this.endpoints.insurance;
 
   constructor(private http: HttpClient) { }
 

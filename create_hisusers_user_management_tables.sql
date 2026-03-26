@@ -216,3 +216,10 @@ BEGIN
     ADD [ProfileID] [int] NULL;
 END
 GO
+
+IF COL_LENGTH('dbo.UserDefinition', 'DepartmentID') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[UserDefinition]
+    ADD [DepartmentID] [int] NULL;
+END
+GO

@@ -1,4 +1,4 @@
-﻿using LIS.Api.Data;
+using LIS.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using LIS.Api.Repositories;
@@ -44,6 +44,9 @@ builder.Services.AddDbContext<HISUsersDbContext>(options =>
 
 // Use SQL Server repository for LabTests
 builder.Services.AddScoped<ILabTestsRepository, SqlLabTestsRepository>();
+
+// Dapper-based QuickAdmission repository (for future Save_V1 refactor)
+builder.Services.AddScoped<QuickAdmissionDapperRepository>();
 
 // CORS for Angular dev server
 const string CorsPolicy = "AllowAngular";

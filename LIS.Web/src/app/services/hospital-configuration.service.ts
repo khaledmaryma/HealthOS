@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 export interface HospitalConfiguration {
   id: number;
@@ -18,7 +19,8 @@ export interface HospitalConfiguration {
 })
 export class HospitalConfigurationService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5050/api/HospitalConfiguration';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiUrl = this.endpoints.hospitalConfiguration;
 
   readonly config = signal<HospitalConfiguration | null>(null);
 

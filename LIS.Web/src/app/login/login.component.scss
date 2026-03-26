@@ -1,19 +1,81 @@
 .login-page {
   min-height: calc(100vh - 72px);
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 2rem;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e8eef6 50%, #f5f7fb 100%);
+  padding: 2rem;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .login-page {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    max-width: 1100px;
+  }
+}
+
+.login-hero {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f5f7fb;
-  padding: 2rem;
+  text-align: center;
+}
+
+.login-hero-frame {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 4 / 3;
+  max-height: min(52vh, 420px);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow:
+    0 20px 50px rgba(13, 110, 253, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08);
+  background: #e8eef4;
+  border: 1px solid rgba(13, 110, 253, 0.12);
+}
+
+.login-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.login-hero-caption {
+  margin-top: 1rem;
+  max-width: 28rem;
 }
 
 .login-card {
-  width: 360px;
-  max-width: 90vw;
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 380px;
   background: #fff;
   border-radius: 0.75rem;
   padding: 2rem;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
   display: grid;
   gap: 0.5rem;
+  align-self: center;
+}
+
+@media (min-width: 900px) {
+  .login-card {
+    margin-left: 0;
+  }
 }

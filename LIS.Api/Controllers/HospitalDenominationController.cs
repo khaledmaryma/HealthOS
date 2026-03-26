@@ -101,8 +101,64 @@ namespace LIS.Api.Controllers
         {
             try
             {
-                var denomination = await _context.Denominations
-                    .Where(d => d.Id == id && (d.IsDeleted == null || d.IsDeleted == 0))
+                // Use raw SQL for consistency with GetDenominationsForQuickAdmission/Search (avoids EF schema issues)
+                var sqlQuery = @"
+                    SELECT 
+                        [ID] AS [Id],
+                        COALESCE([SmallDescription], '') AS [SmallDescription],
+                        COALESCE([LongDescription], '') AS [LongDescription],
+                        COALESCE([Code], '') AS [Code],
+                        COALESCE([Abreviation], '') AS [Abreviation],
+                        COALESCE([HasOperatingPhysician], 0) AS [HasOperatingPhysician],
+                        COALESCE([HasAnesthesiaPhysician], 0) AS [HasAnesthesiaPhysician],
+                        COALESCE([HasOperatingRoom], 0) AS [HasOperatingRoom],
+                        COALESCE([IsHonoraryExcluded], 0) AS [IsHonoraryExcluded],
+                        COALESCE([IsResidenceRelated], 0) AS [IsResidenceRelated],
+                        COALESCE([HasMedicalResult], 0) AS [HasMedicalResult],
+                        COALESCE([App], 0) AS [App],
+                        COALESCE(CAST([OperatingRoom] AS NVARCHAR(MAX)), '') AS [OperatingRoom],
+                        COALESCE([CoefficientCode], '') AS [CoefficientCode],
+                        COALESCE([CoefficientValue], 0) AS [CoefficientValue],
+                        COALESCE([CashPriceUsd], 0) AS [CashPriceUsd],
+                        COALESCE([CashPriceLlbp], 0) AS [CashPriceLlbp],
+                        COALESCE([Status], 0) AS [Status],
+                        COALESCE(CAST([DisplayOrder] AS NVARCHAR(MAX)), '') AS [DisplayOrder],
+                        COALESCE(CAST([CostCenter] AS NVARCHAR(MAX)), '') AS [CostCenter],
+                        COALESCE([ExpectedResidenceDays], 0) AS [ExpectedResidenceDays],
+                        COALESCE([IsSubItem], 0) AS [IsSubItem],
+                        COALESCE([IsDeleted], 0) AS [IsDeleted],
+                        COALESCE([CreatedBy], 0) AS [CreatedBy],
+                        COALESCE([ModifiedBy], 0) AS [ModifiedBy],
+                        COALESCE([CreatedDate], GETDATE()) AS [CreatedDate],
+                        NULL AS [ModifiedDate],
+                        COALESCE([StartDate], 0) AS [StartDate],
+                        COALESCE([StartDateLabel], 0) AS [StartDateLabel],
+                        COALESCE([EndDate], 0) AS [EndDate],
+                        COALESCE([EndDateLabel], 0) AS [EndDateLabel],
+                        COALESCE([IsSelectedOrNot], 0) AS [IsSelectedOrNot],
+                        COALESCE([SeverityID], 0) AS [SeverityId],
+                        COALESCE([StatusID], 0) AS [StatusId],
+                        COALESCE([Comments], '') AS [Comments],
+                        COALESCE([InCrAppCode], '') AS [InCrAppCode],
+                        COALESCE([InCaAppCode], '') AS [InCaAppCode],
+                        COALESCE([OutCrAppCode], '') AS [OutCrAppCode],
+                        COALESCE([OutCaAppCode], '') AS [OutCaAppCode],
+                        COALESCE([DenominationDefaultTime], 0) AS [DenominationDefaultTime],
+                        COALESCE([Rate], 0) AS [Rate],
+                        COALESCE([HasVideo], 0) AS [HasVideo],
+                        COALESCE([IsOpenHeart], 0) AS [IsOpenHeart],
+                        COALESCE([IsReferralShare], 0) AS [IsReferralShare],
+                        COALESCE([ReferralAmount], 0) AS [ReferralAmount],
+                        COALESCE([DenominationGroupID], 0) AS [DenominationGroupId],
+                        COALESCE([IsClassRelated], 0) AS [IsClassRelated],
+                        COALESCE([CreditDiscount], '') AS [CreditDiscount],
+                        COALESCE([CashDiscount], '') AS [CashDiscount],
+                        COALESCE([IsPrintable], 0) AS [IsPrintable]
+                    FROM [dbo].[Denomination]
+                    WHERE [ID] = {0} AND COALESCE([IsDeleted], 0) = 0";
+
+                var denomination = await _context.Database
+                    .SqlQueryRaw<HospitalDenomination>(sqlQuery, id)
                     .FirstOrDefaultAsync();
 
                 if (denomination == null)
@@ -114,8 +170,8 @@ namespace LIS.Api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving denomination {Id}", id);
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error retrieving denomination {Id}. Details: {Details}", id, ex.InnerException?.Message);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 

@@ -803,3 +803,117 @@
   }
 }
 
+// Medicament Popup Modal - larger width and height
+.medicament-modal-dialog {
+  max-width: 95vw;
+  width: 1200px;
+  min-height: 80vh;
+}
+
+.medicament-modal {
+  .modal-body {
+    min-height: 60vh;
+  }
+
+  .medicament-grid-container {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .medicament-autocomplete-dropdown {
+    position: absolute;
+    z-index: 2100;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    max-height: 240px;
+    overflow-y: auto;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    width: 100%;
+    top: 100%;
+    left: 0;
+    margin-top: 2px;
+  }
+
+  .medicament-autocomplete-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.15s ease;
+    font-size: 0.875rem;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover,
+    &.active {
+      background-color: #cff4fc;
+    }
+
+    .medicament-item-code {
+      font-weight: 600;
+      color: #0d6efd;
+      font-size: 0.9rem;
+    }
+
+    .medicament-item-desc {
+      color: #212529;
+      margin-top: 2px;
+    }
+
+    .medicament-item-pl {
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+  }
+}
+
+// Bilan Popup Modal
+.bilan-modal-dialog {
+  max-width: 95vw;
+  width: 1100px;
+  min-height: 60vh;
+}
+
+.bilan-modal {
+  .modal-body {
+    min-height: 400px;
+  }
+
+  .bilan-list-container {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background: #fff;
+
+    .bilan-list-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background-color 0.15s ease;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background-color: #f8f9fa;
+      }
+
+      &.selected {
+        background-color: #cff4fc;
+        border-left: 3px solid #0d6efd;
+      }
+    }
+  }
+
+  .bilan-details-grid {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+  }
+}
+

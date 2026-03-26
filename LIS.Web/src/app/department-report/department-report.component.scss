@@ -36,6 +36,12 @@
   vertical-align: middle;
 }
 
+/* Advance rows: distinct styling */
+tr.advance-row {
+  background-color: rgba(13, 202, 240, 0.15) !important;
+  border-left: 3px solid #0dcaf0;
+}
+
 .grand-totals-section {
   border: 2px solid #dee2e6;
 }

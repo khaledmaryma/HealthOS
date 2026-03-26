@@ -48,5 +48,8 @@ namespace LIS.Api.Models.UserManagement
 
         [Column("ModifiedDate")]
         public DateTime? ModifiedDate { get; set; }
+
+        [Column("DepartmentID")]
+        public int? DepartmentId { get; set; }
     }
 }

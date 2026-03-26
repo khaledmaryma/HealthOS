@@ -1,9 +1,12 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router, RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthorizationService } from './auth/authorization.service';
 import { LoginAccess } from './models/user-management';
 
-type AppName = 'LIS' | 'Inventory' | 'UserManagement' | 'Accounting';
+type AppName = 'LIS' | 'Inventory' | 'UserManagement' | 'Accounting' | 'EMR';
+
+const ALL_APPS: readonly AppName[] = ['LIS', 'Inventory', 'UserManagement', 'Accounting', 'EMR'];
 
 @Component({
   selector: 'app-root',
@@ -17,14 +20,17 @@ export class App implements OnInit, OnDestroy {
   protected readonly activeApp = signal<AppName>('LIS');
   protected readonly isLauncherOpen = signal(false);
   protected readonly loggedInUser = signal('Guest');
-  protected readonly allowedApps = signal<Set<AppName>>(new Set(['LIS', 'Inventory', 'UserManagement', 'Accounting']));
+  protected readonly loggedInUserDepartment = signal<string | null>(null);
+  protected readonly allowedApps = signal<Set<AppName>>(new Set([...ALL_APPS]));
   protected readonly fontScale = signal(1);
   protected readonly controlScale = signal(1);
   protected readonly currentTime = signal('');
   private timeIntervalId: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private readonly router: Router) {
-  }
+  constructor(
+    private readonly router: Router,
+    private readonly auth: AuthorizationService
+  ) {}
 
   ngOnInit(): void {
     const storedFontScale = Number(localStorage.getItem('appFontScale') || '1');
@@ -35,6 +41,8 @@ export class App implements OnInit, OnDestroy {
     if (storedUser) {
       this.loggedInUser.set(storedUser);
     }
+    const storedDept = localStorage.getItem('loggedInUserDepartmentName');
+    this.loggedInUserDepartment.set(storedDept || null);
     this.allowedApps.set(this.resolveAllowedApps());
     const allowed = this.allowedApps();
     if (!allowed.has(this.activeApp())) {
@@ -66,15 +74,11 @@ export class App implements OnInit, OnDestroy {
     this.activeApp.set(app);
     this.isLauncherOpen.set(false);
 
-    if (app === 'LIS') {
-      this.router.navigate(['/labtests']);
-    } else if (app === 'Inventory') {
-      this.router.navigate(['/inventory']);
-    } else if (app === 'UserManagement') {
-      this.router.navigate(['/user-management/users']);
-    } else if (app === 'Accounting') {
-      this.router.navigate(['/accounting/journal-voucher']);
-    }
+    if (app === 'LIS') this.router.navigate(['/lis/home']);
+    else if (app === 'Inventory') this.router.navigate(['/inventory/home']);
+    else if (app === 'UserManagement') this.router.navigate(['/user-management/home']);
+    else if (app === 'Accounting') this.router.navigate(['/accounting/home']);
+    else if (app === 'EMR') this.router.navigate(['/emr/home']);
   }
 
   isAppAllowed(app: AppName): boolean {
@@ -106,9 +110,13 @@ export class App implements OnInit, OnDestroy {
   }
 
   private resolveAllowedApps(): Set<AppName> {
+    if (this.auth.isAdmin()) {
+      return new Set(ALL_APPS);
+    }
+
     const raw = localStorage.getItem('userAccess');
     if (!raw) {
-      return new Set(['LIS', 'Inventory', 'UserManagement', 'Accounting']);
+      return new Set(ALL_APPS);
     }
 
     try {
@@ -124,10 +132,10 @@ export class App implements OnInit, OnDestroy {
       if (allowed.size) {
         return allowed;
       }
-      // If access exists but no app matched, allow all to avoid locking admin users out
-      return new Set(['LIS', 'Inventory', 'UserManagement', 'Accounting']);
+      // If access exists but no app matched, allow all to avoid locking users out
+      return new Set(ALL_APPS);
     } catch {
-      return new Set(['LIS', 'Inventory', 'UserManagement', 'Accounting']);
+      return new Set(ALL_APPS);
     }
   }
 
@@ -137,6 +145,7 @@ export class App implements OnInit, OnDestroy {
     if (normalized.includes('inventory') || normalized.includes('inv')) return 'Inventory';
     if (normalized.includes('usermanagement') || normalized.includes('user') || normalized.includes('um')) return 'UserManagement';
     if (normalized.includes('accounting') || normalized.includes('acc')) return 'Accounting';
+    if (normalized.includes('emr')) return 'EMR';
     return null;
   }
 }

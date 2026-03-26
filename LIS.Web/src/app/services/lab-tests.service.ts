@@ -1,5 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { ApiUrlService } from '../api/api-url.service';
 
 export interface LabTest {
   id: number;
@@ -114,14 +115,14 @@ export interface LabTestSub {
 @Injectable({ providedIn: 'root' })
 export class LabTestsService {
   private http = inject(HttpClient);
-  // Adjust if API base differs
-  private readonly labTestsUrl = 'http://localhost:5050/api/labtests';
-  private readonly resultTypesUrl = 'http://localhost:5050/api/resulttypes';
-  private readonly unitOfMeasuresUrl = 'http://localhost:5050/api/unitofmeasures';
-  private readonly denominationUrl = 'http://localhost:5050/api/denomination';
-  private readonly labTestAgeUrl = 'http://localhost:5050/api/labtestage';
-  private readonly labTestGynecoUrl = 'http://localhost:5050/api/labtestgyneco';
-  private readonly labTestSubUrl = 'http://localhost:5050/api/labtestsub';
+  private readonly urls = inject(ApiUrlService);
+  private readonly labTestsUrl = this.urls.api('/api/labtests');
+  private readonly resultTypesUrl = this.urls.api('/api/resulttypes');
+  private readonly unitOfMeasuresUrl = this.urls.api('/api/unitofmeasures');
+  private readonly denominationUrl = this.urls.api('/api/denomination');
+  private readonly labTestAgeUrl = this.urls.api('/api/labtestage');
+  private readonly labTestGynecoUrl = this.urls.api('/api/labtestgyneco');
+  private readonly labTestSubUrl = this.urls.api('/api/labtestsub');
 
   readonly items = signal<LabTest[]>([]);
   readonly resultTypes = signal<ResultType[]>([]);

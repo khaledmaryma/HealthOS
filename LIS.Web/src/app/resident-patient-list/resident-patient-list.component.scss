@@ -1,3 +1,54 @@
+.unpaid-private-modal-dialog {
+  max-width: min(1480px, 98vw);
+  width: 98vw;
+  margin: 0.75rem auto;
+  max-height: calc(100vh - 1.5rem);
+  display: flex;
+  align-items: stretch;
+}
+
+.unpaid-private-modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 1.5rem);
+  min-height: 0;
+  width: 100%;
+}
+
+.unpaid-private-modal-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.unpaid-private-table-scroll {
+  flex: 1 1 auto;
+  min-height: 12rem;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  .unpaid-private-invoice-table {
+    min-width: 1280px;
+  }
+
+  thead.table-dark th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: #212529;
+    color: #fff;
+    border-bottom-width: 1px;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.unpaid-private-receipt-input {
+  min-width: 5.5rem;
+  max-width: 7rem;
+}
+
 .resident-patient-container {
   height: 100vh;
   display: flex;

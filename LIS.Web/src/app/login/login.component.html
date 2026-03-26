@@ -1,4 +1,19 @@
 <div class="login-page">
+  <div class="login-hero" aria-hidden="false">
+    <div class="login-hero-frame">
+      <img
+        class="login-hero-img"
+        [src]="heroImageSrc()"
+        [alt]="heroImageAlt()"
+        loading="eager"
+        decoding="async"
+      />
+    </div>
+    <p class="login-hero-caption text-muted small mb-0">
+      Trusted tools for laboratory, billing, and hospital operations.
+    </p>
+  </div>
+
   <form class="login-card" (submit)="submit($event)">
     <h2>Sign In</h2>
     <p class="text-muted">Use your User Management credentials.</p>

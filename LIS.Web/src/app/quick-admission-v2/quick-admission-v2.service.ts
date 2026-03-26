@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { inject } from '@angular/core';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 export interface SaveOptions {
   savePatient: boolean;
@@ -66,7 +68,7 @@ export interface SaveRequest {
 
 @Injectable({ providedIn: 'root' })
 export class QuickAdmissionV2Service {
-  private baseUrl = '/api/QuickAdmissionV2';
+  private readonly baseUrl = inject(ApiEndpointsService).quickAdmissionV2;
 
   constructor(private http: HttpClient) { }
 

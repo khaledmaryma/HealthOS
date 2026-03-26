@@ -2,6 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 @Component({
   selector: 'app-gemini-chat',
@@ -12,7 +13,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class GeminiChatComponent {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5050/api/ChatGpt';
+  private readonly apiUrl = inject(ApiEndpointsService).chatGpt;
 
   // Using regular properties for two-way binding with forms
   promptText = '';

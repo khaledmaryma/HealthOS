@@ -1,6 +1,9 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:7000' // Default API URL - adjust as needed
+  // Base API URL for this environment (single place to change)
+  apiBaseUrl: 'http://localhost:5050',
+  // Backward compatibility for older code paths (will be removed later)
+  apiUrl: 'http://localhost:5050'
 };
 
 

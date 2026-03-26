@@ -79,6 +79,7 @@ export interface UserDefinition {
   createdDate: string;
   modifiedBy?: number | null;
   modifiedDate?: string | null;
+  departmentId?: number | null;
 }
 
 export interface LoginRequest {
@@ -126,5 +127,9 @@ export interface LoginResponse {
   id: number;
   username: string;
   fullName: string;
+  departmentId?: number | null;
+  departmentName?: string | null;
   access: LoginAccess;
+  /** True when the user's profile has IsAdmin (server-side); bypasses permission checks in the client. */
+  isAdmin?: boolean;
 }

@@ -13,6 +13,7 @@ namespace LIS.Api.Data
         public DbSet<ProfilePermission> ProfilePermissions { get; set; } = null!;
         public DbSet<AppDefinition> AppDefinitions { get; set; } = null!;
         public DbSet<ScreenDefinition> ScreenDefinitions { get; set; } = null!;
+        public DbSet<UserKpiDefinition> UserKpiDefinitions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,6 +52,10 @@ namespace LIS.Api.Data
                 .WithMany(s => s.Permissions)
                 .HasForeignKey(p => p.ScreenId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserKpiDefinition>()
+                .HasIndex(e => new { e.UserId, e.AppKey, e.HomePageId })
+                .HasDatabaseName("IX_UserKpi_User_App_Home");
         }
     }
 }

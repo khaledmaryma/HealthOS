@@ -89,5 +89,12 @@ namespace LIS.Api.Models
         public string? DiagnosticGroup1 { get; set; }
         public string? DiagnosticGroup2 { get; set; }
         public string? DiagnosticGroup3 { get; set; }
+        public decimal? InvTotal { get; set; }
+        public string? ReceiptNumber { get; set; }
+        public DateTime? ReceiptDate { get; set; }
+        public string? Currency { get; set; }
+        public string? AdvReceiptNumber { get; set; }
+        public DateTime? AdvReceiptDate { get; set; }
+        public decimal? AdvanceAmount { get; set; }
     }
 }

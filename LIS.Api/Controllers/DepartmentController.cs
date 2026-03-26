@@ -37,7 +37,7 @@ namespace LIS.Api.Controllers
                     _logger.LogInformation("Attempting EF Core query for departments");
                     var departments = await _context.Departments
                         .Where(d => d.IsDeleted == null || d.IsDeleted == false)
-                        .OrderBy(d => d.Name)
+                        .OrderBy(d => d.DepartmentName)
                         .ToListAsync();
                     
                     _logger.LogInformation("EF Core query returned {Count} departments", departments.Count);
@@ -194,18 +194,13 @@ namespace LIS.Api.Controllers
                                         // Try to read Name (could be Name or DepartmentName)
                                         if (availableColumns.Contains("Name"))
                                         {
-                                            dept.Name = reader.IsDBNull(reader.GetOrdinal("Name")) ? null : reader.GetString(reader.GetOrdinal("Name"));
+                                            dept.DepartmentName = reader.IsDBNull(reader.GetOrdinal("Name")) ? null : reader.GetString(reader.GetOrdinal("Name"));
                                         }
                                         else if (availableColumns.Contains("DepartmentName"))
                                         {
-                                            dept.Name = reader.IsDBNull(reader.GetOrdinal("DepartmentName")) ? null : reader.GetString(reader.GetOrdinal("DepartmentName"));
+                                            dept.DepartmentName = reader.IsDBNull(reader.GetOrdinal("DepartmentName")) ? null : reader.GetString(reader.GetOrdinal("DepartmentName"));
                                         }
 
-                                        // Try to read other optional columns
-                                        if (availableColumns.Contains("Description"))
-                                        {
-                                            dept.Description = reader.IsDBNull(reader.GetOrdinal("Description")) ? null : reader.GetString(reader.GetOrdinal("Description"));
-                                        }
                                         if (availableColumns.Contains("Code"))
                                         {
                                             dept.Code = reader.IsDBNull(reader.GetOrdinal("Code")) ? null : reader.GetString(reader.GetOrdinal("Code"));
@@ -235,7 +230,7 @@ namespace LIS.Api.Controllers
                                             dept.ModifiedDate = reader.IsDBNull(reader.GetOrdinal("ModifiedDate")) ? null : reader.GetDateTime(reader.GetOrdinal("ModifiedDate"));
                                         }
 
-                                        _logger.LogInformation("Read department: ID={Id}, Name={Name}, Code={Code}", dept.Id, dept.Name, dept.Code);
+                                        _logger.LogInformation("Read department: ID={Id}, Name={Name}, Code={Code}", dept.Id, dept.DepartmentName, dept.Code);
                                         departmentsList.Add(dept);
                                     }
                                     catch (Exception ex)

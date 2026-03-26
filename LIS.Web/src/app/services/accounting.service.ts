@@ -1,11 +1,52 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 export interface DepartmentCash {
   department: string;
   lbp: number;
   usd: number;
+}
+
+export interface CashierDetailRow {
+  dailyCounter?: number;
+  cashierDetailCounter?: number;
+  department?: string;
+  distributionTypeDescription?: string;
+  payedBY?: string;
+  mouvementNb?: string;
+  voucherNumber?: number;
+  amoutToBePayed?: number;
+  accountCurrency?: number;
+  collectionLBP?: number;
+  collectionUSD?: number;
+  differenceUSD?: number;
+  differenceLBP?: number;
+}
+
+export interface CashierDepartmentSummary {
+  department: string;
+  collectionLBP: number;
+  collectionUSD: number;
+}
+
+export interface CashierOpenDetailsResponse {
+  cashierHeaderId?: number | null;
+  openDate?: string;
+  details: CashierDetailRow[];
+  summary: CashierDepartmentSummary[];
+  totals: { totalLBP: number; totalUSD: number };
+}
+
+export interface CashierForPrintResponse {
+  cashierHeaderId?: number | null;
+  openDate?: string | null;
+  closeDate?: string | null;
+  closeTime?: string | null;
+  details: CashierDetailRow[];
+  summary: CashierDepartmentSummary[];
+  totals: { totalLBP: number; totalUSD: number };
 }
 
 export interface AccountIncome {
@@ -90,10 +131,29 @@ export interface VoucherSaveRequest {
 @Injectable({ providedIn: 'root' })
 export class AccountingService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:5050/api/Accounting';
+  private endpoints = inject(ApiEndpointsService);
+  private readonly apiUrl = this.endpoints.accounting;
 
   getDailyCashByDepartment(): Observable<DepartmentCash[]> {
     return this.http.get<DepartmentCash[]>(`${this.apiUrl}/DailyCashByDepartment`);
+  }
+
+  getCashierOpenDetails(): Observable<CashierOpenDetailsResponse> {
+    return this.http.get<CashierOpenDetailsResponse>(`${this.apiUrl}/CashierOpenDetails`);
+  }
+
+  /** draft=true: current open cashier; draft=false: last closed cashier */
+  getCashierForPrint(draft: boolean): Observable<CashierForPrintResponse> {
+    return this.http.get<CashierForPrintResponse>(`${this.apiUrl}/CashierForPrint`, {
+      params: { draft: String(draft) },
+    });
+  }
+
+  closeCashierAndOpenNew(newOpenDate: string): Observable<{ message: string; newOpenDate: string }> {
+    return this.http.post<{ message: string; newOpenDate: string }>(
+      `${this.apiUrl}/CloseCashierAndOpenNew`,
+      { newOpenDate }
+    );
   }
 
   getCurrentMonthIncomeByAccount(): Observable<AccountIncome[]> {

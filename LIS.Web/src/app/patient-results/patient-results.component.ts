@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 import { PatientResultsService, PatientLabResult, PatientLabSub } from '../services/patient-results.service';
 import { RichTextEditorComponent } from '../shared/rich-text-editor/rich-text-editor.component';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 export interface ResidentPatient {
   id: number;
@@ -99,7 +100,8 @@ function getDefaultFromDate(): string {
 export class PatientResultsComponent implements OnInit {
   private http = inject(HttpClient);
   private patientResultsService = inject(PatientResultsService);
-  private readonly apiUrl = 'http://localhost:5050/api/residentpatients';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiUrl = this.endpoints.residentPatientsLegacy;
 
   // Expose Math and Array to template
   Math = Math;
@@ -1195,7 +1197,7 @@ export class PatientResultsComponent implements OnInit {
 
   loadGerms(): void {
     console.log('🔄 Loading germs from API...');
-    this.http.get<Germ[]>('http://localhost:5050/api/Germs').subscribe({
+    this.http.get<Germ[]>(this.endpoints.germs).subscribe({
       next: (germs) => {
         this.allGerms.set(germs);
         console.log(`✅ Loaded ${germs.length} germs:`, germs.slice(0, 5));
@@ -1258,7 +1260,7 @@ export class PatientResultsComponent implements OnInit {
   }
 
   loadBacteriaForGerm(germId: number): void {
-    this.http.get<Bacteria[]>(`http://localhost:5050/api/Bacteria?germId=${germId}`).subscribe({
+    this.http.get<Bacteria[]>(`${this.endpoints.bacteria}?germId=${germId}`).subscribe({
       next: (bacteria) => {
         this.allBacteria.set(bacteria);
         console.log(`Loaded ${bacteria.length} bacteria for germ ${germId}`);
@@ -1315,7 +1317,7 @@ export class PatientResultsComponent implements OnInit {
     this.http.get<{
       header: any,
       details: PatientLabBacteriology[]
-    }>(`http://localhost:5050/api/PatientLabBacteriology/byPatientLabResult/${resultId}`).subscribe({
+    }>(`${this.endpoints.patientLabBacteriology}/byPatientLabResult/${resultId}`).subscribe({
       next: (response) => {
         if (response.header && response.details && response.details.length > 0) {
           const currentMap = this.antibiogramSelections();
@@ -1383,7 +1385,7 @@ export class PatientResultsComponent implements OnInit {
       detailsCreated: number,
       totalRecords: number,
       details: PatientLabBacteriology[]
-    }>('http://localhost:5050/api/PatientLabBacteriology/createForGerm', requestBody).subscribe({
+    }>(`${this.endpoints.patientLabBacteriology}/createForGerm`, requestBody).subscribe({
       next: (response) => {
         const currentMap = this.antibiogramSelections();
         const selection = currentMap.get(resultId) || {};
@@ -1447,7 +1449,7 @@ export class PatientResultsComponent implements OnInit {
       modifiedBy: 1 // Replace with actual user ID
     }));
 
-    this.http.put('http://localhost:5050/api/PatientLabBacteriology/batchUpdate', updates).subscribe({
+    this.http.put(`${this.endpoints.patientLabBacteriology}/batchUpdate`, updates).subscribe({
       next: (response: any) => {
         console.log('Bacteriology records saved successfully:', response);
         alert(`Saved ${response.count} bacteriology results successfully!`);

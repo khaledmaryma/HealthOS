@@ -46,6 +46,37 @@ namespace LIS.Api.Controllers
             public decimal USD { get; set; }
         }
 
+        /// <summary>Cashier detail row for open (CloseDate is null) cashier headers.</summary>
+        public class CashierDetailRowDto
+        {
+            public int? DailyCounter { get; set; }
+            public int? CashierDetailCounter { get; set; }
+            public string? Department { get; set; }
+            public string? DistributionTypeDescription { get; set; }
+            public string? PayedBY { get; set; }
+            public string? MouvementNb { get; set; }
+            public int? VoucherNumber { get; set; }
+            public decimal? AmoutToBePayed { get; set; }
+            public int? AccountCurrency { get; set; }
+            public decimal? CollectionLBP { get; set; }
+            public decimal? CollectionUSD { get; set; }
+            public decimal? DifferenceUSD { get; set; }
+            public decimal? DifferenceLBP { get; set; }
+        }
+
+        /// <summary>Summary by department for open cashier.</summary>
+        public class CashierDepartmentSummaryDto
+        {
+            public string Department { get; set; } = string.Empty;
+            public decimal CollectionLBP { get; set; }
+            public decimal CollectionUSD { get; set; }
+        }
+
+        public class CloseCashierRequest
+        {
+            public string? NewOpenDate { get; set; }
+        }
+
         public class AccountIncomeDto
         {
             public string AccountCode { get; set; } = string.Empty;
@@ -101,6 +132,333 @@ namespace LIS.Api.Controllers
             public int CurrencyID { get; set; }
             public string? AdmissionNB { get; set; }
             public int BeautyCount { get; set; }
+        }
+
+        /// <summary>Get cashier details for open cashier headers (CloseDate is null). Includes main grid data and department summary.</summary>
+        [HttpGet("CashierOpenDetails")]
+        public async Task<ActionResult<object>> GetCashierOpenDetails()
+        {
+            await using var conn = GetFinancialConnection();
+            if (conn.State != ConnectionState.Open)
+                await conn.OpenAsync();
+
+            var financialDbName = _configuration["FinancialDatabaseName"] ?? "Financial DB";
+            var fin = $"[{financialDbName}]";
+
+            var details = new List<CashierDetailRowDto>();
+            var summary = new List<CashierDepartmentSummaryDto>();
+            DateTime? openDate = null;
+            int? cashierHeaderId = null;
+
+            var openHeaderSql = $@"SELECT TOP 1 ch.ID, ch.OpenDate FROM {fin}.dbo.CashierHeader ch WHERE ISNULL(ch.IsDeleted, 0) = 0 AND ch.CloseDate IS NULL ORDER BY ch.ID DESC";
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = openHeaderSql;
+                await using var rdr = await cmd.ExecuteReaderAsync();
+                if (await rdr.ReadAsync())
+                {
+                    cashierHeaderId = rdr.IsDBNull(0) ? null : rdr.GetInt32(0);
+                    openDate = rdr.IsDBNull(1) ? null : rdr.GetDateTime(1);
+                }
+            }
+
+            var sqlWithLookup = $@"
+                SELECT 
+                    cd.DailyCounter,
+                    cd.CashierDetailCounter,
+                    cd.Department,
+                    dt.[Description] AS DistributionTypeDescription,
+                    cd.comment as PayedBY,
+                    cd.MouvementNb,
+                    cd.VoucherNumber,
+                    cd.AmoutToBePayed,
+                    cd.AccountCurrency,
+                    cd.CollectionLBP,
+                    cd.CollectionUSD,
+                    cd.DifferenceUSD,
+                    cd.DifferenceLBP
+                FROM {fin}.dbo.CashierHeader ch
+                INNER JOIN {fin}.dbo.CashierDetail cd ON ch.ID = cd.CashierHeaderID AND ISNULL(cd.IsDeleted, 0) = 0
+                LEFT JOIN {fin}.dbo.DistrubutionTypes dt ON cd.DistributionTypesID = dt.ID AND ISNULL(dt.IsDeleted, 0) = 0
+                WHERE ISNULL(ch.IsDeleted, 0) = 0 AND ch.CloseDate IS NULL
+                ORDER BY cd.DailyCounter, cd.CashierDetailCounter";
+
+            var sqlWithoutLookup = $@"
+                SELECT 
+                    cd.DailyCounter,
+                    cd.CashierDetailCounter,
+                    cd.Department,
+                    CAST(NULL AS NVARCHAR(255)) AS DistributionTypeDescription,
+                    cd.comment as PayedBY,
+                    cd.MouvementNb,
+                    cd.VoucherNumber,
+                    cd.AmoutToBePayed,
+                    cd.AccountCurrency,
+                    cd.CollectionLBP,
+                    cd.CollectionUSD,
+                    cd.DifferenceUSD,
+                    cd.DifferenceLBP
+                FROM {fin}.dbo.CashierHeader ch
+                INNER JOIN {fin}.dbo.CashierDetail cd ON ch.ID = cd.CashierHeaderID AND ISNULL(cd.IsDeleted, 0) = 0
+                WHERE ISNULL(ch.IsDeleted, 0) = 0 AND ch.CloseDate IS NULL
+                ORDER BY cd.DailyCounter, cd.CashierDetailCounter";
+
+            var sql = sqlWithLookup;
+            try
+            {
+                await using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = sql;
+                await using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    details.Add(new CashierDetailRowDto
+                    {
+                        DailyCounter = reader.IsDBNull(0) ? null : reader.GetInt32(0),
+                        CashierDetailCounter = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                        Department = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        DistributionTypeDescription = reader.IsDBNull(3) ? null : reader.GetString(3),
+                        PayedBY = reader.IsDBNull(4) ? null : reader.GetString(4),
+                        MouvementNb = reader.IsDBNull(5) ? null : reader.GetString(5),
+                        VoucherNumber = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                        AmoutToBePayed = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
+                        AccountCurrency = reader.IsDBNull(8) ? 2 : reader.GetInt32(8),
+                        CollectionLBP = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
+                        CollectionUSD = reader.IsDBNull(10) ? null : reader.GetDecimal(10),
+                        DifferenceUSD = reader.IsDBNull(11) ? null : reader.GetDecimal(11),
+                        DifferenceLBP = reader.IsDBNull(12) ? null : reader.GetDecimal(12)
+                    });
+                }
+                }
+            }
+            catch (SqlException ex) when (ex.Number == 208 || ex.Message.Contains("Invalid object name"))
+            {
+                details.Clear();
+                sql = sqlWithoutLookup;
+                await using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = sql;
+                    await using var reader = await cmd.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        details.Add(new CashierDetailRowDto
+                        {
+                            DailyCounter = reader.IsDBNull(0) ? null : reader.GetInt32(0),
+                            CashierDetailCounter = reader.IsDBNull(1) ? null : reader.GetInt32(1),
+                            Department = reader.IsDBNull(2) ? null : reader.GetString(2),
+                            DistributionTypeDescription = null,
+                            PayedBY = reader.IsDBNull(4) ? null : reader.GetString(4),
+                            MouvementNb = reader.IsDBNull(5) ? null : reader.GetString(5),
+                            VoucherNumber = reader.IsDBNull(6) ? null : reader.GetInt32(6),
+                            AmoutToBePayed = reader.IsDBNull(7) ? null : reader.GetDecimal(7),
+                            AccountCurrency = reader.IsDBNull(8) ? 2 : reader.GetInt32(8),
+                            CollectionLBP = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
+                            CollectionUSD = reader.IsDBNull(10) ? null : reader.GetDecimal(10),
+                            DifferenceUSD = reader.IsDBNull(11) ? null : reader.GetDecimal(11),
+                            DifferenceLBP = reader.IsDBNull(12) ? null : reader.GetDecimal(12)
+                        });
+                    }
+                }
+            }
+
+            var summarySql = $@"
+                SELECT 
+                    ISNULL(cd.Department, '(Blank)') AS Department,
+                    ISNULL(SUM(cd.CollectionLBP), 0) AS CollectionLBP,
+                    ISNULL(SUM(cd.CollectionUSD), 0) AS CollectionUSD
+                FROM {fin}.dbo.CashierHeader ch
+                INNER JOIN {fin}.dbo.CashierDetail cd ON ch.ID = cd.CashierHeaderID AND ISNULL(cd.IsDeleted, 0) = 0
+                WHERE ISNULL(ch.IsDeleted, 0) = 0 AND ch.CloseDate IS NULL
+                GROUP BY cd.Department
+                ORDER BY cd.Department";
+
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = summarySql;
+                await using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    summary.Add(new CashierDepartmentSummaryDto
+                    {
+                        Department = reader.IsDBNull(0) ? "(Blank)" : reader.GetString(0),
+                        CollectionLBP = reader.IsDBNull(1) ? 0m : reader.GetDecimal(1),
+                        CollectionUSD = reader.IsDBNull(2) ? 0m : reader.GetDecimal(2)
+                    });
+                }
+            }
+
+            var totalLBP = details.Sum(d => d.CollectionLBP ?? 0);
+            var totalUSD = details.Sum(d => d.CollectionUSD ?? 0);
+
+            return Ok(new
+            {
+                cashierHeaderId,
+                openDate = openDate?.ToString("yyyy-MM-dd"),
+                details,
+                summary,
+                totals = new { totalLBP, totalUSD }
+            });
+        }
+
+        /// <summary>Get cashier data for printing. draft=true: current open; draft=false: last closed.</summary>
+        [HttpGet("CashierForPrint")]
+        public async Task<ActionResult<object>> GetCashierForPrint([FromQuery] bool draft = true)
+        {
+            await using var conn = GetFinancialConnection();
+            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+            var fin = $"[{_configuration["FinancialDatabaseName"] ?? "Financial DB"}]";
+
+            string whereClause = draft
+                ? "ch.CloseDate IS NULL"
+                : "ch.CloseDate IS NOT NULL";
+            string orderClause = draft ? "ch.ID DESC" : "ch.CloseDate DESC, ch.ID DESC";
+
+            var headerSql = $@"SELECT TOP 1 ch.ID, ch.OpenDate, ch.CloseDate, ch.CloseTime FROM {fin}.dbo.CashierHeader ch WHERE ISNULL(ch.IsDeleted, 0) = 0 AND {whereClause} ORDER BY {orderClause}";
+            int? headerId = null;
+            DateTime? hOpenDate = null;
+            DateTime? hCloseDate = null;
+            TimeSpan? hCloseTime = null;
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = headerSql;
+                await using var rdr = await cmd.ExecuteReaderAsync();
+                if (await rdr.ReadAsync())
+                {
+                    headerId = rdr.IsDBNull(0) ? null : rdr.GetInt32(0);
+                    hOpenDate = rdr.IsDBNull(1) ? null : rdr.GetDateTime(1);
+                    hCloseDate = rdr.IsDBNull(2) ? null : rdr.GetDateTime(2);
+                    hCloseTime = rdr.IsDBNull(3) ? default(TimeSpan?) : rdr.GetFieldValue<TimeSpan>(3);
+                }
+            }
+            if (!headerId.HasValue)
+                return Ok(new { openDate = (string?)null, closeDate = (string?)null, details = Array.Empty<CashierDetailRowDto>(), summary = Array.Empty<CashierDepartmentSummaryDto>(), totals = new { totalLBP = 0m, totalUSD = 0m } });
+
+            var detailSql = $@"
+                SELECT cd.DailyCounter, cd.CashierDetailCounter, cd.Department, dt.[Description], cd.comment, cd.MouvementNb, cd.VoucherNumber, cd.AmoutToBePayed, cd.AccountCurrency, cd.CollectionLBP, cd.CollectionUSD, cd.DifferenceUSD, cd.DifferenceLBP
+                FROM {fin}.dbo.CashierDetail cd
+                LEFT JOIN {fin}.dbo.DistrubutionTypes dt ON cd.DistributionTypesID = dt.ID
+                WHERE cd.CashierHeaderID = @Hid AND ISNULL(cd.IsDeleted, 0) = 0
+                ORDER BY cd.DailyCounter, cd.CashierDetailCounter";
+            var detailList = new List<CashierDetailRowDto>();
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = detailSql;
+                cmd.Parameters.Add(new SqlParameter("@Hid", headerId.Value));
+                await using var rdr = await cmd.ExecuteReaderAsync();
+                while (await rdr.ReadAsync())
+                {
+                    detailList.Add(new CashierDetailRowDto
+                    {
+                        DailyCounter = rdr.IsDBNull(0) ? null : rdr.GetInt32(0),
+                        CashierDetailCounter = rdr.IsDBNull(1) ? null : rdr.GetInt32(1),
+                        Department = rdr.IsDBNull(2) ? null : rdr.GetString(2),
+                        DistributionTypeDescription = rdr.IsDBNull(3) ? null : rdr.GetString(3),
+                        PayedBY = rdr.IsDBNull(4) ? null : rdr.GetString(4),
+                        MouvementNb = rdr.IsDBNull(5) ? null : rdr.GetString(5),
+                        VoucherNumber = rdr.IsDBNull(6) ? null : rdr.GetInt32(6),
+                        AmoutToBePayed = rdr.IsDBNull(7) ? null : rdr.GetDecimal(7),
+                        AccountCurrency = rdr.IsDBNull(8) ? 2 : rdr.GetInt32(8),
+                        CollectionLBP = rdr.IsDBNull(9) ? null : rdr.GetDecimal(9),
+                        CollectionUSD = rdr.IsDBNull(10) ? null : rdr.GetDecimal(10),
+                        DifferenceUSD = rdr.IsDBNull(11) ? null : rdr.GetDecimal(11),
+                        DifferenceLBP = rdr.IsDBNull(12) ? null : rdr.GetDecimal(12)
+                    });
+                }
+            }
+
+            var sumSql = $@"SELECT ISNULL(cd.Department, '(Blank)') AS Department, ISNULL(SUM(cd.CollectionLBP), 0) AS CollectionLBP, ISNULL(SUM(cd.CollectionUSD), 0) AS CollectionUSD FROM {fin}.dbo.CashierDetail cd WHERE cd.CashierHeaderID = @Hid2 AND ISNULL(cd.IsDeleted, 0) = 0 GROUP BY cd.Department ORDER BY cd.Department";
+            var sumList = new List<CashierDepartmentSummaryDto>();
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = sumSql;
+                cmd.Parameters.Add(new SqlParameter("@Hid2", headerId.Value));
+                await using var rdr = await cmd.ExecuteReaderAsync();
+                while (await rdr.ReadAsync())
+                    sumList.Add(new CashierDepartmentSummaryDto { Department = rdr.GetString(0), CollectionLBP = rdr.GetDecimal(1), CollectionUSD = rdr.GetDecimal(2) });
+            }
+            var tLBP = detailList.Sum(d => d.CollectionLBP ?? 0);
+            var tUSD = detailList.Sum(d => d.CollectionUSD ?? 0);
+            return Ok(new { cashierHeaderId = headerId, openDate = hOpenDate?.ToString("yyyy-MM-dd"), closeDate = hCloseDate?.ToString("yyyy-MM-dd"), closeTime = hCloseTime?.ToString(@"hh\:mm"), details = detailList, summary = sumList, totals = new { totalLBP = tLBP, totalUSD = tUSD } });
+        }
+
+        /// <summary>Close current cashier and open a new one with the given OpenDate.</summary>
+        [HttpPost("CloseCashierAndOpenNew")]
+        public async Task<ActionResult<object>> CloseCashierAndOpenNew([FromBody] CloseCashierRequest req)
+        {
+            if (string.IsNullOrEmpty(req?.NewOpenDate))
+                return BadRequest(new { message = "NewOpenDate is required (yyyy-MM-dd)" });
+
+            await using var conn = GetFinancialConnection();
+            if (conn.State != ConnectionState.Open) await conn.OpenAsync();
+            var fin = $"[{_configuration["FinancialDatabaseName"] ?? "Financial DB"}]";
+
+            var getOpenSql = $@"SELECT TOP 1 ch.ID, ch.CashierID, ch.Number FROM {fin}.dbo.CashierHeader ch WHERE ISNULL(ch.IsDeleted, 0) = 0 AND ch.CloseDate IS NULL ORDER BY ch.ID DESC";
+            int? currentId = null;
+            int? cashierId = null;
+            int? currentNumber = null;
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = getOpenSql;
+                await using var rdr = await cmd.ExecuteReaderAsync();
+                if (await rdr.ReadAsync())
+                {
+                    currentId = rdr.GetInt32(0);
+                    cashierId = rdr.IsDBNull(1) ? 1 : rdr.GetInt32(1);
+                    currentNumber = rdr.IsDBNull(2) ? 1 : rdr.GetInt32(2);
+                }
+            }
+            if (!currentId.HasValue)
+                return BadRequest(new { message = "No open cashier found" });
+
+            var sumSql = $@"SELECT ISNULL(SUM(CollectionLBP), 0), ISNULL(SUM(CollectionUSD), 0) FROM {fin}.dbo.CashierDetail WHERE CashierHeaderID = @Hid AND ISNULL(IsDeleted, 0) = 0";
+            decimal totalLBP = 0, totalUSD = 0;
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = sumSql;
+                cmd.Parameters.Add(new SqlParameter("@Hid", currentId.Value));
+                await using var rdr = await cmd.ExecuteReaderAsync();
+                if (await rdr.ReadAsync()) { totalLBP = rdr.GetDecimal(0); totalUSD = rdr.GetDecimal(1); }
+            }
+
+            var now = DateTime.Now;
+            var newOpenDate = DateTime.Parse(req.NewOpenDate);
+
+            await using var tx = conn.BeginTransaction();
+            try
+            {
+                var updateSql = $@"UPDATE {fin}.dbo.CashierHeader SET CloseDate = @CloseDate, CloseTime = @CloseTime, TotalCashLocal = @TotalLBP, TotalCashMain = @TotalUSD, ModifiedBy = 338, ModifiedDate = GETDATE() WHERE ID = @Id";
+                await using (var cmd = conn.CreateCommand())
+                {
+                    cmd.Transaction = tx;
+                    cmd.CommandText = updateSql;
+                    cmd.Parameters.Add(new SqlParameter("@CloseDate", now.Date));
+                    cmd.Parameters.Add(new SqlParameter("@CloseTime", now.TimeOfDay));
+                    cmd.Parameters.Add(new SqlParameter("@TotalLBP", totalLBP));
+                    cmd.Parameters.Add(new SqlParameter("@TotalUSD", totalUSD));
+                    cmd.Parameters.Add(new SqlParameter("@Id", currentId.Value));
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                var nextNum = (currentNumber ?? 0) + 1;
+                var insertSql = $@"INSERT INTO {fin}.dbo.CashierHeader (Number, CashierID, OpenDate, OpenTime, CloseDate, CloseTime, IsDeleted, CreatedBy, CreatedDate) VALUES (@Num, @CashierId, @OpenDate, @OpenTime, NULL, NULL, 0, 338, GETDATE())";
+                await using (var cmd = conn.CreateCommand())
+                {
+                    cmd.Transaction = tx;
+                    cmd.CommandText = insertSql;
+                    cmd.Parameters.Add(new SqlParameter("@Num", nextNum));
+                    cmd.Parameters.Add(new SqlParameter("@CashierId", cashierId ?? 1));
+                    cmd.Parameters.Add(new SqlParameter("@OpenDate", newOpenDate.Date));
+                    cmd.Parameters.Add(new SqlParameter("@OpenTime", newOpenDate.TimeOfDay));
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                await tx.CommitAsync();
+                return Ok(new { message = "Cashier closed and new opened", newOpenDate = newOpenDate.ToString("yyyy-MM-dd") });
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
 
         [HttpGet("DailyCashByDepartment")]

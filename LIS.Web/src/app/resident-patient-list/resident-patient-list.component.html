@@ -9,6 +9,10 @@
       </h4>
       <div class="d-flex gap-2 flex-wrap align-items-center">
         <!-- Department Report Button -->
+        <button class="btn btn-outline-light" (click)="openUnpaidPrivateInvoices()" type="button" title="Unpaid invoices: Private insurance, no receipt; your department if set, else all departments">
+          <i class="bi bi-receipt-cutoff me-2"></i>
+          Unpaid (Private)
+        </button>
         <button class="btn btn-warning text-dark fw-bold" (click)="openDepartmentReport()" type="button" title="Department Report" style="min-width: 150px;">
           <i class="bi bi-file-earmark-text me-2"></i>
           Department Report
@@ -26,22 +30,7 @@
             <i class="bi bi-person-plus me-2"></i>
             New Patient
           </button>
-        </div>
-        <!-- V2 Screen Buttons -->
-        <div class="btn-group">
-          <button class="btn btn-success btn-outline-success" (click)="newAdmissionV2()" type="button" title="New Admission (V2 Screen)" [disabled]="!selectedPatient()">
-            <i class="bi bi-plus-circle me-2"></i>
-            New Admission V2
-          </button>
-          <button class="btn btn-primary btn-outline-primary" (click)="editAdmissionV2()" type="button" title="Edit Admission (V2 Screen)" [disabled]="!selectedPatient()">
-            <i class="bi bi-pencil-square me-2"></i>
-            Edit V2
-          </button>
-          <button class="btn btn-success btn-outline-success" (click)="newPatientV2()" type="button" title="New Patient (V2 Screen)">
-            <i class="bi bi-person-plus me-2"></i>
-            New Patient V2
-          </button>
-        </div>
+        </div>  
       </div>
     </div>
   </div>
@@ -137,6 +126,8 @@
           <th>Insurance</th>
           <th>Department</th>
           <th>Physician</th>
+          <th>Inv Total</th>
+          <th>Paid</th>
           <th>Status</th>
         </tr>
       </thead>
@@ -192,6 +183,12 @@
               </div>
             </div>
           </td>
+          <td>{{ formatInvTotal(patient) }}</td>
+          <td [attr.title]="getPaidTooltip(patient)">
+            <span *ngIf="getPaidStatus(patient) === 'paid'" class="badge bg-success">Paid</span>
+            <span *ngIf="getPaidStatus(patient) === 'partial'" class="badge bg-warning text-dark">Partially Paid</span>
+            <span *ngIf="getPaidStatus(patient) === 'unpaid'" class="badge bg-secondary">Not Paid</span>
+          </td>
           <td>
             <span *ngIf="patient.isDischarged" class="badge bg-secondary">
               <i class="bi bi-check-circle me-1"></i>
@@ -207,7 +204,7 @@
           </td>
         </tr>
         <tr *ngIf="patients().length === 0">
-          <td colspan="12" class="text-center text-muted py-4">
+          <td colspan="14" class="text-center text-muted py-4">
             <i class="bi bi-inbox display-6 d-block mb-2"></i>
             No patients found
           </td>
@@ -266,4 +263,132 @@
     </div>
   </div>
 </div>
+
+<!-- Unpaid private invoices modal -->
+<div
+  *ngIf="showUnpaidPrivateModal()"
+  class="modal fade show d-block"
+  tabindex="-1"
+  aria-modal="true"
+  role="dialog"
+  style="z-index: 1055">
+  <div class="modal-dialog modal-xl unpaid-private-modal-dialog">
+    <div class="modal-content shadow unpaid-private-modal-content">
+      <div class="modal-header bg-primary text-white flex-shrink-0">
+        <h5 class="modal-title mb-0">
+          <i class="bi bi-receipt me-2"></i>
+          Unpaid invoices — Private auxiliary insurance (no receipt)
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeUnpaidPrivateModal()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0 unpaid-private-modal-body">
+        <p class="text-muted small px-3 pt-3 mb-2 flex-shrink-0">
+          Filter: receipt not issued, auxiliary insurance = Private, not deleted.
+          <span *ngIf="getLoggedInDepartmentName()">Department: {{ getLoggedInDepartmentName() }}.</span>
+          <span *ngIf="!getLoggedInDepartmentName()">No department in session — showing all departments.</span>
+        </p>
+        <div *ngIf="unpaidPrivateLoading()" class="text-center py-5 flex-shrink-0">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 text-muted">Loading…</p>
+        </div>
+        <div *ngIf="unpaidPrivateError() && !unpaidPrivateLoading()" class="alert alert-danger m-3 flex-shrink-0">
+          {{ unpaidPrivateError() }}
+        </div>
+        <div *ngIf="!unpaidPrivateLoading() && !unpaidPrivateError()" class="px-3 pb-2 flex-shrink-0 d-flex flex-wrap align-items-end gap-2">
+          <div class="flex-grow-1" style="min-width: 200px">
+            <label class="form-label small text-muted mb-1">Search (department, MRN, admission, patient, phone, check-in)</label>
+            <input
+              type="search"
+              class="form-control form-control-sm"
+              placeholder="Type to filter…"
+              [ngModel]="unpaidPrivateSearch()"
+              (ngModelChange)="unpaidPrivateSearch.set($event)"
+              [ngModelOptions]="{ standalone: true }" />
+          </div>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-success"
+            (click)="exportUnpaidPrivateToExcel()"
+            [disabled]="filteredUnpaidPrivateRows().length === 0"
+            title="Download current filtered rows as Excel">
+            <i class="bi bi-file-earmark-excel me-1"></i>
+            Export Excel
+          </button>
+        </div>
+        <div *ngIf="!unpaidPrivateLoading() && !unpaidPrivateError()" class="unpaid-private-table-scroll px-3 pb-3">
+          <table class="table table-sm table-striped table-hover mb-0 align-middle unpaid-private-invoice-table">
+            <thead class="table-dark">
+              <tr>
+                <th>Department</th>
+                <th>Check-in</th>
+                <th>MRN</th>
+                <th>Admission #</th>
+                <th>Patient name</th>
+                <th>Phone</th>
+                <th class="text-end">Invoice net</th>
+                <th class="text-end">Paid advance</th>
+                <th class="text-end">Rest to pay</th>
+                <th class="text-end">Receipt LBP</th>
+                <th class="text-end">Receipt USD</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of filteredUnpaidPrivateRows(); trackBy: trackUnpaidInvoiceRow">
+                <td>{{ row.department || '—' }}</td>
+                <td>{{ row.checkInDate ? formatDate(row.checkInDate) : '—' }}</td>
+                <td><strong class="text-danger">{{ row.mrn }}</strong></td>
+                <td>{{ row.admissionNumber }}</td>
+                <td>{{ row.patientName }}</td>
+                <td class="text-nowrap">{{ row.patientPhone || '—' }}</td>
+                <td class="text-end">{{ formatCurrency(row.invoiceNet) }} <span class="text-muted small" *ngIf="row.currency">{{ row.currency }}</span></td>
+                <td class="text-end">{{ formatCurrency(row.paidAdvance) }}</td>
+                <td class="text-end fw-semibold">{{ formatCurrency(row.restToPay) }}</td>
+                <td class="text-end">
+                  <input
+                    type="number"
+                    class="form-control form-control-sm text-end unpaid-private-receipt-input"
+                    step="0.01"
+                    [(ngModel)]="row.receivedLbp"
+                    [ngModelOptions]="{ standalone: true }" />
+                </td>
+                <td class="text-end">
+                  <input
+                    type="number"
+                    class="form-control form-control-sm text-end unpaid-private-receipt-input"
+                    step="0.01"
+                    [(ngModel)]="row.receivedUsd"
+                    [ngModelOptions]="{ standalone: true }" />
+                </td>
+                <td class="text-nowrap">
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-success"
+                    (click)="saveUnpaidPrivateReceipt(row)"
+                    [disabled]="savingUnpaidInvoiceId() === row.invoiceHeaderId">
+                    <span
+                      *ngIf="savingUnpaidInvoiceId() === row.invoiceHeaderId"
+                      class="spinner-border spinner-border-sm me-1"
+                      role="status"></span>
+                    Save
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="unpaidPrivateRows().length === 0">
+                <td colspan="12" class="text-center text-muted py-4">No matching unpaid invoices.</td>
+              </tr>
+              <tr *ngIf="unpaidPrivateRows().length > 0 && filteredUnpaidPrivateRows().length === 0">
+                <td colspan="12" class="text-center text-muted py-4">No rows match your search.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer flex-shrink-0">
+        <button type="button" class="btn btn-secondary" (click)="closeUnpaidPrivateModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="showUnpaidPrivateModal()" (click)="closeUnpaidPrivateModal()"></div>
 

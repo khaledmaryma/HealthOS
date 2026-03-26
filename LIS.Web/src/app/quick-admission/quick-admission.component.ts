@@ -5,6 +5,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { BillingService } from '../services/billing.service';
 import { DepartmentService } from '../services/department.service';
+import { InventoryProductService, MedicamentProduct } from '../services/inventory-product.service';
+import { BilanService, Bilan, BilanDetail } from '../services/bilan.service';
 import { BillingInvoiceHeader } from '../models/billing-invoice-header';
 import { BillingInvoiceDetail } from '../models/billing-invoice-detail';
 import { HospitalDenomination } from '../models/hospital-denomination';
@@ -12,12 +14,40 @@ import { Department } from '../models/department';
 import { DenominationSearchResult } from '../models/denomination-search-result';
 import { Insurance } from '../models/insurance';
 import { InsuranceService } from '../services/insurance.service';
+import { forkJoin, of } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
+import { ApiUrlService } from '../api/api-url.service';
 
 interface NameOption {
   id: number;
   name: string;
   arabicName: string;
   gender?: string;
+}
+
+interface MedicamentSelectionLine {
+  prdId: number;
+  prdCode: string;
+  prdName: string;
+  PLDescription: string;
+  prdPackId: number;
+  prdPack: number;
+  quantity: number;
+  unitPrice: number;
+  /** True when newly added in this session; false when restored from medicamentDeliverItems */
+  isNew?: boolean;
+}
+
+/** Payload for Inventory.dbo.DeliverItem - sent in save JSON */
+interface DeliverItemPayload {
+  Product: number;
+  Package: number;
+  Code: string;
+  AlternateDescription: string;
+  Qty: number;
+  UnitPrice: number;
+  Net: number;
+  PLDescription: string;
 }
 
 @Component({
@@ -28,10 +58,12 @@ interface NameOption {
   styleUrl: './quick-admission.component.scss'
 })
 export class QuickAdmissionComponent implements OnInit {
-  private apiUrl = 'http://localhost:5050/api';
+  private readonly apiUrl = inject(ApiUrlService).api('/api');
   private billingService = inject(BillingService);
   private departmentService = inject(DepartmentService);
   private insuranceService = inject(InsuranceService);
+  private inventoryProductService = inject(InventoryProductService);
+  private bilanService = inject(BilanService);
 
   admissionId = signal<number | null>(null);
   isEditMode = signal(false);
@@ -85,6 +117,29 @@ export class QuickAdmissionComponent implements OnInit {
   saveMedicalFile = signal(true);
   saveAdmission = signal(true);
   saveInvoice = signal(false);
+  createAdvance = signal(false);
+
+  // Medicament popup state
+  showMedicamentPopup = signal(false);
+  medicamentProducts = signal<MedicamentProduct[]>([]);
+  medicamentSearchQuery = signal('');
+  filteredMedicamentProducts = signal<MedicamentProduct[]>([]);
+  showMedicamentDropdown = signal(false);
+  selectedMedicamentProductIndex = signal(-1);
+  selectedMedicamentProductForAdd = signal<MedicamentProduct | null>(null);
+  medicamentQuantity = signal(1);
+  medicamentUnitPrice = signal<number>(0);
+  medicamentSelection = signal<MedicamentSelectionLine[]>([]);
+  /** Persisted DeliverItem data for save payload (maps to Inventory.dbo.DeliverItem) */
+  medicamentDeliverItems = signal<DeliverItemPayload[]>([]);
+
+  // Bilan popup state
+  showBilanPopup = signal(false);
+  bilans = signal<Bilan[]>([]);
+  selectedBilan = signal<Bilan | null>(null);
+  selectedBilanDetails = signal<BilanDetail[]>([]);
+  isLoadingBilans = signal(false);
+  isLoadingBilanDetails = signal(false);
 
   // Duplicate check (only for name changes, not save)
   showDuplicateModal = signal(false);
@@ -159,6 +214,7 @@ export class QuickAdmissionComponent implements OnInit {
 
   // Departments
   departments = signal<Department[]>([]);
+  departmentAutoSelected = signal(false);
 
   // Computed property for departments with display text
   departmentsWithDisplay = computed(() => {
@@ -232,6 +288,16 @@ export class QuickAdmissionComponent implements OnInit {
            (this.saveInvoice() && this.canSaveInvoice());
   });
 
+  /** True when receipt sum < invoice net (partial payment) - show Create Advance checkbox */
+  showCreateAdvanceCheckbox = computed(() => {
+    if (!this.saveInvoice() || !this.canSaveInvoice()) return false;
+    const net = this.invoiceTotals().net;
+    const receiptSum = this.invoiceCurrency().toUpperCase() === 'USD'
+      ? this.receiptAmount()
+      : this.receiptLocal();
+    return receiptSum > 0 && receiptSum < net;
+  });
+
   // Track which detail is being edited inline
   editingDetailIndex = signal<number | null>(null);
 
@@ -292,10 +358,12 @@ export class QuickAdmissionComponent implements OnInit {
     this.attendingPhysicianId.set(null);
     this.checkInDate.set(this.getTodayDateString());
     this.department.set('');
+    this.departmentAutoSelected.set(false);
     this.mainInsurance.set(5);
     this.auxiliaryInsurance.set(5);
     this.invoiceHeaderId.set(null);
     this.invoiceDetails.set([]);
+    this.medicamentDeliverItems.set([]);
     this.inlineEditingDetails.set(new Map());
     this.receiptAmount.set(0);
     this.receiptLocal.set(0);
@@ -860,6 +928,7 @@ export class QuickAdmissionComponent implements OnInit {
         if (!header) {
           this.invoiceHeaderId.set(null);
           this.invoiceDetails.set([]);
+    this.medicamentDeliverItems.set([]);
           this.inlineEditingDetails.set(new Map());
           return;
         }
@@ -878,6 +947,7 @@ export class QuickAdmissionComponent implements OnInit {
           error: (error) => {
             console.error('Error loading invoice details:', error);
             this.invoiceDetails.set([]);
+    this.medicamentDeliverItems.set([]);
             this.inlineEditingDetails.set(new Map());
           }
         });
@@ -886,6 +956,7 @@ export class QuickAdmissionComponent implements OnInit {
         console.error('Error loading invoice header:', error);
         this.invoiceHeaderId.set(null);
         this.invoiceDetails.set([]);
+    this.medicamentDeliverItems.set([]);
         this.inlineEditingDetails.set(new Map());
       }
     });
@@ -1017,13 +1088,38 @@ export class QuickAdmissionComponent implements OnInit {
         CostCenter: detail.costCenter || 12,
         ProfitCenter: detail.profitCenter || 3,
         CreatedBy: detail.createdBy || 338
-      }))
+      })),
+      deliverHeader: this.medicamentDeliverItems().length > 0 ? {
+        Type: 1,
+        TypeCounter: 0,
+        PatientType: 0,
+        Date: new Date().toISOString().split('T')[0],
+        Currency: this.invoiceCurrency().toUpperCase() === 'USD' ? 2 : 1,
+        Warehouse: 1,
+        Admission: 0,
+        CreatedBy: 338
+      } : null,
+      deliverItems: this.medicamentDeliverItems().length > 0 ? this.medicamentDeliverItems() : []
     };
+
+    if (this.saveInvoice() && this.canSaveInvoice()) {
+      const receiptSum = this.invoiceCurrency().toUpperCase() === 'USD'
+        ? this.receiptAmount()
+        : this.receiptLocal();
+      (saveData as any).invoiceReceipt = {
+        currency: this.invoiceCurrency(),
+        receiptAmount: this.receiptAmount(),
+        receiptLocal: this.receiptLocal(),
+        invoiceNet: this.invoiceTotals().net,
+        totalPaidInInvoiceCurrency: receiptSum
+      };
+    }
 
     const saveOptions = {
       saveMedicalFile: this.saveMedicalFile(),
       saveAdmission: this.saveAdmission(),
-      saveInvoice: this.saveInvoice()
+      saveInvoice: this.saveInvoice(),
+      createAdvance: this.createAdvance()
     };
 
     return {
@@ -1807,22 +1903,34 @@ export class QuickAdmissionComponent implements OnInit {
   loadDepartments(): void {
     console.log('🔄 Loading departments...');
     this.departmentService.getAll().subscribe({
-      next: (departments) => {
+      next: (departments: Department[]) => {
         console.log('📥 Raw departments response:', departments);
         console.log('📥 First department:', departments[0]);
-        console.log('📥 First department name:', departments[0]?.name);
-        console.log('📥 First department name type:', typeof departments[0]?.name);
+        console.log('📥 First department name:', departments[0]?.name ?? departments[0]?.departmentName);
+        console.log('📥 First department name type:', typeof (departments[0]?.name ?? departments[0]?.departmentName));
 
         // Don't filter - show all departments, even if some fields are empty
         this.departments.set(departments);
         console.log('✅ Loaded departments:', departments.length);
         console.log('📋 All departments:', departments.map(d => ({
           id: d.id,
-          name: d.name,
-          nameType: typeof d.name,
+          name: d.name ?? d.departmentName,
           code: d.code,
           description: d.description
         })));
+
+        // Auto-select department from logged-in user's departmentId (only for new admission, not edit)
+        if (!this.isEditMode()) {
+          const userDeptId = localStorage.getItem('loggedInUserDepartmentId');
+          if (userDeptId) {
+            const deptId = parseInt(userDeptId, 10);
+            const userDept = departments.find(d => d.id === deptId);
+            if (userDept) {
+              this.department.set(this.getDepartmentValue(userDept));
+              this.departmentAutoSelected.set(true);
+            }
+          }
+        }
       },
       error: (error) => {
         console.error('❌ Error loading departments:', error);
@@ -1835,8 +1943,9 @@ export class QuickAdmissionComponent implements OnInit {
    * Get department value for select option
    */
   getDepartmentValue(dept: Department): string {
-    if (dept.name && dept.name.toString().trim().length > 0) {
-      return dept.name.toString().trim();
+    const name = dept.name ?? dept.departmentName;
+    if (name && name.toString().trim().length > 0) {
+      return name.toString().trim();
     }
     if (dept.code && dept.code.toString().trim().length > 0) {
       return dept.code.toString().trim();
@@ -1852,8 +1961,9 @@ export class QuickAdmissionComponent implements OnInit {
    * Get department display text
    */
   getDepartmentDisplay(dept: Department): string {
-    if (dept.name && dept.name.toString().trim().length > 0) {
-      return dept.name.toString().trim();
+    const name = dept.name ?? dept.departmentName;
+    if (name && name.toString().trim().length > 0) {
+      return name.toString().trim();
     }
     if (dept.code && dept.code.toString().trim().length > 0) {
       return dept.code.toString().trim();
@@ -1869,9 +1979,14 @@ export class QuickAdmissionComponent implements OnInit {
    * Get department display text for template (simplified)
    */
   getDepartmentDisplayText(dept: Department): string {
-    const name = dept?.name?.toString()?.trim() || '';
+
+    const name = (dept?.name ?? dept?.departmentName)?.toString()?.trim() || '';
     const code = dept?.code?.toString()?.trim() || '';
     const description = dept?.description?.toString()?.trim() || '';
+    console.log("🚀 ~ QuickAdmissionComponent ~ getDepartmentDisplayText ~ name:", name)
+    console.log("🚀 ~ QuickAdmissionComponent ~ getDepartmentDisplayText ~ code:", code)
+    console.log("🚀 ~ QuickAdmissionComponent ~ getDepartmentDisplayText ~ description:", description)
+    console.log("🚀 ~ QuickAdmissionComponent ~ getDepartmentDisplayText ~ dept:", dept)
 
     if (name) return name;
     if (code) return code;
@@ -2964,6 +3079,425 @@ export class QuickAdmissionComponent implements OnInit {
     });
   }
 
+  /**
+   * Medicament popup - open and load products
+   */
+  openMedicamentPopup(): void {
+    this.showMedicamentPopup.set(true);
+    // Restore selection from previously added deliver items
+    const existing = this.medicamentDeliverItems();
+    const restored: MedicamentSelectionLine[] = existing.map(di => ({
+      prdId: di.Product,
+      prdCode: di.Code || '',
+      prdName: di.AlternateDescription || di.Code || '',
+      PLDescription: di.PLDescription || '',
+      prdPackId: di.Package ?? 0,
+      prdPack: di.Package ?? 0,
+      quantity: di.Qty ?? 0,
+      unitPrice: di.UnitPrice ?? 0,
+      isNew: false
+    }));
+    this.medicamentSelection.set(restored);
+    this.selectedMedicamentProductForAdd.set(null);
+    this.medicamentSearchQuery.set('');
+    this.medicamentQuantity.set(1);
+    this.medicamentUnitPrice.set(0);
+    this.showMedicamentDropdown.set(false);
+    this.inventoryProductService.getProductsForMedicament().subscribe({
+      next: (products) => {
+        this.medicamentProducts.set(products);
+        this.filteredMedicamentProducts.set(products);
+      },
+      error: (err) => {
+        console.error('Error loading medicament products:', err);
+        alert('Failed to load products. Please try again.');
+      }
+    });
+  }
+
+  closeMedicamentPopup(): void {
+    this.showMedicamentPopup.set(false);
+    this.showMedicamentDropdown.set(false);
+  }
+
+  /**
+   * Bilan popup - open and load bilans
+   */
+  openBilanPopup(): void {
+    this.showBilanPopup.set(true);
+    this.selectedBilan.set(null);
+    this.selectedBilanDetails.set([]);
+    this.isLoadingBilans.set(true);
+    this.isLoadingBilanDetails.set(false);
+    this.bilanService.getAll().subscribe({
+      next: (list: Bilan[]) => {
+        this.bilans.set(list.filter((b: Bilan) => !b.isDeleted));
+        this.isLoadingBilans.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading bilans:', err);
+        alert('Failed to load bilans. Please try again.');
+        this.isLoadingBilans.set(false);
+      }
+    });
+  }
+
+  closeBilanPopup(): void {
+    this.showBilanPopup.set(false);
+    this.selectedBilan.set(null);
+    this.selectedBilanDetails.set([]);
+  }
+
+  selectBilan(bilan: Bilan): void {
+    this.selectedBilan.set(bilan);
+    this.selectedBilanDetails.set([]);
+    this.isLoadingBilanDetails.set(true);
+    this.bilanService.getDetails(bilan.id).subscribe({
+      next: (details: BilanDetail[]) => {
+        this.selectedBilanDetails.set(details);
+        this.isLoadingBilanDetails.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading bilan details:', err);
+        alert('Failed to load bilan details. Please try again.');
+        this.selectedBilanDetails.set([]);
+        this.isLoadingBilanDetails.set(false);
+      }
+    });
+  }
+
+  removeBilanDetailFromSelection(index: number): void {
+    const details = this.selectedBilanDetails().slice();
+    details.splice(index, 1);
+    this.selectedBilanDetails.set(details);
+  }
+
+  confirmBilanSelection(): void {
+    const details = this.selectedBilanDetails();
+    if (details.length === 0) return;
+
+    const validDetails = details.filter(d => d.denominationId && d.denominationId > 0);
+    if (validDetails.length === 0) {
+      alert('No bilan details with valid denomination. Cannot add to invoice.');
+      return;
+    }
+
+    const denomIds = [...new Set(validDetails.map((d: BilanDetail) => d.denominationId!))];
+    forkJoin(denomIds.map((id: number) =>
+      this.billingService.getDenomination(id).pipe(
+        catchError(() => of({ id, cashPriceUsd: 0, cashPriceLlbp: 0, code: '', smallDescription: '', longDescription: '', coefficientCode: '', coefficientValue: 1 } as HospitalDenomination))
+      )
+    )).pipe(
+      map((denoms: HospitalDenomination[]) => {
+        const denomMap = new Map<number, HospitalDenomination>();
+        denomIds.forEach((id: number, i: number) => denomMap.set(id, denoms[i]));
+        return denomMap;
+      }),
+      switchMap((denomMap: Map<number, HospitalDenomination>) => {
+        const newDetails: BillingInvoiceDetail[] = [];
+        let seq = this.invoiceDetails().length;
+        for (const d of validDetails) {
+          const denom = denomMap.get(d.denominationId!);
+          const detailPrice = d.priceUsd ?? d.priceLlbp ?? null;
+          const unitPrice = (detailPrice != null && detailPrice > 0)
+            ? detailPrice
+            : (denom?.cashPriceUsd ?? denom?.cashPriceLlbp ?? 0);
+          const netPrice = unitPrice;
+          newDetails.push({
+            id: Date.now() + seq,
+            prescriptionDate: undefined,
+            prescribedBy: this.referralPhysicianId() || this.attendingPhysicianId() || undefined,
+            medicationUnit: 113,
+            medicationUnitDescription: 'Lab',
+            admission: 0,
+            patient: 0,
+            denomination: d.denominationId!,
+            denominationCode: d.denominationCode || denom?.code || '',
+            denominationDescription: d.denominationDescription || d.description || denom?.smallDescription || denom?.longDescription || '',
+            denominationCoeffCode: denom?.coefficientCode || '',
+            denominationCoeffValue: denom?.coefficientValue ?? 1,
+            denominationCoeffPrice: unitPrice,
+            quantity: 1,
+            unitPrice,
+            netPrice,
+            netUnitPrice: unitPrice,
+            differenceAmount: 0,
+            deniedAmount: 0,
+            discount: 0,
+            lumpSum: 0,
+            complementaryAmount: 0,
+            complementaryAmountOtherCurrency: 0,
+            complementaryDifferenceOtherCurrency: 0,
+            operatingPhysician: 0,
+            requireApproval: 0,
+            isDenied: 0,
+            invoiceHeader: 0,
+            referralPhysician: this.referralPhysicianId() || 0,
+            costCenter: 12,
+            profitCenter: 3,
+            detailDate: new Date(),
+            copyFlag: 0,
+            isDoubtfull: 0,
+            procedure: undefined,
+            isDeleted: 0,
+            createdBy: 298,
+            createdDate: new Date(),
+            orderDetailSequenceNumber: ++seq,
+            source: 'O',
+            isCanceled: 0
+          } as BillingInvoiceDetail);
+        }
+        return of({ newDetails });
+      })
+    ).subscribe({
+      next: ({ newDetails }: { newDetails: BillingInvoiceDetail[] }) => {
+        this.invoiceDetails.set([...this.invoiceDetails(), ...newDetails]);
+        const map = new Map(this.inlineEditingDetails());
+        const defaultOperatingPhysician = this.referralPhysicianId();
+        const defaultOperatingPhysicianName = this.referralPhysician();
+        const startIndex = this.invoiceDetails().length - newDetails.length;
+        newDetails.forEach((_detail: BillingInvoiceDetail, i: number) => {
+          const idx = startIndex + i;
+          map.set(idx, {
+            denominationSearchQuery: newDetails[i].denominationDescription || '',
+            searchResults: [],
+            showDropdown: false,
+            selectedDropdownIndex: -1,
+            quantity: 1,
+            unitPrice: newDetails[i].unitPrice,
+            discount: 0,
+            hasOperatingPhysician: false,
+            operatingPhysician: defaultOperatingPhysician || 0,
+            operatingPhysicianName: defaultOperatingPhysicianName || '',
+            operatingPhysicianOptions: [],
+            showOperatingPhysicianDropdown: false
+          });
+        });
+        this.inlineEditingDetails.set(map);
+        this.closeBilanPopup();
+      },
+      error: (err) => {
+        console.error('Error adding bilan to invoice:', err);
+        alert('Failed to add bilan details to invoice. Please try again.');
+      }
+    });
+  }
+
+  filterMedicamentProducts(query: string): void {
+    const q = (query || '').toLowerCase().trim();
+    const all = this.medicamentProducts();
+    if (!q) {
+      this.filteredMedicamentProducts.set(all);
+      this.selectedMedicamentProductIndex.set(-1);
+      return;
+    }
+    const filtered = all.filter(p =>
+      (p.prdCode || '').toLowerCase().includes(q) ||
+      (p.prdName || '').toLowerCase().includes(q) ||
+      (p.PLDescription || '').toLowerCase().includes(q)
+    );
+    this.filteredMedicamentProducts.set(filtered);
+    this.selectedMedicamentProductIndex.set(filtered.length > 0 ? 0 : -1);
+    this.showMedicamentDropdown.set(true);
+  }
+
+  selectMedicamentProduct(prod: MedicamentProduct, event?: MouseEvent): void {
+    if (event) event.preventDefault();
+    this.selectedMedicamentProductForAdd.set(prod);
+    this.medicamentSearchQuery.set(`${prod.prdCode} - ${prod.prdName}`);
+    this.showMedicamentDropdown.set(false);
+    this.medicamentQuantity.set(1);
+    this.medicamentUnitPrice.set(this.getMedicamentSalePrice(prod));
+  }
+
+  toggleMedicamentDropdown(): void {
+    const show = !this.showMedicamentDropdown();
+    this.showMedicamentDropdown.set(show);
+    if (show && this.filteredMedicamentProducts().length > 0) {
+      this.selectedMedicamentProductIndex.set(0);
+    }
+  }
+
+  onMedicamentInputBlur(): void {
+    setTimeout(() => this.showMedicamentDropdown.set(false), 150);
+  }
+
+  onMedicamentProductKeyDown(event: KeyboardEvent): void {
+    const items = this.filteredMedicamentProducts();
+    if (items.length === 0) return;
+    let idx = this.selectedMedicamentProductIndex();
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      idx = Math.min(idx + 1, items.length - 1);
+      this.selectedMedicamentProductIndex.set(idx);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      idx = Math.max(idx - 1, 0);
+      this.selectedMedicamentProductIndex.set(idx);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      if (idx >= 0 && items[idx]) {
+        this.selectMedicamentProduct(items[idx]);
+      }
+    } else if (event.key === 'Escape') {
+      this.showMedicamentDropdown.set(false);
+    }
+  }
+
+  getMedicamentSalePrice(prod: MedicamentProduct): number {
+    // Always use SalePriceMain per requirement (handle both PascalCase and camelCase from API)
+    const price = (prod as any).SalePriceMain ?? (prod as any).salePriceMain ?? (prod as any).SalePriceLocal ?? (prod as any).salePriceLocal ?? 0;
+    return Number(price);
+  }
+
+  getMedicamentLineTotal(): number {
+    if (!this.selectedMedicamentProductForAdd()) return 0;
+    const qty = Math.max(1, this.medicamentQuantity());
+    const unitPrice = this.medicamentUnitPrice() ?? 0;
+    return unitPrice * qty;
+  }
+
+  addMedicamentToSelection(): void {
+    const prod = this.selectedMedicamentProductForAdd();
+    if (!prod) return;
+    const qty = Math.max(1, this.medicamentQuantity());
+    const unitPrice = this.medicamentUnitPrice() ?? this.getMedicamentSalePrice(prod);
+    const prdPack = (prod as any).prdPack ?? 1;
+    const prdPackId = (prod as any).prdPackId ?? 0;
+    const line: MedicamentSelectionLine = {
+      prdId: prod.prdId,
+      prdCode: prod.prdCode,
+      prdName: prod.prdName,
+      PLDescription: (prod as any).PLDescription || (prod as any).plDescription || '',
+      prdPackId,
+      prdPack,
+      quantity: qty,
+      unitPrice,
+      isNew: true
+    };
+    this.medicamentSelection.set([...this.medicamentSelection(), line]);
+    this.selectedMedicamentProductForAdd.set(null);
+    this.medicamentSearchQuery.set('');
+    this.medicamentQuantity.set(1);
+    this.medicamentUnitPrice.set(0);
+    // Focus product search to select another product
+    setTimeout(() => document.getElementById('medicamentProductInput')?.focus(), 0);
+  }
+
+  removeMedicamentFromSelection(index: number): void {
+    const arr = [...this.medicamentSelection()];
+    const removed = arr.splice(index, 1)[0];
+    this.medicamentSelection.set(arr);
+    // If it was a restored item (already in deliverItems), remove from medicamentDeliverItems
+    if (removed && !removed.isNew) {
+      const deliver = this.medicamentDeliverItems();
+      const idx = deliver.findIndex(d => d.Product === removed.prdId && d.Qty === removed.quantity && d.UnitPrice === removed.unitPrice);
+      if (idx >= 0) {
+        const updated = [...deliver];
+        updated.splice(idx, 1);
+        this.medicamentDeliverItems.set(updated);
+      }
+    }
+  }
+
+  confirmMedicamentSelection(): void {
+    const lines = this.medicamentSelection();
+    const newLines = lines.filter(l => l.isNew === true);
+    if (newLines.length === 0) return;
+
+    // 1. Build DeliverItem payloads for new items only (maps to Inventory.dbo.DeliverItem)
+    const deliverItems: DeliverItemPayload[] = newLines.map(line => ({
+      Product: line.prdId,
+      Package: line.prdPackId || line.prdPack || 0,
+      Code: line.prdCode,
+      AlternateDescription: `${line.prdCode} - ${line.prdName}`,
+      Qty: line.quantity,
+      UnitPrice: line.unitPrice,
+      Net: line.quantity * line.unitPrice,
+      PLDescription: line.PLDescription || ''
+    }));
+    this.medicamentDeliverItems.set([...this.medicamentDeliverItems(), ...deliverItems]);
+
+    // 2. Group by PLDescription and add invoice rows per group (only new lines)
+    const groups = new Map<string, { total: number; lines: MedicamentSelectionLine[] }>();
+    for (const line of newLines) {
+      const key = (line.PLDescription || (line as any).plDescription || '').trim();
+      const existing = groups.get(key);
+      const lineTotal = line.quantity * line.unitPrice;
+      if (existing) {
+        existing.total += lineTotal;
+        existing.lines.push(line);
+      } else {
+        groups.set(key, { total: lineTotal, lines: [line] });
+      }
+    }
+
+    const newDetails: BillingInvoiceDetail[] = [];
+    let seq = this.invoiceDetails().length;
+    for (const [plDesc, group] of groups) {
+      const plDescNorm = (plDesc || '').toLowerCase().trim();
+      let denomination: number;
+      if (plDescNorm === 'medications' || plDescNorm === 'medication') {
+        denomination = 464;
+      } else if (plDescNorm === 'serum' || plDescNorm === 'serums') {
+        denomination = 466;
+      } else {
+        denomination = 465;
+      }
+      const desc = denomination === 465 ? 'Medical Supplies' : (plDesc ? `Medicament (${plDesc})` : 'Medicament');
+      newDetails.push({
+        id: Date.now() + seq,
+        prescriptionDate: undefined,
+        prescribedBy: this.referralPhysicianId() || this.attendingPhysicianId() || undefined,
+        medicationUnit: 113,
+        medicationUnitDescription: 'Clinics',
+        admission: 0,
+        patient: 0,
+        denomination,
+        denominationCode: plDesc || 'MED',
+        denominationDescription: desc,
+        denominationCoeffCode: '',
+        denominationCoeffValue: 1,
+        denominationCoeffPrice: group.total,
+        quantity: 1,
+        unitPrice: group.total,
+        netPrice: group.total,
+        netUnitPrice: group.total,
+        differenceAmount: 0,
+        deniedAmount: 0,
+        discount: 0,
+        lumpSum: 0,
+        complementaryAmount: 0,
+        complementaryAmountOtherCurrency: 0,
+        complementaryDifferenceOtherCurrency: 0,
+        operatingPhysician: 0,
+        requireApproval: 0,
+        isDenied: 0,
+        invoiceHeader: 0,
+        referralPhysician: this.referralPhysicianId() || 0,
+        costCenter: 12,
+        profitCenter: 3,
+        detailDate: new Date(),
+        copyFlag: 0,
+        isDoubtfull: 0,
+        procedure: undefined,
+        isDeleted: 0,
+        createdBy: 298,
+        createdDate: new Date(),
+        orderDetailSequenceNumber: ++seq,
+        source: 'O',
+        isCanceled: 0
+      } as BillingInvoiceDetail);
+    }
+
+    this.invoiceDetails.set([...this.invoiceDetails(), ...newDetails]);
+    // Update medicamentSelection so all items (including newly added) show as non-new for next reopen
+    const updatedSelection: MedicamentSelectionLine[] = lines.map(l => ({ ...l, isNew: false }));
+    this.medicamentSelection.set(updatedSelection);
+    this.closeMedicamentPopup();
+    console.log('✅ Medicament: DeliverItems=', deliverItems.length, 'Invoice rows=', newDetails.length);
+  }
+
   private getDenominationCodeFromSearchResult(result: DenominationSearchResult): string {
     return (result.actCode || result.ActCode || result.code || '').trim();
   }
@@ -3684,6 +4218,7 @@ export class QuickAdmissionComponent implements OnInit {
 
   cancelSaveOptions(): void {
     this.showSaveOptionsModal.set(false);
+    this.createAdvance.set(false);
   }
 }
 

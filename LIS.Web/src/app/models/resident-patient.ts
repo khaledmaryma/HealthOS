@@ -84,6 +84,13 @@ export interface ResidentPatient {
   diagnosticGroup1?: string;
   diagnosticGroup2?: string;
   diagnosticGroup3?: string;
+  invTotal?: number;
+  receiptNumber?: string | null;
+  receiptDate?: Date | string | null;
+  currency?: string | null;
+  advReceiptNumber?: string | null;
+  advReceiptDate?: Date | string | null;
+  advanceAmount?: number | null;
 }
 
 

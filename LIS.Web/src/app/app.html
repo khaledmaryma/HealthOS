@@ -13,6 +13,7 @@
       <a class="navbar-brand" href="#">
         <i class="bi bi-hospital"></i>
         <span *ngIf="activeApp() === 'LIS'">LIS - Laboratory Information System</span>
+        <span *ngIf="activeApp() === 'EMR'">EMR - Electronic Medical Record</span>
         <span *ngIf="activeApp() === 'Inventory'">Inventory Management</span>
         <span *ngIf="activeApp() === 'UserManagement'">User Management</span>
       <span *ngIf="activeApp() === 'Accounting'">Accounting</span>
@@ -25,6 +26,12 @@
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav" *ngIf="activeApp() === 'LIS'">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/lis/home" routerLinkActive="active">
+            <i class="bi bi-house-door me-1"></i>
+            Home
+          </a>
+        </li>
         <li class="nav-item">
           <a class="nav-link" routerLink="/labtests" routerLinkActive="active">
             <i class="bi bi-clipboard2-pulse me-1"></i>
@@ -59,6 +66,12 @@
 
       <ul class="navbar-nav" *ngIf="activeApp() === 'Inventory'">
         <li class="nav-item">
+          <a class="nav-link" routerLink="/inventory/home" routerLinkActive="active">
+            <i class="bi bi-house-door me-1"></i>
+            Home
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" routerLink="/inventory" routerLinkActive="active">
             <i class="bi bi-box-seam me-1"></i>
             Product Definition
@@ -68,6 +81,12 @@
       </ul>
 
       <ul class="navbar-nav" *ngIf="activeApp() === 'UserManagement'">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/user-management/home" routerLinkActive="active">
+            <i class="bi bi-house-door me-1"></i>
+            Home
+          </a>
+        </li>
         <li class="nav-item">
           <a class="nav-link" routerLink="/user-management/users" routerLinkActive="active">
             <i class="bi bi-person-badge me-1"></i>
@@ -89,6 +108,12 @@
       </ul>
 
       <ul class="navbar-nav" *ngIf="activeApp() === 'Accounting'">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting/home" routerLinkActive="active">
+            <i class="bi bi-house-door me-1"></i>
+            Home
+          </a>
+        </li>
         <li class="nav-item">
           <a class="nav-link" routerLink="/accounting/chart-of-accounts" routerLinkActive="active">
             <i class="bi bi-tree me-1"></i>
@@ -120,6 +145,12 @@
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" routerLink="/accounting/cashier" routerLinkActive="active">
+            <i class="bi bi-cash-stack me-1"></i>
+            Cashier
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" routerLink="/accounting/configuration" routerLinkActive="active">
             <i class="bi bi-gear me-1"></i>
             Configuration
@@ -132,12 +163,27 @@
           </a>
         </li>
       </ul>
+
+      <ul class="navbar-nav" *ngIf="activeApp() === 'EMR'">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/emr/home" routerLinkActive="active">
+            <i class="bi bi-house-door me-1"></i>
+            Home
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/emr/resident-patients" routerLinkActive="active">
+            <i class="bi bi-people-fill me-1"></i>
+            Resident Patients
+          </a>
+        </li>
+      </ul>
     </div>
 
     <div class="app-toolbar ms-auto">
       <div class="toolbar-item">
         <span class="toolbar-label">User:</span>
-        <span class="toolbar-value">{{ loggedInUser() }}</span>
+        <span class="toolbar-value">{{ loggedInUser() }}{{ loggedInUserDepartment() ? ' (' + loggedInUserDepartment() + ')' : '' }}</span>
       </div>
       <div class="toolbar-item">
         <span class="toolbar-label">Time:</span>
@@ -248,6 +294,22 @@
         <div class="app-text">
           <div class="app-name">Accounting</div>
           <div class="app-description">Journal vouchers and cash</div>
+        </div>
+      </button>
+
+      <button
+        type="button"
+        class="app-tile"
+        [class.active]="activeApp() === 'EMR'"
+        [class.disabled]="!isAppAllowed('EMR')"
+        [disabled]="!isAppAllowed('EMR')"
+        (click)="selectApp('EMR')"
+        [attr.title]="!isAppAllowed('EMR') ? 'No access' : null"
+      >
+        <div class="app-icon lis-icon">EMR</div>
+        <div class="app-text">
+          <div class="app-name">EMR</div>
+          <div class="app-description">Electronic Medical Record</div>
         </div>
       </button>
     </div>

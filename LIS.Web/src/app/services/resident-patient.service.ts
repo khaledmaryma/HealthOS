@@ -1,15 +1,18 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ResidentPatient } from '../models/resident-patient';
+import { UnpaidPrivateInvoiceReceivedPatch, UnpaidPrivateInvoiceRow } from '../models/unpaid-private-invoice';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ResidentPatientService {
-  private apiUrl = 'http://localhost:5050/api/ResidentPatient';
+  private readonly http = inject(HttpClient);
+  private readonly endpoints = inject(ApiEndpointsService);
 
-  constructor(private http: HttpClient) { }
+  constructor() {}
 
   getAll(page: number = 1, pageSize: number = 50, search?: string, isDischarged?: boolean, currentDateOnly?: boolean, checkInDateFrom?: string, checkInDateTo?: string): Observable<ResidentPatient[]> {
     let params = new HttpParams();
@@ -42,7 +45,7 @@ export class ResidentPatientService {
       params = params.set('checkInDateTo', checkInDateTo);
     }
 
-    return this.http.get<ResidentPatient[]>(this.apiUrl, { params });
+    return this.http.get<ResidentPatient[]>(this.endpoints.residentPatient, { params });
   }
 
   getCount(search?: string, isDischarged?: boolean, currentDateOnly?: boolean, checkInDateFrom?: string, checkInDateTo?: string): Observable<number> {
@@ -72,11 +75,36 @@ export class ResidentPatientService {
       params = params.set('checkInDateTo', checkInDateTo);
     }
 
-    return this.http.get<number>(`${this.apiUrl}/count`, { params });
+    return this.http.get<number>(`${this.endpoints.residentPatient}/count`, { params });
   }
 
   getById(id: number): Observable<ResidentPatient> {
-    return this.http.get<ResidentPatient>(`${this.apiUrl}/${id}`);
+    return this.http.get<ResidentPatient>(`${this.endpoints.residentPatient}/${id}`);
+  }
+
+  /** Unpaid invoices (no receipt, Private auxiliary insurance). Uses logged-in department when set; otherwise all departments. */
+  getUnpaidPrivateInvoices(departmentNameOverride?: string | null): Observable<UnpaidPrivateInvoiceRow[]> {
+    let headers = new HttpHeaders();
+    const dept = localStorage.getItem('loggedInUserDepartmentName');
+    if (dept) {
+      headers = headers.set('X-User-Department', dept);
+    }
+    let url = `${this.endpoints.residentPatient}/unpaid-private-invoices`;
+    if (departmentNameOverride?.trim()) {
+      const p = new HttpParams().set('departmentName', departmentNameOverride.trim());
+      url = `${url}?${p.toString()}`;
+    }
+    return this.http.get<UnpaidPrivateInvoiceRow[]>(url, { headers });
+  }
+
+  patchUnpaidPrivateInvoiceReceived(
+    invoiceHeaderId: number,
+    body: UnpaidPrivateInvoiceReceivedPatch
+  ): Observable<UnpaidPrivateInvoiceRow> {
+    return this.http.patch<UnpaidPrivateInvoiceRow>(
+      `${this.endpoints.residentPatient}/unpaid-private-invoices/${invoiceHeaderId}/received`,
+      body
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 export interface PatientLabResult {
   id: number;
@@ -93,8 +94,9 @@ export interface PatientLabSub {
 })
 export class PatientResultsService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5050/api/patientlabresults';
-  private readonly subApiUrl = 'http://localhost:5050/api/patientlabsub';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiUrl = this.endpoints.patientLabResults;
+  private readonly subApiUrl = this.endpoints.patientLabSub;
 
   getByAdmissionNumber(admissionNumber: string): Observable<PatientLabResult[]> {
     return this.http.get<PatientLabResult[]>(`${this.apiUrl}/byAdmission/${admissionNumber}`);

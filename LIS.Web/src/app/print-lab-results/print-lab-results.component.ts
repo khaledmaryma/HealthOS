@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { PatientResultsService, PatientLabResult, PatientLabSub } from '../services/patient-results.service';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 export interface ResidentPatient {
   id: number;
@@ -114,8 +115,9 @@ export class PrintLabResultsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private patientResultsService = inject(PatientResultsService);
-  private readonly apiUrl = 'http://localhost:5050/api/residentpatients';
-  private readonly headerApiUrl = 'http://localhost:5050/api/patientlabresultsheaders';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiUrl = this.endpoints.residentPatientsLegacy;
+  private readonly headerApiUrl = this.endpoints.patientLabResultsHeaders;
 
   readonly patient = signal<ResidentPatient | null>(null);
   readonly labResults = signal<PatientLabResult[]>([]);
@@ -197,7 +199,7 @@ export class PrintLabResultsComponent implements OnInit {
 
   loadHospitalConfiguration(): void {
     console.log('🏥 Loading hospital configuration...');
-    this.http.get<HospitalConfiguration>('http://localhost:5050/api/HospitalConfiguration').subscribe({
+    this.http.get<HospitalConfiguration>(this.endpoints.hospitalConfiguration).subscribe({
       next: (config) => {
         console.log('✅ Hospital configuration loaded:', config);
         console.log('Hospital Name:', config.hospitalName);
@@ -280,7 +282,7 @@ export class PrintLabResultsComponent implements OnInit {
     this.http.get<{
       header: BacteriologyHeader,
       details: PatientLabBacteriology[]
-    }>(`http://localhost:5050/api/PatientLabBacteriology/byPatientLabResult/${resultId}`).subscribe({
+    }>(`${this.endpoints.patientLabBacteriology}/byPatientLabResult/${resultId}`).subscribe({
       next: (response) => {
         const currentMap = this.bacteriologyMap();
         const newMap = new Map(currentMap);

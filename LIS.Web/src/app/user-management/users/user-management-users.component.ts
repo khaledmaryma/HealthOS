@@ -1,8 +1,10 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfileDefinition, UserDefinition } from '../../models/user-management';
 import { UserManagementService } from '../../services/user-management.service';
+import { DepartmentService } from '../../services/department.service';
+import { Department } from '../../models/department';
 
 @Component({
   selector: 'app-user-management-users',
@@ -14,10 +16,13 @@ import { UserManagementService } from '../../services/user-management.service';
 export class UserManagementUsersComponent implements OnInit {
   readonly items = signal<UserDefinition[]>([]);
   readonly profiles = signal<ProfileDefinition[]>([]);
+  readonly departments = signal<Department[]>([]);
   readonly query = signal('');
   readonly showForm = signal(false);
   readonly editItem = signal<UserDefinition | null>(null);
   readonly selectedItem = signal<UserDefinition | null>(null);
+
+  private readonly departmentService = inject(DepartmentService);
 
   readonly filtered = computed(() => {
     const q = this.query().toLowerCase().trim();
@@ -35,6 +40,14 @@ export class UserManagementUsersComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.loadProfiles();
+    this.loadDepartments();
+  }
+
+  loadDepartments(): void {
+    this.departmentService.getAll().subscribe({
+      next: data => this.departments.set(data || []),
+      error: () => this.departments.set([])
+    });
   }
 
   load(): void {
@@ -81,7 +94,8 @@ export class UserManagementUsersComponent implements OnInit {
       isActive: true,
       isDeleted: false,
       createdBy: 0,
-      createdDate: new Date().toISOString()
+      createdDate: new Date().toISOString(),
+      departmentId: null
     });
     this.showForm.set(true);
   }
@@ -160,5 +174,11 @@ export class UserManagementUsersComponent implements OnInit {
 
   getProfileLabel(profileId: number): string {
     return this.profiles().find(p => p.id === profileId)?.name ?? '-';
+  }
+
+  getDepartmentLabel(deptId: number | null | undefined): string {
+    if (deptId == null) return '-';
+    const dept = this.departments().find(d => d.id === deptId);
+    return dept?.name ?? dept?.code ?? String(deptId);
   }
 }

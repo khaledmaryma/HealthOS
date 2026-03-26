@@ -1,12 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ApiUrlService } from '../../api/api-url.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class QuickAdmissionV2Service {
-  private apiUrl = 'http://localhost:5050/api';
+  private readonly apiUrl = inject(ApiUrlService).api('/api');
   private http = inject(HttpClient);
 
   constructor() { }

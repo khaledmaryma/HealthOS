@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 interface ProductEdit {
   id: number;
@@ -50,7 +51,8 @@ export class ProductEditComponent implements OnInit {
   isSaving = false;
   loadError: string | null = null;
 
-  private readonly apiBaseUrl = 'http://localhost:5050/api/inventory/products';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiBaseUrl = this.endpoints.inventoryProducts;
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');

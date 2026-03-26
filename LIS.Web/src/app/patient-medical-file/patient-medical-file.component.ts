@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 interface VitalSign {
   id: number;
@@ -127,7 +128,7 @@ export class PatientMedicalFileComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:5050/api/PatientMedicalFile';
+  private readonly apiUrl = inject(ApiEndpointsService).patientMedicalFile;
 
   readonly patientId = signal<number | null>(null);
   readonly admissionId = signal<number | null>(null);

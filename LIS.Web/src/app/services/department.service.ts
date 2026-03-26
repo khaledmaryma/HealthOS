@@ -1,13 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Department } from '../models/department';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DepartmentService {
-  private apiUrl = 'http://localhost:5050/api/Department';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly apiUrl = this.endpoints.department;
 
   constructor(private http: HttpClient) { }
 

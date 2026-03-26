@@ -292,7 +292,11 @@
               <!-- Department -->
               <div class="col-md-2">
                 <label class="form-label">Department <span class="text-danger">*</span></label>
-                <select class="form-select"
+                <div *ngIf="departmentAutoSelected() && department()" class="form-control-plaintext py-2">
+                  {{ department() }}
+                </div>
+                <select *ngIf="!departmentAutoSelected() || !department()"
+                        class="form-select"
                         [ngModel]="department()"
                         (ngModelChange)="department.set($event)">
                   <option [value]="''">Select Department</option>
@@ -386,6 +390,20 @@
                 (click)="addConsultation()">
                 <i class="bi bi-plus-circle me-1"></i>
                 Add Consultation
+              </button>
+              <button
+                *ngIf="department().toLowerCase() === 'clinic'"
+                class="btn btn-info btn-sm"
+                (click)="openMedicamentPopup()">
+                <i class="bi bi-capsule me-1"></i>
+                Medicament
+              </button>
+              <button
+                *ngIf="department().toLowerCase() === 'lab'"
+                class="btn btn-info btn-sm"
+                (click)="openBilanPopup()">
+                <i class="bi bi-clipboard2-pulse me-1"></i>
+                Bilan
               </button>
               <button class="btn btn-info btn-sm" (click)="addInvoiceDetailInline()">
                 <i class="bi bi-plus-circle me-1"></i>
@@ -623,6 +641,237 @@
   </div>
   <!-- End of Main Layout -->
 
+  <!-- Medicament Popup Modal -->
+  <div *ngIf="showMedicamentPopup()" class="modal-backdrop" (click)="closeMedicamentPopup()">
+    <div class="modal-dialog medicament-modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content medicament-modal">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-capsule me-2"></i>
+            Select Medicament
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeMedicamentPopup()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Product Search / Autocomplete -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Product</label>
+            <div class="position-relative">
+              <div class="input-group">
+                <input
+                  #medicamentProductInput
+                  id="medicamentProductInput"
+                  type="text"
+                  class="form-control"
+                  placeholder="Search product (code, description, line)..."
+                  [value]="medicamentSearchQuery()"
+                  (input)="medicamentSearchQuery.set($any($event.target).value); filterMedicamentProducts($any($event.target).value)"
+                  (focus)="showMedicamentDropdown.set(true)"
+                  (blur)="onMedicamentInputBlur()"
+                  (keydown)="onMedicamentProductKeyDown($event)">
+                <button class="btn btn-outline-secondary" type="button" (click)="toggleMedicamentDropdown(); $event.preventDefault()" (mousedown)="$event.preventDefault()" title="Show options">
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+              </div>
+              <div *ngIf="showMedicamentDropdown() && filteredMedicamentProducts().length > 0"
+                   class="medicament-autocomplete-dropdown">
+                <div *ngFor="let prod of filteredMedicamentProducts(); let i = index"
+                     class="medicament-autocomplete-item"
+                     [class.active]="selectedMedicamentProductIndex() === i"
+                     (mousedown)="selectMedicamentProduct(prod, $event)"
+                     (mouseenter)="selectedMedicamentProductIndex.set(i)">
+                  <div class="medicament-item-code">{{ prod.prdCode }}</div>
+                  <div class="medicament-item-desc">{{ prod.prdName }}</div>
+                  <div class="medicament-item-pl text-muted small">{{ prod.PLDescription }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Product Details (when product selected) -->
+          <div *ngIf="selectedMedicamentProductForAdd()" class="card mb-3 border-info">
+            <div class="card-body py-3">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                  <label class="form-label small text-muted mb-0">Description</label>
+                  <div class="fw-semibold">{{ selectedMedicamentProductForAdd()!.prdCode }} - {{ selectedMedicamentProductForAdd()!.prdName }}</div>
+                  <div class="small text-muted">{{ selectedMedicamentProductForAdd()!.PLDescription }}</div>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small">Unit Price ({{ invoiceCurrency() }})</label>
+                  <input type="number"
+                         class="form-control form-control-sm"
+                         min="0"
+                         step="0.01"
+                         [value]="medicamentUnitPrice()"
+                         (input)="medicamentUnitPrice.set(+$any($event.target).value || 0)">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small">Pack</label>
+                  <div class="badge bg-secondary">{{ selectedMedicamentProductForAdd()!.prdPack }}</div>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small">Quantity</label>
+                  <input type="number"
+                         class="form-control form-control-sm"
+                         min="1"
+                         step="1"
+                         [value]="medicamentQuantity()"
+                         (input)="medicamentQuantity.set(+$any($event.target).value || 1)">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small">Total</label>
+                  <div class="fw-bold text-primary">
+                    {{ formatCurrency(getMedicamentLineTotal()) }}
+                  </div>
+                </div>
+                <div class="col-md-12 col-lg-auto ms-lg-auto">
+                  <button type="button" class="btn btn-success btn-sm" (click)="addMedicamentToSelection()">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Add to List
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Products Grid -->
+          <div>
+            <label class="form-label fw-semibold">Selected Products</label>
+            <div class="table-responsive medicament-grid-container">
+              <table class="table table-sm table-hover mb-0">
+                <thead class="table-light sticky-top">
+                  <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th class="text-center">Pack</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Total</th>
+                    <th style="width: 50px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let line of medicamentSelection(); let i = index">
+                    <td class="small">{{ line.prdCode }}</td>
+                    <td>
+                      <div class="small">{{ line.prdName }}</div>
+                      <div class="text-muted" style="font-size: 0.75rem;">{{ line.PLDescription }}</div>
+                    </td>
+                    <td class="text-center"><span class="badge bg-secondary">{{ line.prdPack }}</span></td>
+                    <td class="text-end">{{ line.quantity }}</td>
+                    <td class="text-end">{{ formatCurrency(line.unitPrice) }}</td>
+                    <td class="text-end fw-bold">{{ formatCurrency(line.quantity * line.unitPrice) }}</td>
+                    <td>
+                      <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1" (click)="removeMedicamentFromSelection(i)" title="Remove">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr *ngIf="medicamentSelection().length === 0">
+                    <td colspan="7" class="text-center text-muted py-3">No products selected</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeMedicamentPopup()">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" (click)="confirmMedicamentSelection()" [disabled]="medicamentSelection().length === 0">
+            <i class="bi bi-check-circle me-1"></i>
+            Add to Invoice ({{ medicamentSelection().length }} item{{ medicamentSelection().length !== 1 ? 's' : '' }})
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bilan Popup Modal -->
+  <div *ngIf="showBilanPopup()" class="modal-backdrop" (click)="closeBilanPopup()">
+    <div class="modal-dialog bilan-modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+      <div class="modal-content bilan-modal">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-clipboard2-pulse me-2"></i>
+            Select Bilan
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="closeBilanPopup()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- Left: Bilan list -->
+            <div class="col-md-5">
+              <label class="form-label fw-semibold">Bilans (EMR.dbo.Bilan)</label>
+              <div class="bilan-list-container">
+                <div *ngFor="let bilan of bilans()"
+                     class="bilan-list-item"
+                     [class.selected]="selectedBilan()?.id === bilan.id"
+                     (click)="selectBilan(bilan)">
+                  <div class="fw-semibold">{{ bilan.description || 'Bilan #' + bilan.id }}</div>
+                  <div class="small text-muted" *ngIf="bilan.type">Type: {{ bilan.type }}</div>
+                </div>
+                <div *ngIf="bilans().length === 0 && !isLoadingBilans()" class="text-center text-muted py-4">
+                  No bilans found
+                </div>
+                <div *ngIf="isLoadingBilans()" class="text-center py-4">
+                  <div class="spinner-border spinner-border-sm text-primary"></div>
+                  <span class="ms-2">Loading bilans...</span>
+                </div>
+              </div>
+            </div>
+            <!-- Right: Selected Bilan Details -->
+            <div class="col-md-7">
+              <label class="form-label fw-semibold">Bilan Details</label>
+              <div class="table-responsive bilan-details-grid">
+                <table class="table table-sm table-hover mb-0">
+                  <thead class="table-light sticky-top">
+                    <tr>
+                      <th>Code</th>
+                      <th>Description</th>
+                      <th style="width: 50px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let detail of selectedBilanDetails(); let i = index">
+                      <td class="small">{{ detail.denominationCode || '-' }}</td>
+                      <td>{{ detail.denominationDescription || detail.description || '-' }}</td>
+                      <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm py-0 px-1" (click)="removeBilanDetailFromSelection(i)" title="Remove">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr *ngIf="selectedBilanDetails().length === 0 && selectedBilan() && !isLoadingBilanDetails()">
+                      <td colspan="3" class="text-center text-muted py-3">Select a bilan to see its details</td>
+                    </tr>
+                    <tr *ngIf="selectedBilan() && isLoadingBilanDetails()">
+                      <td colspan="3" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                        <span class="ms-2">Loading details...</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeBilanPopup()">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" (click)="confirmBilanSelection()" [disabled]="selectedBilanDetails().length === 0">
+            <i class="bi bi-check-circle me-1"></i>
+            Add to Invoice ({{ selectedBilanDetails().length }} item{{ selectedBilanDetails().length !== 1 ? 's' : '' }})
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Duplicate Patient Modal -->
   <div *ngIf="showDuplicateModal()" class="modal-backdrop" (keydown.escape)="$event.preventDefault()">
     <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
@@ -807,6 +1056,20 @@
                   <div *ngIf="!canSaveInvoice()" class="mt-2 text-danger small">
                     <i class="bi bi-exclamation-triangle me-1"></i>
                     No invoice items added
+                  </div>
+                  <div *ngIf="showCreateAdvanceCheckbox()" class="mt-3 pt-3 border-top">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="createAdvance"
+                             [checked]="createAdvance()"
+                             (change)="createAdvance.set($any($event.target).checked)">
+                      <label class="form-check-label fw-semibold" for="createAdvance">
+                        <i class="bi bi-cash-stack me-2"></i>
+                        Create Advance
+                      </label>
+                    </div>
+                    <p class="small text-muted mb-0 mt-1">
+                      Receipt &lt; invoice net. Create advance record for partial payment.
+                    </p>
                   </div>
                 </div>
               </div>

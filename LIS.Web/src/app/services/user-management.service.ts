@@ -10,11 +10,13 @@ import {
   LoginRequest,
   LoginResponse
 } from '../models/user-management';
+import { ApiEndpointsService } from '../api/api-endpoints.service';
 
 @Injectable({ providedIn: 'root' })
 export class UserManagementService {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:5050/api/user-management';
+  private readonly endpoints = inject(ApiEndpointsService);
+  private readonly baseUrl = this.endpoints.userManagement;
 
   getPermissions() {
     return this.http.get<PermissionDefinition[]>(`${this.baseUrl}/permissions`);
